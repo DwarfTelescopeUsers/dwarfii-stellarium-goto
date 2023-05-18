@@ -1,0 +1,4 @@
+[submodule "src/lib/dwarfii_api"]
+	path = src/lib/dwarfii_api
+	url = https://github.com/DwarfTelescopeUsers/dwarfii_api
+	branch = main
