@@ -2,8 +2,7 @@ import { useContext } from "react";
 import type { FormEvent } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { wsURL, startGoto, startGotoCmd } from "@/lib/dwarf2_api";
-import { saveRADecDB } from "@/db/db_utils";
+import { wsURL, startGoto, startGotoCmd, socketSend } from "@/lib/dwarfii_api";
 
 export default function ExecuteGoto() {
   let connectionCtx = useContext(ConnectionContext);
@@ -14,10 +13,6 @@ export default function ExecuteGoto() {
     const formData = new FormData(e.currentTarget);
     const formRa = Number(formData.get("ra"));
     const formDeclination = Number(formData.get("declination"));
-
-    connectionCtx.setRA(formRa);
-    connectionCtx.setDeclination(formDeclination);
-    saveRADecDB(formRa, formDeclination);
 
     updateTelescope(formRa, formDeclination);
   }
@@ -30,7 +25,14 @@ export default function ExecuteGoto() {
     socket.addEventListener("open", () => {
       console.log("start startGoto...");
       let planet = null;
-      startGoto(socket, planet, ra, declination, lat as number, lon as number);
+      let options = startGoto(
+        planet,
+        ra,
+        declination,
+        lat as number,
+        lon as number
+      );
+      socketSend(socket, options);
     });
 
     socket.addEventListener("message", (event) => {

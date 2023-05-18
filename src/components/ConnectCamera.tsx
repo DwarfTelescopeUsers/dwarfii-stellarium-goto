@@ -5,7 +5,7 @@ import {
   statusTelephotoCmd,
   statusWideangleCmd,
   cameraSettings,
-} from "@/lib/dwarf2_api";
+} from "@/lib/dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   saveConnectionStatusDB,

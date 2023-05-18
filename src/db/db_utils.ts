@@ -1,5 +1,4 @@
-import { olderThanHours } from "@/lib/math_utils";
-import { CoordinatesData, RADeclinationData } from "@/types";
+import { CoordinatesData } from "@/types";
 
 export function saveCoordinatesDB(latitude: number, longitude: number) {
   localStorage.setItem("latitude", latitude.toString());
@@ -38,96 +37,21 @@ export function fetchInitialConnectionTimeDB(): number | undefined {
   }
 }
 
-export function saveRADecDB(RA: number, declination: number): void {
-  localStorage.setItem("RA", RA.toString());
-  localStorage.setItem("declination", declination.toString());
 }
 
-export function fetchRADecDB(): RADeclinationData {
-  let RA = localStorage.getItem("RA");
-  let dec = localStorage.getItem("declination");
-  if (typeof RA === "string" && typeof dec === "string") {
-    return { RA: Number(RA), declination: Number(dec) };
-  } else {
-    return {};
   }
 }
 
-export function saveRADB(RA: number): void {
-  localStorage.setItem("RA", RA.toString());
 }
 
-export function saveDecDB(declination: number): void {
-  localStorage.setItem("declination", declination.toString());
 }
 
-export function saveBinningDB(value: number): void {
-  localStorage.setItem("binning", value.toString());
 }
 
-export function fetchBinningDB(): number | undefined {
-  let data = localStorage.getItem("binning");
-  if (data) return Number(data);
 }
 
-export function saveExposureDB(value: number): void {
-  localStorage.setItem("exposure", value.toString());
 }
 
-export function fetchExposureDB(): number | undefined {
-  let data = localStorage.getItem("exposure");
-  if (data) return Number(data);
-}
-
-export function saveExposureModeDB(value: number): void {
-  localStorage.setItem("exposureMode", value.toString());
-}
-
-export function fetchExposureModeDB(): number | undefined {
-  let data = localStorage.getItem("exposureMode");
-  if (data) return Number(data);
-}
-
-export function saveFileFormatDB(value: number): void {
-  localStorage.setItem("fileFormat", value.toString());
-}
-
-export function fetchFileFormatDB(): number | undefined {
-  let data = localStorage.getItem("fileFormat");
-  if (data) return Number(data);
-}
-
-export function saveGainDB(value: number): void {
-  localStorage.setItem("gain", value.toString());
-}
-
-export function fetchGainDB(): number | undefined {
-  let data = localStorage.getItem("gain");
-  if (data) return Number(data);
-}
-
-export function saveGainModeDB(value: number): void {
-  localStorage.setItem("gainMode", value.toString());
-}
-
-export function fetchGainModeDB(): number | undefined {
-  let data = localStorage.getItem("gainMode");
-  if (data) return Number(data);
-}
-
-export function saveIRDB(value: number): void {
-  localStorage.setItem("IR", value.toString());
-}
-
-export function fetchIRDB(): number | undefined {
-  let data = localStorage.getItem("IR");
-  if (data) return Number(data);
-}
-
-export function expiredSession(): boolean | undefined {
-  let prevTime = localStorage.getItem("initialConnectionTime");
-  if (prevTime) {
-    return olderThanHours(Number(prevTime), 12);
   }
 }
 

@@ -1,4 +1,4 @@
-import { telephotoURL } from "@/lib/dwarf2_api";
+import { telephotoURL } from "@/lib/dwarfii_api";
 import { ConnectionContextType } from "@/types";
 import {
   saveConnectionStatusDB,
