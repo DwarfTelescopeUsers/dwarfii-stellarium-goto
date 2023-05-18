@@ -6,7 +6,7 @@ export default function Home() {
       <Head>
         <title>Create Next App</title>
       </Head>
-      <main>hi</main>
+      <main className="container mt-4">hi</main>
     </>
   );
 }
