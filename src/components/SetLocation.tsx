@@ -64,6 +64,7 @@ export default function SetLocation() {
               name="latitude"
               placeholder="-12.3456"
               required
+              defaultValue={connectionCtx.latitude}
             />
           </div>
 
@@ -78,6 +79,7 @@ export default function SetLocation() {
               name="longitude"
               placeholder="56.7890"
               required
+              defaultValue={connectionCtx.longitude}
             />
           </div>
         </div>
