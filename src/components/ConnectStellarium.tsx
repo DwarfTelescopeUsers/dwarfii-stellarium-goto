@@ -1,15 +1,15 @@
-import { useContext, useState } from "react";
+/* eslint react/no-unescaped-entities: 0 */
 
-import {
-  wsURL,
-  statusTelephotoCmd,
-  statusWideangleCmd,
-  cameraSettings,
-} from "@/lib/dwarfii_api";
+import { useContext, useState } from "react";
+import type { FormEvent } from "react";
+import Link from "next/link";
+
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
-  saveConnectionStatusDB,
-  saveInitialConnectionTimeDB,
+  saveConnectionStatusStellariumDB,
+  saveIPStellariumDB,
+  savePortStellariumDB,
+  saveUrlStellariumDB,
 } from "@/db/db_utils";
 
 export default function ConnectCamera() {
@@ -17,60 +17,49 @@ export default function ConnectCamera() {
 
   const [connecting, setConnecting] = useState(false);
 
-  function checkConnection() {
-    setConnecting(true);
+  function checkConnection(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-    const socket = new WebSocket(wsURL);
+    const formData = new FormData(e.currentTarget);
+    const formIP = formData.get("ip");
+    const formPort = formData.get("port");
 
-    socket.addEventListener("open", () => {
-      console.log("start cameraSettings...");
-      cameraSettings(socket);
-    });
+    if (formIP && formPort) {
+      setConnecting(true);
+      let url = `http://${formIP}:${formPort}/api/main/status`;
+      console.log(url);
 
-    // close socket is request takes too long
-    let closeSocketTimer = setTimeout(() => {
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-      socket.close();
-    }, 3000);
+      connectionCtx.setIPStellarium(formIP.toString());
+      connectionCtx.setPortStellarium(Number(formPort));
+      connectionCtx.setUrlStellarium(url);
 
-    socket.addEventListener("message", (event) => {
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
+      saveIPStellariumDB(formIP.toString());
+      savePortStellariumDB(Number(formPort));
+      saveUrlStellariumDB(url);
 
-      let message = JSON.parse(event.data);
-      if (
-        message.interface === statusTelephotoCmd ||
-        message.interface === statusWideangleCmd
-      ) {
-        console.log("cameraSettings:", message);
-        connectionCtx.setConnectionStatus(true);
-        connectionCtx.setInitialConnectionTime(Date.now());
-        saveConnectionStatusDB(true);
-        saveInitialConnectionTimeDB();
-      } else {
-        console.log(message);
-      }
-    });
-
-    socket.addEventListener("error", (error) => {
-      console.log("cameraSettings error:", error);
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-    });
+      fetch(url, { signal: AbortSignal.timeout(2000) })
+        .then(() => {
+          setConnecting(false);
+          connectionCtx.setConnectionStatusStellarium(true);
+          saveConnectionStatusStellariumDB(true);
+        })
+        .catch((err) => {
+          console.log(err);
+          setConnecting(false);
+          connectionCtx.setConnectionStatusStellarium(false);
+          saveConnectionStatusStellariumDB(false);
+        });
+    }
   }
 
   function renderConnectionStatus() {
     if (connecting) {
       return <span>Connecting...</span>;
     }
-    if (connectionCtx.connectionStatus === undefined) {
+    if (connectionCtx.connectionStatusStellarium === undefined) {
       return <></>;
     }
-    if (connectionCtx.connectionStatus === false) {
+    if (connectionCtx.connectionStatusStellarium === false) {
       return <span>Connection failed.</span>;
     }
 
@@ -79,30 +68,69 @@ export default function ConnectCamera() {
 
   return (
     <div>
-      <h2>Connect to Dwarf II</h2>
-
+      <h2>Connect to Stellarium</h2>
       <p>
-        In order for this site to connect to the Dwarf II, both the Dwarf II and
-        the website must use the Dwarf II wifi.
+        In order to get right acension and declination from Stellarium, we need
+        to setup up the Remote Control plugin.
       </p>
 
       <ol>
+        <li className="mb-2">Start Stellarium.</li>
         <li className="mb-2">
-          Use the Dwarf II mobile app to connect to the telescope using the
-          Dwarf II wifi.
+          The beginning of this{" "}
+          <Link href="https://www.youtube.com/watch?v=v2gROUlPRhw">
+            Youtube video
+          </Link>{" "}
+          demostrates setting up Stellarium's Remote Control plugin (0 to 1:40);
+          skip the part about NINA. Click "Enable CORS for the following origin"
+          and enter in "*".
         </li>
         <li className="mb-2">
-          Visit this site on a device that is connected to the Dwarf II wifi.
-        </li>
-        <li className="mb-2">
-          Click Connect. This site will try to connect to Dwarf II.
+          Enter in IP and port for the Remote Control plugin, and click
+          "Connect". This site will try to connect to Stellarium.
         </li>
       </ol>
 
-      <button className="btn btn-primary me-3" onClick={checkConnection}>
-        Connect
-      </button>
-      {renderConnectionStatus()}
+      <form onSubmit={checkConnection}>
+        <div className="row mb-3">
+          <div className="col-sm-1">
+            <label htmlFor="ip" className="form-label">
+              IP
+            </label>
+          </div>
+          <div className="col-sm-11">
+            <input
+              className="form-control"
+              id="ip"
+              name="ip"
+              placeholder="127.00.00.00"
+              required
+              defaultValue={connectionCtx.IPStellarium}
+            />
+          </div>
+        </div>
+        <div className="row mb-3">
+          <div className="col-sm-1">
+            <label htmlFor="port" className="form-label">
+              Port
+            </label>
+          </div>
+          <div className="col-sm-11">
+            <input
+              className="form-control"
+              id="port"
+              name="port"
+              placeholder="8000"
+              required
+              defaultValue={connectionCtx.portStellarium}
+            />
+          </div>
+        </div>
+        <button type="submit" className="btn btn-primary me-3">
+          Connect
+        </button>{" "}
+        {renderConnectionStatus()}
+      </form>
     </div>
   );
 }
