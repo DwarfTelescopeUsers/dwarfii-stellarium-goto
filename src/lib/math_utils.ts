@@ -27,3 +27,51 @@ export function range(start: number, stop: number, step: number) {
     (_, i) => start + i * step
   );
 }
+
+// https://www.vedantu.com/question-answer/calculate-the-right-ascension-and-decli-class-11-physics-cbse-5ff94d1cbfdd3912f3ab841e
+export function convertHMSToDecimalDegrees(
+  text: string,
+  decimalPlaces = 5
+): number | undefined {
+  let hmsMatches = text.match(/(\d{1,2})[hH](\d{1,2})[mM]([0-9.]+)[sS]/);
+  if (hmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, hour, minute, second] = hmsMatches;
+    let decimal =
+      (Number(hour) + Number(minute) / 60 + Number(second) / 3600) * 15;
+    return formatFloatToDecimalPlaces(decimal, decimalPlaces);
+  }
+
+  let decimalMatches = text.match(/([0-9.]+)/);
+  if (decimalMatches) {
+    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
+  }
+}
+
+export function convertDMSToDecimalDegrees(
+  text: string,
+  decimalPlaces = 5
+): number | undefined {
+  let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
+  if (dmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, degree, minute, second] = dmsMatches;
+    let decimal = Number(degree) + Number(minute) / 60 + Number(second) / 3600;
+    return formatFloatToDecimalPlaces(decimal, decimalPlaces);
+  }
+
+  let decimalMatches = text.match(/([0-9.]+)/);
+  if (decimalMatches) {
+    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
+  }
+}
+
+// https://stackoverflow.com/a/32178833
+function formatFloatToDecimalPlaces(
+  value: number,
+  decimalPlaces: number
+): number {
+  return Number(
+    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
+  );
+}

@@ -44,3 +44,9 @@ export type RADeclinationData = {
   RA?: number;
   declination?: number;
 };
+
+export type ParsedStellariumData = {
+  objectName: string;
+  RA: string;
+  declination: string;
+};
