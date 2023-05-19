@@ -2,9 +2,12 @@ import { useContext, useEffect } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
-  deleteSettings,
   fetchCoordinatesDB,
   fetchInitialConnectionTimeDB,
+  fetchIPStellariumDB,
+  fetchPortStellariumDB,
+  fetchUrlStellariumDB,
+  fetchConnectionStatusStellariumDB,
 } from "@/db/db_utils";
 import { checkConnectionLoop } from "@/lib/connection_status";
 
@@ -34,6 +37,22 @@ export function useSetupConnection() {
     if (connectionCtx.initialConnectionTime === undefined) {
       let data = fetchInitialConnectionTimeDB();
       if (data !== undefined) connectionCtx.setInitialConnectionTime(data);
+    }
+    if (connectionCtx.connectionStatusStellarium === undefined) {
+      let data = fetchConnectionStatusStellariumDB();
+      if (data !== undefined) connectionCtx.setConnectionStatusStellarium(data);
+    }
+    if (connectionCtx.IPStellarium === undefined) {
+      let data = fetchIPStellariumDB();
+      if (data !== undefined) connectionCtx.setIPStellarium(data);
+    }
+    if (connectionCtx.portStellarium === undefined) {
+      let data = fetchPortStellariumDB();
+      if (data !== undefined) connectionCtx.setPortStellarium(data);
+    }
+    if (connectionCtx.urlStellarium === undefined) {
+      let data = fetchUrlStellariumDB();
+      if (data !== undefined) connectionCtx.setUrlStellarium(data);
     }
 
     return () => {

@@ -37,21 +37,47 @@ export function fetchInitialConnectionTimeDB(): number | undefined {
   }
 }
 
+export function saveConnectionStatusStellariumDB(status: boolean) {
+  localStorage.setItem("connectionStatusStellarium", status ? "true" : "false");
 }
 
+export function fetchConnectionStatusStellariumDB(): boolean | undefined {
+  let status = localStorage.getItem("connectionStatusStellarium");
+  if (status) {
+    return status === "true";
   }
 }
 
+export function saveIPStellariumDB(ip: string) {
+  localStorage.setItem("IPStellarium", ip);
 }
 
+export function fetchIPStellariumDB(): string | undefined {
+  let data = localStorage.getItem("IPStellarium");
+  if (data) {
+    return data;
+  }
 }
 
+export function savePortStellariumDB(port: number) {
+  localStorage.setItem("portStellarium", port.toString());
 }
 
+export function fetchPortStellariumDB(): number | undefined {
+  let data = localStorage.getItem("portStellarium");
+  if (data) {
+    return Number(data);
+  }
 }
 
+export function saveUrlStellariumDB(url: string) {
+  localStorage.setItem("urlStellarium", url);
 }
 
+export function fetchUrlStellariumDB(): string | undefined {
+  let data = localStorage.getItem("urlStellarium");
+  if (data) {
+    return data;
   }
 }
 
