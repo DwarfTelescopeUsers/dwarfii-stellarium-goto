@@ -49,11 +49,31 @@ export default function ExecuteGoto() {
     });
   }
 
+  function fetchStellariumData() {
+    let url = connectionCtx.urlStellarium;
+    if (url) {
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data.selectioninfo);
+        })
+        .catch((err) => console.error(err));
+    }
+  }
+
   return (
     <div>
       <h2>Manual Goto</h2>
 
       <form onSubmit={submitHandler}>
+        <div className="row mb-3">
+          <div className="col-sm-4">
+            <button className="btn btn-primary" onClick={fetchStellariumData}>
+              Fetch data from Stellarium
+            </button>
+          </div>
+        </div>
+
         <div className="row mb-3">
           <div className="col-sm-4">
             <label htmlFor="ra" className="form-label">
