@@ -5,6 +5,7 @@ import {
   statusTelephotoCmd,
   statusWideangleCmd,
   cameraSettings,
+  socketSend,
 } from "@/lib/dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
@@ -24,7 +25,8 @@ export default function ConnectCamera() {
 
     socket.addEventListener("open", () => {
       console.log("start cameraSettings...");
-      cameraSettings(socket);
+      let options = cameraSettings();
+      socketSend(socket, options);
     });
 
     // close socket is request takes too long
