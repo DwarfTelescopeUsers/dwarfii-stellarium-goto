@@ -5,6 +5,14 @@ export function saveCoordinatesDB(latitude: number, longitude: number) {
   localStorage.setItem("longitude", longitude.toString());
 }
 
+export function saveLatitudeDB(latitude: number) {
+  localStorage.setItem("latitude", latitude.toString());
+}
+
+export function saveLongitudeDB(longitude: number) {
+  localStorage.setItem("longitude", longitude.toString());
+}
+
 export function fetchCoordinatesDB(): CoordinatesData {
   let lat = localStorage.getItem("latitude");
   let lon = localStorage.getItem("longitude");

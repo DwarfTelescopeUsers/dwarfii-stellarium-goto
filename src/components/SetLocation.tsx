@@ -1,32 +1,39 @@
 import { useContext } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent } from "react";
 
 import { getCoordinates } from "@/lib/geolocation";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveCoordinatesDB } from "@/db/db_utils";
+import { saveLatitudeDB, saveLongitudeDB } from "@/db/db_utils";
 
 export default function SetLocation() {
   let connectionCtx = useContext(ConnectionContext);
 
   function browserCoordinatesHandler() {
     getCoordinates((coords) => {
-      saveCoordinatesDB(coords.latitude, coords.longitude);
+      saveLatitudeDB(coords.latitude);
+      saveLongitudeDB(coords.longitude);
       connectionCtx.setLatitude(coords.latitude);
       connectionCtx.setLongitude(coords.longitude);
     });
   }
 
-  function userCoordinatesHandler(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function latitudeHandler(e: ChangeEvent<HTMLInputElement>) {
+    let value = e.target.value.trim();
+    if (value === "") return;
 
-    const formData = new FormData(e.currentTarget);
-    const formLatitude = formData.get("latitude");
-    const formLongitude = formData.get("longitude");
+    if (/^-?\d*(\.\d+)?$/.test(value)) {
+      saveLatitudeDB(Number(value));
+      connectionCtx.setLatitude(Number(value));
+    }
+  }
 
-    if (formLatitude && formLongitude) {
-      saveCoordinatesDB(Number(formLatitude), Number(formLongitude));
-      connectionCtx.setLatitude(Number(formLatitude));
-      connectionCtx.setLongitude(Number(formLongitude));
+  function longitudeHandler(e: ChangeEvent<HTMLInputElement>) {
+    let value = e.target.value.trim();
+    if (value === "") return;
+
+    if (/^-?\d*(\.\d+)?$/.test(value)) {
+      saveLongitudeDB(Number(value));
+      connectionCtx.setLongitude(Number(value));
     }
   }
 
@@ -34,8 +41,7 @@ export default function SetLocation() {
     <>
       <h2>Set Location</h2>
       <p>
-        In order to take astronomy photos, this site needs your latitude and
-        longitude.
+        In order for goto to work, this site needs your latitude and longitude.
       </p>
 
       <p>
@@ -51,7 +57,7 @@ export default function SetLocation() {
       </button>
       <h3 className="mt-3">Option 2</h3>
       <p>Enter in your coordinates.</p>
-      <form onSubmit={userCoordinatesHandler}>
+      <form>
         <div className="row mb-3">
           <div className="col">
             <label htmlFor="latitude" className="form-label">
@@ -64,7 +70,8 @@ export default function SetLocation() {
               name="latitude"
               placeholder="-12.3456"
               required
-              defaultValue={connectionCtx.latitude}
+              value={connectionCtx.latitude}
+              onChange={(e) => latitudeHandler(e)}
             />
           </div>
 
@@ -79,14 +86,11 @@ export default function SetLocation() {
               name="longitude"
               placeholder="56.7890"
               required
-              defaultValue={connectionCtx.longitude}
+              value={connectionCtx.longitude}
+              onChange={(e) => longitudeHandler(e)}
             />
           </div>
         </div>
-
-        <button type="submit" className="btn btn-primary">
-          Submit
-        </button>
       </form>
     </>
   );
