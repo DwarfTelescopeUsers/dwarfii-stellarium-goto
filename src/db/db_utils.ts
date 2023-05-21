@@ -112,17 +112,6 @@ export function deleteConnectionDB(): void {
   [
     "connectionStatus",
     "initialConnectionTime",
-
-    "RA",
-    "declination",
-
-    "gain",
-    "gainMode",
-    "exposure",
-    "exposureMode",
-    "IR",
-    "binning",
-
-    "fileFormat",
+    "connectionStatusStellarium",
   ].forEach((item) => localStorage.removeItem(item));
 }
