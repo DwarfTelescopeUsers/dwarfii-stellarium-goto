@@ -8,8 +8,11 @@ import {
   fetchPortStellariumDB,
   fetchUrlStellariumDB,
   fetchConnectionStatusStellariumDB,
+  saveConnectionStatusDB,
+  saveInitialConnectionTimeDB,
 } from "@/db/db_utils";
-import { checkConnectionLoop } from "@/lib/connection_status";
+import { telephotoURL } from "@/lib/dwarfii_api";
+import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {
   let connectionCtx = useContext(ConnectionContext);
@@ -17,12 +20,12 @@ export function useSetupConnection() {
   useEffect(() => {
     let timer: any;
 
-    checkConnectionLoop(connectionCtx, timer);
-
-    // continously check connection status
     if (connectionCtx.connectionStatus) {
+      checkConnection(connectionCtx, timer);
+
+      // continously check connection status
       timer = setInterval(() => {
-        checkConnectionLoop(connectionCtx, timer);
+        checkConnection(connectionCtx, timer);
       }, 90 * 1000);
     }
 
@@ -56,8 +59,30 @@ export function useSetupConnection() {
     }
 
     return () => {
-      console.log("unmount: delete checkConnectionLoop timer");
+      console.log("unmount: delete checkConnection timer");
       clearInterval(timer);
     };
   }, [connectionCtx]);
+}
+
+function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
+  // if we can't connect to camera in 2 seconds, reset connection data
+  fetch(telephotoURL, { signal: AbortSignal.timeout(2000) })
+    .then(() => {
+      console.log("connection ok");
+      if (!connectionCtx.connectionStatus) {
+        connectionCtx.setConnectionStatus(true);
+        saveConnectionStatusDB(true);
+        saveInitialConnectionTimeDB();
+      }
+    })
+    .catch((err) => {
+      if (err.name === "AbortError") {
+        console.log("connection error");
+        clearInterval(timer);
+
+        connectionCtx.setConnectionStatus(false);
+        saveConnectionStatusDB(false);
+      }
+    });
 }
