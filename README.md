@@ -4,7 +4,6 @@ This website connects to the Dwarf II telescope to Stellarium via the [Dwarf II 
 
 ![screenshot of Stellarium and app](images/ScreenShot.png) –
 
-
 ## Setup for coders
 
 If you are interested in seeing how the code works or contributing to the project, then follow these steps.
@@ -29,7 +28,7 @@ npm run dev
 
 If you just want to get the site up and running on your machine, then follow these steps.
 
-1. Download the file [DwarfStellariumGoto.tar.gz](https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto/releases/tag/v0.1.0-alpha).
+1. Download the file [DwarfStellariumGoto.tar.gz](https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto/releases/tag/v0.1.1-alpha).
 
 2. Unzip the file. A DwarfStellariumGoto directory will be created. The website is a static html site (html, javascript, and css), so it should work on any OS that can run a browser and a web server.
 
@@ -42,8 +41,8 @@ python -m http.server
 
 4. Visit the site in a browser. If you use the Python's server, visit [localhost:8000](http://localhost:8000/)
 
-## Details 
+## Details
 
 Stellarium remote control plugin starts a webserver that allows people to access Stellarium desktop app through a web browser. When people select an object in Stellarium, they can access information about that object through `http://<localhost or IP>:<port>/api/main/status`.
 
-This app connects to `/api/main/status`, and parses the returned data to get the object name, right acension and declination. The app then sends a goto command to the DWARF II with RA, declination, latitude, and longitude data via Dwarf II API. 
+This app connects to `/api/main/status`, and parses the returned data to get the object name, right acension and declination. The app then sends a goto command to the DWARF II with RA, declination, latitude, and longitude data via Dwarf II API.
