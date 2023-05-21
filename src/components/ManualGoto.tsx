@@ -152,8 +152,12 @@ export default function ManualGoto() {
 
   return (
     <div>
-      <h2>Manual Goto</h2>
+      <h2>Goto</h2>
       <ol>
+        <li>
+          Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
+          calibrate the goto, and set gain, exposure, and IR.
+        </li>
         <li>
           Select an object in Stellarium. Make sure "RA/Dec (on date)" is
           displayed.
