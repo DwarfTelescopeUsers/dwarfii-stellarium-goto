@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { getCoordinates } from "@/lib/geolocation";
@@ -7,17 +7,29 @@ import { saveLatitudeDB, saveLongitudeDB } from "@/db/db_utils";
 
 export default function SetLocation() {
   let connectionCtx = useContext(ConnectionContext);
+  const [errors, setErrors] = useState<string | undefined>();
 
   function browserCoordinatesHandler() {
-    getCoordinates((coords) => {
-      saveLatitudeDB(coords.latitude);
-      saveLongitudeDB(coords.longitude);
-      connectionCtx.setLatitude(coords.latitude);
-      connectionCtx.setLongitude(coords.longitude);
-    });
+    console.log("start getCoordinates...");
+    getCoordinates(
+      (position) => {
+        let coords = position.coords;
+        console.log("getCoordinates:", coords);
+        saveLatitudeDB(coords.latitude);
+        saveLongitudeDB(coords.longitude);
+        connectionCtx.setLatitude(coords.latitude);
+        connectionCtx.setLongitude(coords.longitude);
+      },
+      (err) => {
+        console.log("getCoordinates err:", err);
+        setErrors("Could not detect location.");
+      }
+    );
   }
 
   function latitudeHandler(e: ChangeEvent<HTMLInputElement>) {
+    setErrors(undefined);
+
     let value = e.target.value.trim();
     if (value === "") return;
 
@@ -28,6 +40,8 @@ export default function SetLocation() {
   }
 
   function longitudeHandler(e: ChangeEvent<HTMLInputElement>) {
+    setErrors(undefined);
+
     let value = e.target.value.trim();
     if (value === "") return;
 
@@ -55,6 +69,7 @@ export default function SetLocation() {
       <button className="btn btn-primary" onClick={browserCoordinatesHandler}>
         Allow
       </button>
+      {errors && <p className="text-danger">{errors}</p>}
       <h3 className="mt-3">Option 2</h3>
       <p>Enter in your coordinates.</p>
       <form>
@@ -70,7 +85,7 @@ export default function SetLocation() {
               name="latitude"
               placeholder="-12.3456"
               required
-              value={connectionCtx.latitude}
+              value={connectionCtx.latitude || ""}
               onChange={(e) => latitudeHandler(e)}
             />
           </div>
@@ -86,7 +101,7 @@ export default function SetLocation() {
               name="longitude"
               placeholder="56.7890"
               required
-              value={connectionCtx.longitude}
+              value={connectionCtx.longitude || ""}
               onChange={(e) => longitudeHandler(e)}
             />
           </div>
