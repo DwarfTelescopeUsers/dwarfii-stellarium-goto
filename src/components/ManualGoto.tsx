@@ -15,6 +15,7 @@ import { ParsedStellariumData } from "@/types";
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [gotoErrors, setGotoErrors] = useState<string | undefined>();
   const [RA, setRA] = useState<number | undefined>();
   const [RARaw, setRARaw] = useState<string | undefined>();
   const [declination, setDeclination] = useState<number | undefined>();
@@ -23,6 +24,8 @@ export default function ManualGoto() {
   const [objectName, setObjectName] = useState<string | undefined>();
 
   function startGotoHandler() {
+    setGotoErrors(undefined);
+
     let lat = connectionCtx.latitude;
     let lon = connectionCtx.longitude;
     if (RA === undefined) return;
@@ -47,7 +50,13 @@ export default function ManualGoto() {
     socket.addEventListener("message", (event) => {
       let message = JSON.parse(event.data);
       if (message.interface === startGotoCmd) {
-        console.log("startGoto:", message);
+        if (message.code === -45) {
+          setGotoErrors("GOTO target below the horizon");
+        }
+        if (message.code === -18) {
+          setGotoErrors("Plate Solving failed");
+        }
+        console.log("startGoto:", message.code, message);
       } else {
         console.log(message);
       }
@@ -96,6 +105,7 @@ export default function ManualGoto() {
 
   function fetchStellariumData() {
     resetData();
+    console.log("start fetchStellariumData...");
 
     let url = connectionCtx.urlStellarium;
     if (url) {
@@ -123,6 +133,8 @@ export default function ManualGoto() {
           }
           console.log("Fetch Stellarium data error:", err);
         });
+    } else {
+      setErrors("App is not connect to Stellarium.");
     }
   }
 
@@ -183,6 +195,7 @@ export default function ManualGoto() {
       >
         Goto
       </button>
+      {gotoErrors && <p className="text-danger">{gotoErrors}</p>}
     </div>
   );
 }
