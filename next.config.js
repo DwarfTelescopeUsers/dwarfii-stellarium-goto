@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-}
+  output: "export",
+  distDir: "DwarfStellariumGoto",
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

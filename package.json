@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "CI": "npm run lint && npm run format && npm run typecheck",
     "test": "jest",
-    "test:watch": "jest . --watch"
+    "test:watch": "jest . --watch",
+    "zipsite": "npm run build &&  tar -czvf DwarfStellariumGoto.tar.gz DwarfStellariumGoto && rm -rf DwarfStellariumGoto"
   },
   "dependencies": {
     "@types/node": "20.2.1",
