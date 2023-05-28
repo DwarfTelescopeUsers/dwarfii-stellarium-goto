@@ -1,5 +1,8 @@
 import { ParsedStellariumData } from "@/types";
 
+export let statusPath = "/api/main/status";
+export let objectInfoPath = "/api/objects/info?format=json";
+
 export function parseStellariumData(text: string): ParsedStellariumData {
   let data = {} as ParsedStellariumData;
 

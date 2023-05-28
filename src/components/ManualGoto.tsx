@@ -5,21 +5,15 @@ import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { wsURL, startGoto, startGotoCmd, socketSend } from "@/lib/dwarfii_api";
-import { parseStellariumData } from "@/lib/stellarium_utils";
-import {
-  convertHMSToDecimalDegrees,
-  convertDMSToDecimalDegrees,
-} from "@/lib/math_utils";
-import { ParsedStellariumData } from "@/types";
+import { objectInfoPath, formatObjectName } from "@/lib/stellarium_utils";
+import { StellariumObjectInfo } from "@/types";
 
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
   const [gotoErrors, setGotoErrors] = useState<string | undefined>();
   const [RA, setRA] = useState<number | undefined>();
-  const [RARaw, setRARaw] = useState<string | undefined>();
   const [declination, setDeclination] = useState<number | undefined>();
-  const [declinationRaw, setDeclinationRaw] = useState<string | undefined>();
 
   const [objectName, setObjectName] = useState<string | undefined>();
 
@@ -71,30 +65,14 @@ export default function ManualGoto() {
     setErrors("You must select an object in Stellarium.");
     setRA(undefined);
     setDeclination(undefined);
+    setObjectName(undefined);
   }
 
-  function validDataHandler(objectData: ParsedStellariumData) {
-    setRARaw(objectData.RA);
-    let parsedRA = convertHMSToDecimalDegrees(objectData.RA);
-    if (parsedRA) {
-      setRA(parsedRA);
-    } else {
-      setErrors("Invalid RA: " + objectData.RA);
-    }
-
-    setDeclinationRaw(objectData.declination);
-    let parsedDeclination = convertDMSToDecimalDegrees(objectData.declination);
-    if (parsedDeclination) {
-      setDeclination(parsedDeclination);
-    } else {
-      setErrors("Invalid declination: " + objectData.declination);
-    }
-
-    setObjectName(objectData.objectName);
-  }
-
-  function invalidDataHandler(data: any) {
-    setErrors("Could not parse data: " + data.selectioninfo);
+  function validDataHandler(objectData: StellariumObjectInfo) {
+    console.log("fetchStellariumData", objectData);
+    setRA(objectData.ra);
+    setDeclination(objectData.dec);
+    setObjectName(formatObjectName(objectData));
   }
 
   function resetData() {
@@ -109,21 +87,23 @@ export default function ManualGoto() {
 
     let url = connectionCtx.urlStellarium;
     if (url) {
-      fetch(url, { signal: AbortSignal.timeout(2000) })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("fetchStellariumData", data.selectioninfo);
-
-          if (data.selectioninfo === "") {
-            noObjectSelectedHandler();
-          } else {
-            const objectData = parseStellariumData(data.selectioninfo);
-            if (objectData) {
-              validDataHandler(objectData);
+      fetch(`${url}${objectInfoPath}`, {
+        signal: AbortSignal.timeout(2000),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            if (response.status === 404) {
+              noObjectSelectedHandler();
             } else {
-              invalidDataHandler(data);
+              setErrors("Error when connecting to Stellarium");
             }
+            return;
           }
+
+          return response.json();
+        })
+        .then((data) => {
+          validDataHandler(data);
         })
         .catch((err) => {
           if (err.name === "AbortError" || err.message === "Failed to fetch") {
@@ -152,16 +132,13 @@ export default function ManualGoto() {
 
   return (
     <div>
-      <h2>Goto</h2>
+      <h2>Manual Goto</h2>
       <ol>
         <li>
           Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
           calibrate the goto, and set gain, exposure, and IR.
         </li>
-        <li>
-          Select an object in Stellarium. Make sure "RA/Dec (on date)" is
-          displayed.
-        </li>
+        <li>Select an object in Stellarium.</li>
         <li>
           Import right acension and declination from Stellarium by clicking
           'Import Data'.
@@ -186,15 +163,15 @@ export default function ManualGoto() {
       </div>
       <div className="row mb-3">
         <div className="col-sm-4">Right Acension</div>
-        <div className="col-sm-8">{RARaw}</div>
+        <div className="col-sm-8">{RA}</div>
       </div>
       <div className="row mb-3">
         <div className="col-sm-4">Declination</div>
-        <div className="col-sm-8">{declinationRaw}</div>
+        <div className="col-sm-8">{declination}</div>
       </div>
       <button
         className="btn btn-primary"
-        disabled={RARaw === undefined}
+        disabled={RA === undefined}
         onClick={startGotoHandler}
       >
         Goto

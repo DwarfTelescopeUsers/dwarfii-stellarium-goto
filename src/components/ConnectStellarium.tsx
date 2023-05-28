@@ -26,7 +26,7 @@ export default function ConnectCamera() {
 
     if (formIP && formPort) {
       setConnecting(true);
-      let url = `http://${formIP}:${formPort}/api/main/status`;
+      let url = `http://${formIP}:${formPort}`;
       console.log(url);
 
       connectionCtx.setIPStellarium(formIP.toString());
