@@ -99,6 +99,10 @@ export default function ConnectCamera() {
         <li className="mb-2">
           Click Connect. This site will try to connect to Dwarf II.
         </li>
+        <li className="mb-2">
+          Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
+          calibrate the goto, and set gain, exposure, and IR.
+        </li>
       </ol>
 
       <button className="btn btn-primary me-3" onClick={checkConnection}>

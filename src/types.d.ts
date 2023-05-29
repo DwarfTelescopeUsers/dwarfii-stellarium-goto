@@ -50,6 +50,14 @@ export type ParsedStellariumData = {
   RA: string;
   declination: string;
 };
+
+export type AstronomyObjectTypes =
+  | "clusters"
+  | "galaxies"
+  | "nebulae"
+  | "stars"
+  | "solar_system";
+
 export type StellariumObservationObject = {
   constellation: string;
   dec: string;

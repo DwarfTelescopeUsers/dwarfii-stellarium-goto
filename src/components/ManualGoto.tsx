@@ -4,9 +4,9 @@ import { useContext, useState } from "react";
 import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { wsURL, startGoto, startGotoCmd, socketSend } from "@/lib/dwarfii_api";
 import { objectInfoPath, formatObjectName } from "@/lib/stellarium_utils";
 import { StellariumObjectInfo } from "@/types";
+import { startGotoHandler, errorHandler } from "@/lib/goto_utils";
 
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
@@ -14,52 +14,7 @@ export default function ManualGoto() {
   const [gotoErrors, setGotoErrors] = useState<string | undefined>();
   const [RA, setRA] = useState<number | undefined>();
   const [declination, setDeclination] = useState<number | undefined>();
-
   const [objectName, setObjectName] = useState<string | undefined>();
-
-  function startGotoHandler() {
-    setGotoErrors(undefined);
-
-    let lat = connectionCtx.latitude;
-    let lon = connectionCtx.longitude;
-    if (RA === undefined) return;
-    if (declination === undefined) return;
-    if (lat === undefined) return;
-    if (lon === undefined) return;
-
-    const socket = new WebSocket(wsURL);
-    socket.addEventListener("open", () => {
-      console.log("start startGoto...");
-      let planet = null;
-      let options = startGoto(
-        planet,
-        RA,
-        declination,
-        lat as number,
-        lon as number
-      );
-      socketSend(socket, options);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === startGotoCmd) {
-        if (message.code === -45) {
-          setGotoErrors("GOTO target below the horizon");
-        }
-        if (message.code === -18) {
-          setGotoErrors("Plate Solving failed");
-        }
-        console.log("startGoto:", message.code, message);
-      } else {
-        console.log(message);
-      }
-    });
-
-    socket.addEventListener("error", (message) => {
-      console.log("startGoto error:", message);
-    });
-  }
 
   function noObjectSelectedHandler() {
     setErrors("You must select an object in Stellarium.");
@@ -105,14 +60,7 @@ export default function ManualGoto() {
         .then((data) => {
           validDataHandler(data);
         })
-        .catch((err) => {
-          if (err.name === "AbortError" || err.message === "Failed to fetch") {
-            setErrors("Can not connect to Stellarium");
-          } else {
-            setErrors("Error processing Stellarium data");
-          }
-          console.log("Fetch Stellarium data error:", err);
-        });
+        .catch((err) => errorHandler(err, setErrors));
     } else {
       setErrors("App is not connect to Stellarium.");
     }
@@ -134,10 +82,6 @@ export default function ManualGoto() {
     <div>
       <h2>Manual Goto</h2>
       <ol>
-        <li>
-          Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
-          calibrate the goto, and set gain, exposure, and IR.
-        </li>
         <li>Select an object in Stellarium.</li>
         <li>
           Import right acension and declination from Stellarium by clicking
@@ -172,7 +116,9 @@ export default function ManualGoto() {
       <button
         className="btn btn-primary"
         disabled={RA === undefined}
-        onClick={startGotoHandler}
+        onClick={() =>
+          startGotoHandler(connectionCtx, setGotoErrors, RA, declination)
+        }
       >
         Goto
       </button>
