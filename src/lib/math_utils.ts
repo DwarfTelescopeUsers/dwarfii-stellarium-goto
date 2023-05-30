@@ -53,16 +53,22 @@ export function convertDMSToDecimalDegrees(
   decimalPlaces = 5
 ): number | undefined {
   let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
+  let isNegative = text[0] === "-";
   if (dmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let [_, degree, minute, second] = dmsMatches;
     let decimal = Number(degree) + Number(minute) / 60 + Number(second) / 3600;
+    decimal = isNegative ? -1 * decimal : decimal;
     return formatFloatToDecimalPlaces(decimal, decimalPlaces);
   }
 
   let decimalMatches = text.match(/([0-9.]+)/);
   if (decimalMatches) {
-    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
+    let decimal = formatFloatToDecimalPlaces(
+      Number(decimalMatches[1]),
+      decimalPlaces
+    );
+    return isNegative ? -1 * decimal : decimal;
   }
 }
 

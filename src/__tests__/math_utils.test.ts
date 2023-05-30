@@ -52,9 +52,27 @@ describe("convertDMSToDecimalDegrees", () => {
     expect(res).toEqual(expected);
   });
 
+  it("converts  negative hour minute seconds into decimal degrees", () => {
+    let text = "-30°50'10.4\"";
+    let expected = -30.83622;
+
+    let res = convertDMSToDecimalDegrees(text);
+
+    expect(res).toEqual(expected);
+  });
+
   it("return decimal number if it is in decimal degrees", () => {
     let text = "30.83622°";
     let expected = 30.83622;
+
+    let res = convertDMSToDecimalDegrees(text);
+
+    expect(res).toEqual(expected);
+  });
+
+  it("return negative decimal number if it is in decimal degrees", () => {
+    let text = "-30.83622°";
+    let expected = -30.83622;
 
     let res = convertDMSToDecimalDegrees(text);
 
