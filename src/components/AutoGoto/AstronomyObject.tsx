@@ -1,8 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import { julian } from "astronomia";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { ObservationObject } from "@/types";
 import { focusPath, objectInfoPath } from "@/lib/stellarium_utils";
+import { getRiseSetTimeLocalV2 } from "@/lib/astro_utils";
 import { startGotoHandler, errorHandler } from "@/lib/goto_utils";
 import eventBus from "@/lib/event_bus";
 
@@ -85,6 +87,45 @@ export default function AstronomyObject(props: AstronomyObjectPropType) {
     }
   }
 
+  function renderRiseSetTime(object: ObservationObject) {
+    if (connectionCtx.latitude && connectionCtx.longitude) {
+      let date = new Date();
+      let jd = julian.CalendarGregorianToJD(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate()
+      );
+      let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      let times = { rise: "--", set: "--" };
+      try {
+        let result = getRiseSetTimeLocalV2(
+          object,
+          connectionCtx.latitude,
+          connectionCtx.longitude,
+          jd,
+          timezone
+        );
+        if (result.rise) {
+          times.rise = result.rise;
+        }
+        if (result.set) {
+          times.set = result.set;
+        }
+      } catch (err) {
+        console.log(err);
+      }
+
+      return (
+        <span>
+          Rises: {times.rise}, Sets: {times.set}
+        </span>
+      );
+    }
+
+    return "";
+  }
+
   return (
     <tr>
       <td>
@@ -93,10 +134,9 @@ export default function AstronomyObject(props: AstronomyObjectPropType) {
         {object.objtype}
       </td>
       <td>
-        RA: {object.ra}
-        <br /> Dec: {object.dec}
-        <br />
         Magnitude: {object.magnitude}
+        <br />
+        {renderRiseSetTime(object)}
       </td>
       <td>
         <button
