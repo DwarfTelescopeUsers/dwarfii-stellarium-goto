@@ -1,4 +1,4 @@
-import ConnectCamera from "@/components/ConnectCamera";
+import ConnectDwarf from "@/components/ConnectDwarf";
 import ConnectStellarium from "@/components/ConnectStellarium";
 
 import SetLocation from "@/components/SetLocation";
@@ -11,7 +11,7 @@ export default function SetupScope() {
   return (
     <div>
       <StatusBar mode="setup" />
-      <ConnectCamera />
+      <ConnectDwarf />
       <hr />
       <ConnectStellarium />
       <hr />

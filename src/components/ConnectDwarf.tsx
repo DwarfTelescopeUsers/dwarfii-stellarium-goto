@@ -13,7 +13,7 @@ import {
   saveInitialConnectionTimeDB,
 } from "@/db/db_utils";
 
-export default function ConnectCamera() {
+export default function ConnectDwarf() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);

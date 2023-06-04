@@ -12,7 +12,7 @@ import {
   saveUrlStellariumDB,
 } from "@/db/db_utils";
 
-export default function ConnectCamera() {
+export default function ConnectStellarium() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);
