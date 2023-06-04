@@ -89,25 +89,6 @@ export function fetchUrlStellariumDB(): string | undefined {
   }
 }
 
-export function deleteSettings(): void {
-  [
-    "connectionStatus",
-    "initialConnectionTime",
-
-    "latitude",
-    "longitude",
-    "RA",
-    "declination",
-
-    "gain",
-    "exposure",
-    "IR",
-    "binning",
-
-    "fileFormat",
-  ].forEach((item) => localStorage.removeItem(item));
-}
-
 export function deleteConnectionDB(): void {
   [
     "connectionStatus",

@@ -28,19 +28,6 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
 
-  function deleteSettings() {
-    setConnectionStatus(undefined);
-    setInitialConnectionTime(undefined);
-
-    setConnectionStatusStellarium(undefined);
-    setIPStellarium(undefined);
-    setPortStellarium(undefined);
-    setUrlStellarium(undefined);
-
-    setLatitude(undefined);
-    setLongitude(undefined);
-  }
-
   function deleteConnection() {
     setConnectionStatus(undefined);
     setInitialConnectionTime(undefined);
@@ -68,7 +55,6 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     longitude,
     setLongitude,
 
-    deleteSettings,
     deleteConnection,
   };
   return (

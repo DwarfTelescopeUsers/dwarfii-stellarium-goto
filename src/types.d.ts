@@ -31,7 +31,6 @@ export type ConnectionContextType = {
   longitude: number | undefined;
   setLongitude: React.Dispatch<React.SetStateAction<number | undefined>>;
 
-  deleteSettings: () => void;
   deleteConnection: () => void;
 };
 
