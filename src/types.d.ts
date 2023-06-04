@@ -61,15 +61,15 @@ export type AstronomyObjectTypes =
 export type StellariumObservationObject = {
   constellation: string;
   dec: string;
-  designation: string;
+  designation?: string;
   fov: number;
   isVisibleMarker: boolean;
   jd: number;
   landscapeID: string;
   location: string;
   magnitude: string;
-  name: string;
-  nameI18n: string;
+  name?: string;
+  nameI18n?: string;
   objtype: string;
   ra: string;
   type: string;

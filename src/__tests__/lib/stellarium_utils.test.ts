@@ -398,4 +398,79 @@ describe("formatObsevationObjectName", () => {
     let res = formatObsevationObjectName(object);
     expect(res).toEqual(expected);
   });
+
+  it("name and nameI18n to create name if they are different", () => {
+    let object: StellariumObservationObject = {
+      designation: "",
+      name: "name",
+      nameI18n: "nameI18n",
+      ...properties,
+    };
+    let expected = "name; nameI18n";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
+
+  it("name to create name if they are different", () => {
+    let object: StellariumObservationObject = {
+      designation: "",
+      name: "name",
+      nameI18n: "",
+      ...properties,
+    };
+    let expected = "name";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
+
+  it("nameI18n to create name if they are different", () => {
+    let object: StellariumObservationObject = {
+      designation: "",
+      name: "",
+      nameI18n: "nameI18n",
+      ...properties,
+    };
+    let expected = "nameI18n";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
+
+  it("handles missing designation", () => {
+    let object: StellariumObservationObject = {
+      name: "name",
+      nameI18n: "nameI18n",
+      ...properties,
+    };
+    let expected = "name; nameI18n";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
+
+  it("handles missing nameI18n", () => {
+    let object: StellariumObservationObject = {
+      designation: "designation",
+      name: "name",
+      ...properties,
+    };
+    let expected = "designation - name";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
+
+  it("handles missing name", () => {
+    let object: StellariumObservationObject = {
+      designation: "designation",
+      nameI18n: "nameI18n",
+      ...properties,
+    };
+    let expected = "designation - nameI18n";
+
+    let res = formatObsevationObjectName(object);
+    expect(res).toEqual(expected);
+  });
 });
