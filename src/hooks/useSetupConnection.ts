@@ -10,6 +10,7 @@ import {
   fetchConnectionStatusStellariumDB,
   saveConnectionStatusDB,
   saveInitialConnectionTimeDB,
+  fetchIPDwarfDB,
 } from "@/db/db_utils";
 import { telephotoURL } from "@/lib/dwarfii_api";
 import { ConnectionContextType } from "@/types";
@@ -41,6 +42,10 @@ export function useSetupConnection() {
       let data = fetchInitialConnectionTimeDB();
       if (data !== undefined) connectionCtx.setInitialConnectionTime(data);
     }
+    if (connectionCtx.IPDwarf === undefined) {
+      let data = fetchIPDwarfDB();
+      if (data !== undefined) connectionCtx.setIPDwarf(data);
+    }
     if (connectionCtx.connectionStatusStellarium === undefined) {
       let data = fetchConnectionStatusStellariumDB();
       if (data !== undefined) connectionCtx.setConnectionStatusStellarium(data);
@@ -67,7 +72,9 @@ export function useSetupConnection() {
 
 function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
   // if we can't connect to camera in 2 seconds, reset connection data
-  fetch(telephotoURL, { signal: AbortSignal.timeout(2000) })
+  fetch(telephotoURL(connectionCtx.IPDwarf), {
+    signal: AbortSignal.timeout(2000),
+  })
     .then(() => {
       console.log("connection ok");
       if (!connectionCtx.connectionStatus) {

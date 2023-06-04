@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import type { FormEvent } from "react";
 
 import {
   wsURL,
@@ -11,6 +12,7 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   saveConnectionStatusDB,
   saveInitialConnectionTimeDB,
+  saveIPDwarfDB,
 } from "@/db/db_utils";
 
 export default function ConnectDwarf() {
@@ -18,10 +20,23 @@ export default function ConnectDwarf() {
 
   const [connecting, setConnecting] = useState(false);
 
-  function checkConnection() {
+  function checkConnection(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
     setConnecting(true);
 
-    const socket = new WebSocket(wsURL);
+    const formData = new FormData(e.currentTarget);
+    const formIP = formData.get("ip");
+    let IPDwarf = formIP?.toString();
+
+    if (IPDwarf == undefined) {
+      return;
+    }
+    setConnecting(true);
+    connectionCtx.setIPDwarf(IPDwarf);
+    saveIPDwarfDB(IPDwarf);
+
+    const socket = new WebSocket(wsURL(IPDwarf));
 
     socket.addEventListener("open", () => {
       console.log("start cameraSettings...");
@@ -85,30 +100,55 @@ export default function ConnectDwarf() {
 
       <p>
         In order for this site to connect to the Dwarf II, both the Dwarf II and
-        the website must use the Dwarf II wifi.
+        the website must use the same wifi network.
       </p>
 
       <ol>
         <li className="mb-2">
-          Use the Dwarf II mobile app to connect to the telescope using the
-          Dwarf II wifi.
+          Use the Dwarf II mobile app to connect to the telescope. You can use
+          the Dwarf wifi or set the Dwarf II to STA mode and use your normal
+          wifi network.
         </li>
         <li className="mb-2">
-          Visit this site on a device that is connected to the Dwarf II wifi.
+          Visit this site on a device that is connected to the same wifi network
+          as the Dwarf II.
+        </li>
+        <li className="mb-2">
+          Enter in IP for the Dwarf II. If you are using Dwarf wifi, the IP is
+          192.168.88.1. If you are using STA mode, use the IP for your wifi
+          network.
         </li>
         <li className="mb-2">
           Click Connect. This site will try to connect to Dwarf II.
         </li>
+        <form onSubmit={checkConnection} className="mb-3">
+          <div className="row mb-3">
+            <div className="col-sm-1">
+              <label htmlFor="ip" className="form-label">
+                IP
+              </label>
+            </div>
+            <div className="col-sm-11">
+              <input
+                className="form-control"
+                id="ip"
+                name="ip"
+                placeholder="127.00.00.00"
+                required
+                defaultValue={connectionCtx.IPDwarf}
+              />
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary me-3">
+            Connect
+          </button>{" "}
+          {renderConnectionStatus()}
+        </form>
         <li className="mb-2">
           Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
           calibrate the goto, and set gain, exposure, and IR.
         </li>
       </ol>
-
-      <button className="btn btn-primary me-3" onClick={checkConnection}>
-        Connect
-      </button>
-      {renderConnectionStatus()}
     </div>
   );
 }

@@ -14,6 +14,8 @@ export type ConnectionContextType = {
   setConnectionStatusStellarium: React.Dispatch<
     React.SetStateAction<boolean | undefined>
   >;
+  IPDwarf: string | undefined;
+  setIPDwarf: React.Dispatch<React.SetStateAction<string | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: React.Dispatch<

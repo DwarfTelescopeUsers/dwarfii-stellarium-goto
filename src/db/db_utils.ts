@@ -45,6 +45,17 @@ export function fetchInitialConnectionTimeDB(): number | undefined {
   }
 }
 
+export function saveIPDwarfDB(ip: string) {
+  localStorage.setItem("IPDwarf", ip);
+}
+
+export function fetchIPDwarfDB(): string | undefined {
+  let data = localStorage.getItem("IPDwarf");
+  if (data) {
+    return data;
+  }
+}
+
 export function saveConnectionStatusStellariumDB(status: boolean) {
   localStorage.setItem("connectionStatusStellarium", status ? "true" : "false");
 }

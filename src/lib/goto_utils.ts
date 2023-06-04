@@ -19,7 +19,7 @@ export function startGotoHandler(
   if (lat === undefined) return;
   if (lon === undefined) return;
 
-  const socket = new WebSocket(wsURL);
+  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
   socket.addEventListener("open", () => {
     console.log("start startGoto...");
     let planet = null;
