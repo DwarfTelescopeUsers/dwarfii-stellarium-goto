@@ -3,6 +3,7 @@ import {
   processObservationList,
   formatObsevationObjectName,
 } from "@/lib/stellarium_utils";
+import { StellariumObservationObject, ObservationObject } from "@/types";
 
 describe("parseStellariumData", () => {
   it("parses object name, RA and declination in hh:mm:ss format", () => {
@@ -47,7 +48,7 @@ describe("parseStellariumData", () => {
 
 describe("processObservationList", () => {
   it("formats and sorts a list of observation objects", () => {
-    let observations = [
+    let observations: StellariumObservationObject[] = [
       {
         constellation: "CMa",
         dec: "-20°45'32\"",
@@ -210,7 +211,7 @@ describe("processObservationList", () => {
         type: "Planet",
       },
     ];
-    let expected = [
+    let expected: ObservationObject[] = [
       {
         dec: "+11°16'08\"",
         designation: "Jupiter",
@@ -334,7 +335,7 @@ describe("formatObsevationObjectName", () => {
   };
 
   it("uses designation, name, and nameI18n to create name if they are different", () => {
-    let object = {
+    let object: StellariumObservationObject = {
       designation: "M 1",
       name: "name",
       nameI18n: "nameI18n",
@@ -347,7 +348,7 @@ describe("formatObsevationObjectName", () => {
   });
 
   it("uses designation and name if name and nameI18n are the same", () => {
-    let object = {
+    let object: StellariumObservationObject = {
       designation: "M 1",
       name: "name",
       nameI18n: "name",
@@ -360,7 +361,7 @@ describe("formatObsevationObjectName", () => {
   });
 
   it("uses designation and nameI18n to create name if designation and name are the same", () => {
-    let object = {
+    let object: StellariumObservationObject = {
       designation: "M 1",
       name: "M 1",
       nameI18n: "nameI18n",
@@ -373,7 +374,7 @@ describe("formatObsevationObjectName", () => {
   });
 
   it("uses designation to create name if designation, name, nameI18n are the same", () => {
-    let object = {
+    let object: StellariumObservationObject = {
       designation: "M 1",
       name: "M 1",
       nameI18n: "M 1",
@@ -386,7 +387,7 @@ describe("formatObsevationObjectName", () => {
   });
 
   it("ignores names that are empty strings", () => {
-    let object = {
+    let object: StellariumObservationObject = {
       designation: "M 1",
       name: "",
       nameI18n: "",

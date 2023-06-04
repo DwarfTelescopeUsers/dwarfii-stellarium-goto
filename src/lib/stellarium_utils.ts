@@ -110,6 +110,7 @@ export function formatObsevationObjectName(
   return names;
 }
 
+// https://stackoverflow.com/a/24457420
 export function isNumeric(value: string) {
   return /^-?\d+$/.test(value);
 }

@@ -1,3 +1,5 @@
+import { sexagesimal as sexa } from "astronomia";
+
 export function roundExposure(value: number): number {
   let newValue = 100000;
   if (value > 0.8) {
@@ -33,10 +35,10 @@ export function convertHMSToDecimalDegrees(
   text: string,
   decimalPlaces = 5
 ): number | undefined {
-  let hmsMatches = text.match(/(\d{1,2})[hH](\d{1,2})[mM]([0-9.]+)[sS]/);
+  let hmsMatches = extractHMSValues(text);
   if (hmsMatches) {
     // eslint-disable-next-line  no-unused-vars
-    let [_, hour, minute, second] = hmsMatches;
+    let { hour, minute, second } = hmsMatches;
     let decimal =
       (Number(hour) + Number(minute) / 60 + Number(second) / 3600) * 15;
     return formatFloatToDecimalPlaces(decimal, decimalPlaces);
@@ -48,18 +50,43 @@ export function convertHMSToDecimalDegrees(
   }
 }
 
+export function extractHMSValues(text: string) {
+  let hmsMatches = text.match(/(\d{1,2})[hH](\d{1,2})[mM]([0-9.]+)[sS]/);
+  if (hmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, hour, minute, second] = hmsMatches;
+
+    return {
+      hour: Number(hour),
+      minute: Number(minute),
+      second: Number(second),
+    };
+  }
+}
+
+// https://stackoverflow.com/a/5786281
+export function convertDecimalDegreesToHMS(decimal: number) {
+  let degree = decimal / 15;
+  return {
+    hour: 0 | (degree < 0 ? (degree = -degree) : degree),
+    min: 0 | (((degree += 1e-9) % 1) * 60),
+    sec: (0 | (((degree * 60) % 1) * 6000)) / 100,
+  };
+}
+
 export function convertDMSToDecimalDegrees(
   text: string,
   decimalPlaces = 5
 ): number | undefined {
-  let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
-  let isNegative = text[0] === "-";
+  let dmsMatches = extractDMSValues(text);
   if (dmsMatches) {
-    // eslint-disable-next-line  no-unused-vars
-    let [_, degree, minute, second] = dmsMatches;
-    let decimal = Number(degree) + Number(minute) / 60 + Number(second) / 3600;
-    decimal = isNegative ? -1 * decimal : decimal;
-    return formatFloatToDecimalPlaces(decimal, decimalPlaces);
+    let { negative, degree, minute, second } = dmsMatches;
+    return sexa.DMSToDeg(
+      negative,
+      Number(degree),
+      Number(minute),
+      Number(second)
+    );
   }
 
   let decimalMatches = text.match(/([0-9.]+)/);
@@ -68,8 +95,35 @@ export function convertDMSToDecimalDegrees(
       Number(decimalMatches[1]),
       decimalPlaces
     );
+    let isNegative = text[0] === "-";
     return isNegative ? -1 * decimal : decimal;
   }
+}
+
+export function extractDMSValues(text: string) {
+  let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
+  if (dmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, degree, minute, second] = dmsMatches;
+
+    return {
+      negative: text[0] === "-",
+      degree: Number(degree),
+      minute: Number(minute),
+      second: Number(second),
+    };
+  }
+}
+
+export function convertDecimalDegreesToDMS(decimal: number) {
+  const data = sexa.degToDMS(decimal);
+
+  return {
+    negative: data[0],
+    degree: data[1],
+    minute: data[2],
+    second: data[3],
+  };
 }
 
 // https://stackoverflow.com/a/32178833
