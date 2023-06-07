@@ -140,13 +140,13 @@ export default function AstronomyObject(props: AstronomyObjectPropType) {
       </td>
       <td>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary me-2 mb-2"
           onClick={() => centerHandler(object)}
         >
           Center
         </button>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary mb-2"
           onClick={() => centerGotoHandler(object)}
         >
           Goto

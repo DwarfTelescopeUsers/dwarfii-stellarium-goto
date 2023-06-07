@@ -6,23 +6,32 @@ import StatusBar from "@/components/shared/StatusBar";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 
 export default function Goto() {
-  const [gotoType, setGotoType] = useState("auto");
+  const [gotoType, setGotoType] = useState("lists");
   useSetupConnection();
 
   return (
     <div>
       <StatusBar mode="goto" />
-      <button className="btn btn-primary" onClick={() => setGotoType("auto")}>
-        Auto
-      </button>{" "}
-      <button
-        className="btn btn-primary"
-        onClick={() => setGotoType("stellarium")}
-      >
-        Stellarium
-      </button>
-      {gotoType === "auto" && <AutoGoto />}
-      {gotoType === "stellarium" && <StellariumGoto />}
+      <ul className="nav nav-tabs mb-2">
+        <li
+          className={`nav-item nav-link ${
+            gotoType === "lists" ? "active" : ""
+          }`}
+          onClick={() => setGotoType("lists")}
+        >
+          Lists
+        </li>
+        <li
+          className={`nav-item nav-link ${
+            gotoType === "manual" ? "active" : ""
+          }`}
+          onClick={() => setGotoType("manual")}
+        >
+          Manual
+        </li>
+      </ul>
+      {gotoType === "lists" && <AutoGoto />}
+      {gotoType === "manual" && <StellariumGoto />}
     </div>
   );
 }

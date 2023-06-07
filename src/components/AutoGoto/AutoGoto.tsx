@@ -10,6 +10,7 @@ import {
   processObservationList,
 } from "@/lib/stellarium_utils";
 import AstronomyObject from "./AstronomyObject";
+import { pluralize } from "@/lib/text_utils";
 
 let dwarflabObjects: ObservationObject[] = processObservationList(
   dwarflabObservationList.observingLists.observingLists[
@@ -23,11 +24,31 @@ let mikeObjects: ObservationObject[] = processObservationList(
   ].objects
 );
 
+let objectTypesMenu = [
+  { value: "all", label: "All" },
+  { value: "clusters", label: "Clusters" },
+  { value: "galaxies", label: "Galaxies" },
+  { value: "nebulae", label: "Nebulae" },
+  { value: "solar_system", label: "Solar System" },
+  { value: "stars", label: "Stars" },
+];
+
+let observationListsMenu = {
+  dwarflab: {
+    description: "List of objects from Dwarf mobile app. 49 objects.",
+  },
+  michaelc: {
+    description:
+      "Michael Camilleri's list of objects ~18' or larger. 169 objects. ",
+  },
+};
+
 export default function AutoGoto() {
   const [allObjects, setAllObjects] = useState(dwarflabObjects);
   const [objects, setObjects] = useState(dwarflabObjects);
   const [selectedTypes, setSelectedTypes] = useState(["all"]);
-  const [objectList, setObjectList] = useState("");
+  const [objectList, setObjectList] =
+    useState<keyof typeof observationListsMenu>("dwarflab");
 
   useEffect(() => {
     filterObjects();
@@ -71,8 +92,8 @@ export default function AutoGoto() {
   }
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
-    console.log(e.target.value);
-    setObjectList(e.target.value);
+    let listName = e.target.value as keyof typeof observationListsMenu;
+    setObjectList(listName);
     if (e.target.value === "dwarflab") {
       setAllObjects(dwarflabObjects);
       setObjects(dwarflabObjects);
@@ -84,31 +105,35 @@ export default function AutoGoto() {
 
   return (
     <div>
-      <h2>AutoGoto</h2>
-      {JSON.stringify(selectedTypes)}
-
+      <h2>Observations Lists</h2>
       <select
         className="form-select"
         value={objectList}
         onChange={selectListHandler}
       >
         <option>Select object lists</option>
-        <option value="dwarflab">Dwarf Lab&apos;s list (49 objects)</option>
-        <option value="michaelc">
-          Michael Camilleri&apos;s list (169 objects)
-        </option>
+        <option value="dwarflab">Dwarf Lab&apos;s list</option>
+        <option value="michaelc">List of objects ~18&apos; or larger.</option>
       </select>
+      <p className="mt-3">{observationListsMenu[objectList]?.description}</p>
 
-      <ul>
-        <li onClick={() => selectTypeHandler("all")}>All</li>
-        <li onClick={() => selectTypeHandler("clusters")}>Clusters</li>
-        <li onClick={() => selectTypeHandler("galaxies")}>Galaxies</li>
-        <li onClick={() => selectTypeHandler("nebulae")}>Nebulae</li>
-        <li onClick={() => selectTypeHandler("solar_system")}>Solar System</li>
-        <li onClick={() => selectTypeHandler("stars")}>Stars</li>
+      <ul className="nav nav-pills mt-3">
+        {objectTypesMenu.map((type) => (
+          <li
+            key={type.value}
+            className={`nav-item nav-link rounded-pill ${
+              selectedTypes.includes(type.value) ? "active" : ""
+            }`}
+            onClick={() => selectTypeHandler(type.value)}
+          >
+            {type.label}
+          </li>
+        ))}
       </ul>
 
-      {objects.length}
+      <h4 className="mt-3">
+        {objects.length} {pluralize(objects.length, "Object", "Objects")}
+      </h4>
 
       <table className="table">
         <thead>
