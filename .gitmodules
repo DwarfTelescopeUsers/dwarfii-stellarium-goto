@@ -2,3 +2,6 @@
 	path = src/lib/dwarfii_api
 	url = https://github.com/DwarfTelescopeUsers/dwarfii_api
 	branch = main
+[submodule "raw_data/OpenNGC"]
+	path = raw_data/OpenNGC
+	url = https://github.com/mattiaverga/OpenNGC
