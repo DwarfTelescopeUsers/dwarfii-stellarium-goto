@@ -39,22 +39,7 @@
             "ra": "3h09m19.0s",
             "type": "Planet"
           },
-          {
-            "constellation": "Sco",
-            "dec": "-32°15'10\"",
-            "designation": "M 6",
-            "fov": 0,
-            "isVisibleMarker": true,
-            "jd": 0,
-            "landscapeID": "",
-            "location": "",
-            "magnitude": "4.20",
-            "name": "Butterfly Cluster",
-            "nameI18n": "Butterfly Cluster",
-            "objtype": "open star cluster",
-            "ra": "17h40m21.4s",
-            "type": "Nebula"
-          },
+
           {
             "constellation": "Vir",
             "dec": "-11°37'30\"",
@@ -152,22 +137,6 @@
             "type": "Nebula"
           },
           {
-            "constellation": "Mon",
-            "dec": "+9°53'41\"",
-            "designation": "NGC 2264",
-            "fov": 0,
-            "isVisibleMarker": true,
-            "jd": 0,
-            "landscapeID": "",
-            "location": "",
-            "magnitude": "3.90",
-            "name": "Christmas Tree Cluster",
-            "nameI18n": "Christmas Tree Cluster",
-            "objtype": "open star cluster",
-            "ra": "6h40m56.9s",
-            "type": "Nebula"
-          },
-          {
             "constellation": "Cas",
             "dec": "+61°26'50\"",
             "designation": "IC 1805",
@@ -197,22 +166,6 @@
             "nameI18n": "Omega Nebula",
             "objtype": "cluster associated with nebulosity",
             "ra": "18h20m48.3s",
-            "type": "Nebula"
-          },
-          {
-            "constellation": "CMa",
-            "dec": "-20°45'32\"",
-            "designation": "M 41",
-            "fov": 0,
-            "isVisibleMarker": true,
-            "jd": 0,
-            "landscapeID": "",
-            "location": "",
-            "magnitude": "4.50",
-            "name": "Little Beehive Cluster",
-            "nameI18n": "Little Beehive Cluster",
-            "objtype": "open star cluster",
-            "ra": "6h45m59.8s",
             "type": "Nebula"
           },
           {
@@ -581,38 +534,6 @@
             "nameI18n": "Bode's Galaxy",
             "objtype": "galaxy",
             "ra": "9h55m32.6s",
-            "type": "Nebula"
-          },
-          {
-            "constellation": "Cen",
-            "dec": "-43°01'21\"",
-            "designation": "C 77",
-            "fov": 0,
-            "isVisibleMarker": true,
-            "jd": 0,
-            "landscapeID": "",
-            "location": "",
-            "magnitude": "6.84",
-            "name": "Centaurus A",
-            "nameI18n": "Centaurus A",
-            "objtype": "active galaxy",
-            "ra": "13h25m28.9s",
-            "type": "Nebula"
-          },
-          {
-            "constellation": "Per",
-            "dec": "+36°25'15\"",
-            "designation": "NGC 1499",
-            "fov": 0,
-            "isVisibleMarker": true,
-            "jd": 0,
-            "landscapeID": "",
-            "location": "",
-            "magnitude": "—",
-            "name": "California Nebula",
-            "nameI18n": "California Nebula",
-            "objtype": "HII region",
-            "ra": "4h03m16.4s",
             "type": "Nebula"
           },
           {
