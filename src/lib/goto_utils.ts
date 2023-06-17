@@ -9,6 +9,10 @@ export function startGotoHandler(
   RA: number | undefined,
   declination: number | undefined
 ) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
+
   setGotoErrors(undefined);
 
   let lat = connectionCtx.latitude;

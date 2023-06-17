@@ -52,13 +52,6 @@ export type ParsedStellariumData = {
   declination: string;
 };
 
-export type AstronomyObjectTypes =
-  | "clusters"
-  | "galaxies"
-  | "nebulae"
-  | "stars"
-  | "solar_system";
-
 export type StellariumObservationObject = {
   constellation: string;
   dec: string;
@@ -79,12 +72,15 @@ export type StellariumObservationObject = {
 export type ObservationObject = {
   dec: string;
   designation: string;
-  magnitude: string;
-  objtype: string;
+  magnitude: string | null | number;
+  type: string;
+  typeCategory: string;
   ra: string;
   displayName: string;
-  sortName1: string;
-  sortName2: number;
+  catalogue: string;
+  objectNumber: number;
+  size?: string;
+  constellation: string | null | undefined;
 };
 
 export type StellariumObjectInfo = {
@@ -136,4 +132,23 @@ export type StellariumObjectInfo = {
   type: string;
   vmag: number;
   vmage: number;
+};
+
+export type ObservationObjectOpenNGC = {
+  "Catalogue Entry": string;
+  "Alternative Entries": string;
+  "Familiar Name": string;
+  "Right Ascension": string;
+  Declination: string;
+  "Major Axis": number | null;
+  "Minor Axis": number | null;
+  Magnitude: number | null;
+  "Surface Brightness": number | null;
+  "Name catalog": string;
+  "Name number": number;
+  Type: string;
+  "Type Category": string;
+  "Height (')": number | null;
+  "Width (')": number | null;
+  Constellation: string | null | undefined;
 };

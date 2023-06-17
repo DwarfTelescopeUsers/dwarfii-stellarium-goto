@@ -2,38 +2,13 @@ import {
   ParsedStellariumData,
   StellariumObjectInfo,
   StellariumObservationObject,
-  ObservationObject,
 } from "@/types";
 
 export let statusPath = "/api/main/status";
 export let focusPath = "/api/main/focus?target=";
 export let objectInfoPath = "/api/objects/info?format=json";
 
-let catalogs = ["C", "Ced", "HIP", "IC", "LBN", "M", "NGC", "PGC"];
-
-export let typesObjectTypes = {
-  clusters: [
-    "cluster associated with nebulosity",
-    "open star cluster",
-    "globular star cluster",
-    "star cluster",
-    "custom object",
-  ],
-  galaxies: ["galaxy", "active galaxy"],
-  nebulae: [
-    "bipolar nebula",
-    "supernova remnant",
-    "HII region",
-    "planetary nebula",
-    "emission nebula",
-    "interstellar matter",
-    "dark nebula",
-    "reflection nebula",
-    "stellar association",
-  ],
-  stars: ["double star, pulsating variable star", "double star"],
-  solar_system: ["moon", "planet"],
-};
+export let catalogs = ["C", "Ced", "HIP", "IC", "LBN", "M", "NGC", "PGC"];
 
 export function parseStellariumData(text: string): ParsedStellariumData {
   let data = {} as ParsedStellariumData;
@@ -74,7 +49,7 @@ export function formatObjectName(objectData: StellariumObjectInfo) {
   return formatName(name1, name2, name3);
 }
 
-export function formatObsevationObjectName(
+export function formatObjectNameStellarium(
   objectData: StellariumObservationObject
 ) {
   let name1 = objectData.designation;
@@ -119,47 +94,4 @@ function formatName(
 // https://stackoverflow.com/a/24457420
 export function isNumeric(value: string) {
   return /^-?\d+$/.test(value);
-}
-
-function formatObservation(
-  object: StellariumObservationObject
-): ObservationObject {
-  let data = {
-    dec: object.dec,
-    designation: object.designation,
-    magnitude: object.magnitude,
-    objtype: object.objtype,
-    ra: object.ra,
-    displayName: formatObsevationObjectName(object),
-  } as ObservationObject;
-
-  if (object.designation) {
-    let parts = object.designation.split(" ");
-    if (catalogs.includes(parts[0]) && parts.length === 2) {
-      data.sortName1 = parts[0];
-      data.sortName2 = Number(parts[1]);
-    } else {
-      data.sortName1 = object.designation;
-      data.sortName2 = -1;
-    }
-  }
-  return data;
-}
-
-export function processObservationList(
-  objects: StellariumObservationObject[]
-): ObservationObject[] {
-  let formattedObjects = objects.map(formatObservation);
-  let noCatalogObjects = formattedObjects
-    .filter((obj) => obj.sortName2 == -1)
-    .sort((a, b) => a.sortName1.localeCompare(b.sortName1));
-  let catalogObjects = formattedObjects
-    .filter((obj) => obj.sortName2 !== -1)
-    .sort((a, b) => {
-      return (
-        a.sortName1.localeCompare(b.sortName1) || a.sortName2 - b.sortName2
-      );
-    });
-
-  return noCatalogObjects.concat(catalogObjects);
 }

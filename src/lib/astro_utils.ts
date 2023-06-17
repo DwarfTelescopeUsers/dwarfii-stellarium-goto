@@ -38,8 +38,8 @@ type RiseSet = {
 
 function notLocalPlanet(object: ObservationObject) {
   return (
-    object.objtype !== "moon" &&
-    object.objtype !== "planet" &&
+    object.type !== "moon" &&
+    object.type !== "planet" &&
     object.designation !== "Sun"
   );
 }
@@ -206,17 +206,17 @@ export function getRiseSetTimeLocalV2(
 ): RiseSetTransit {
   if (notLocalPlanet(object)) {
     let times = getRiseSetTimeV2(object, lat, lon, jd);
-    return foo(times, timezone);
-  } else if (object.objtype === "planet") {
+    return formatTimes(times, timezone);
+  } else if (object.type === "planet") {
     let date = new Date();
     let times = getRiseSetTimePlanetV2(object, lat, lon, date);
-    return foo(times, timezone);
+    return formatTimes(times, timezone);
   } else {
     return { rise: "--", set: "--", transit: "--" };
   }
 }
 
-function foo(times: RiseSetTransit, timezone: string): RiseSetTransit {
+function formatTimes(times: RiseSetTransit, timezone: string): RiseSetTransit {
   let results = { rise: "--", set: "--", transit: "--" };
   let formattedRise = formatRiseSetTimeV2(times.rise, timezone);
   if (formattedRise) {

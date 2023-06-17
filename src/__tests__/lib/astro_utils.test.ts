@@ -13,11 +13,13 @@ let Vega: ObservationObject = {
   dec: "+38°47'01.0\"",
   designation: "Vega",
   displayName: "",
-  objtype: "",
+  type: "",
+  typeCategory: "",
   ra: "18h36m56.00s",
   magnitude: "",
-  sortName1: "",
-  sortName2: 0,
+  catalogue: "",
+  objectNumber: 0,
+  constellation: "",
 };
 // NYC -4, HK +8
 let lat_NYC = 40.7128;
@@ -106,11 +108,13 @@ describe("getRiseSetTimeV2", () => {
       dec: "+18°26'27.3\"",
       designation: "",
       displayName: "",
-      objtype: "",
+      type: "",
+      typeCategory: "",
       ra: "2h46m55.51s",
       magnitude: "",
-      sortName1: "",
-      sortName2: 0,
+      catalogue: "",
+      objectNumber: 0,
+      constellation: "",
     };
     let expected = {
       rise: "12ʰ26ᵐ9ˢ",
@@ -198,15 +202,17 @@ describe("getRiseSetTimePlanet", () => {
     date.setUTCFullYear(1988);
     date.setUTCMonth(3 - 1);
     date.setUTCDate(20);
-    let object = {
+    let object: ObservationObject = {
       designation: "Venus",
       dec: "",
       displayName: "",
-      objtype: "",
+      type: "",
+      typeCategory: "",
       ra: "",
       magnitude: "",
-      sortName1: "",
-      sortName2: 0,
+      catalogue: "",
+      objectNumber: 0,
+      constellation: "",
     };
     let expected = {
       rise: "12ʰ26ᵐ9ˢ",

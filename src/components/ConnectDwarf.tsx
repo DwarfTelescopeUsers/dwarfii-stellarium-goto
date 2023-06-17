@@ -32,6 +32,7 @@ export default function ConnectDwarf() {
     if (IPDwarf == undefined) {
       return;
     }
+
     setConnecting(true);
     connectionCtx.setIPDwarf(IPDwarf);
     saveIPDwarfDB(IPDwarf);

@@ -71,6 +71,9 @@ export function useSetupConnection() {
 }
 
 function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
   // if we can't connect to camera in 2 seconds, reset connection data
   fetch(telephotoURL(connectionCtx.IPDwarf), {
     signal: AbortSignal.timeout(2000),

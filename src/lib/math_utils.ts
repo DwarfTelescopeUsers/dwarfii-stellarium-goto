@@ -62,6 +62,17 @@ export function extractHMSValues(text: string) {
       second: Number(second),
     };
   }
+  hmsMatches = text.match(/(\d{1,2}):(\d{1,2}):([0-9.]+)/);
+  if (hmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, hour, minute, second] = hmsMatches;
+
+    return {
+      hour: Number(hour),
+      minute: Number(minute),
+      second: Number(second),
+    };
+  }
 }
 
 // https://stackoverflow.com/a/5786281
@@ -102,6 +113,19 @@ export function convertDMSToDecimalDegrees(
 
 export function extractDMSValues(text: string) {
   let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
+  if (dmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let [_, degree, minute, second] = dmsMatches;
+
+    return {
+      negative: text[0] === "-",
+      degree: Number(degree),
+      minute: Number(minute),
+      second: Number(second),
+    };
+  }
+
+  dmsMatches = text.match(/(\d{1,2}):(\d{1,2}):([0-9.]+)/);
   if (dmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let [_, degree, minute, second] = dmsMatches;
