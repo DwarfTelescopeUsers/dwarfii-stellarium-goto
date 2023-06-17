@@ -1,0 +1,22 @@
+code,name,category
+*,Star,stars
+**,Double star,stars
+*Ass,Association of stars,stars
+OCl,Open Cluster,clusters
+GCl,Globular Cluster,clusters
+Cl+N,Star cluster + Nebula,nebulae
+G,Galaxy,galaxies
+GPair,Galaxy Pair,galaxies
+GTrpl,Galaxy Triplet,galaxies
+GGroup,Group of galaxies,galaxies
+PN,Planetary Nebula,nebulae
+HII,HII Ionized region,nebulae
+DrkN,Dark Nebula,nebulae
+EmN,Emission Nebula,nebulae
+Neb,Nebula,nebulae
+RfN,Reflection Nebula,nebulae
+SNR,Supernova remnant,nebulae
+Nova,Nova star,stars
+NonEx,Nonexistent object,nonexistent
+Dup,Duplicated object (see NGC or IC columns to find the master object),duplicate
+Other,Other classification (see object notes),other
