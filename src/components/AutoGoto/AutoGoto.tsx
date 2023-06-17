@@ -2,26 +2,25 @@ import React, { useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 
 import dwarflabObservationList from "../../../data/observingList_DwarfII.json";
-import mikeObservationList from "../../../data/observingList_mike_camilleri.json";
+import openngc15ObservationList from "../../../data/openngc_15min_catalog.json";
 
-import { AstronomyObjectTypes, ObservationObject } from "@/types";
+import { ObservationObject } from "@/types";
+import { groupTypeCategoriesTypes } from "../../../data/objectTypes";
 import {
-  typesObjectTypes,
-  processObservationList,
-} from "@/lib/stellarium_utils";
+  processObservationListStellarium,
+  processObservationListOpenNGC,
+} from "@/lib/observation_lists_utils";
 import AstronomyObject from "./AstronomyObject";
 import { pluralize } from "@/lib/text_utils";
 
-let dwarflabObjects: ObservationObject[] = processObservationList(
+let dwarflabObjects: ObservationObject[] = processObservationListStellarium(
   dwarflabObservationList.observingLists.observingLists[
     "{5e727f81-e0a8-43f0-9258-3848aa2d9762}"
   ].objects
 );
 
-let mikeObjects: ObservationObject[] = processObservationList(
-  mikeObservationList.observingLists.observingLists[
-    "{998bdf5f-82af-433c-bf65-619969e85574}"
-  ].objects
+let openngc15Objects: ObservationObject[] = processObservationListOpenNGC(
+  openngc15ObservationList
 );
 
 let objectTypesMenu = [
@@ -35,11 +34,10 @@ let objectTypesMenu = [
 
 let observationListsMenu = {
   dwarflab: {
-    description: "List of objects from Dwarf mobile app. 49 objects.",
+    description: "List of objects from Dwarf mobile app. 44 objects.",
   },
-  michaelc: {
-    description:
-      "Michael Camilleri's list of objects ~18' or larger. 169 objects. ",
+  openngc15: {
+    description: "List of objects 15' or larger. 201 objects. ",
   },
 };
 
@@ -76,7 +74,7 @@ export default function AutoGoto() {
     let filteredObjectTypes: string[] = [];
     selectedTypes.forEach((type) => {
       filteredObjectTypes = filteredObjectTypes.concat(
-        typesObjectTypes[type as AstronomyObjectTypes]
+        groupTypeCategoriesTypes[type as keyof typeof groupTypeCategoriesTypes]
       );
     });
 
@@ -85,7 +83,7 @@ export default function AutoGoto() {
     } else {
       setObjects(
         allObjects.filter((object) => {
-          return filteredObjectTypes.includes(object.objtype);
+          return filteredObjectTypes.includes(object.type);
         })
       );
     }
@@ -98,8 +96,8 @@ export default function AutoGoto() {
       setAllObjects(dwarflabObjects);
       setObjects(dwarflabObjects);
     } else {
-      setAllObjects(mikeObjects);
-      setObjects(mikeObjects);
+      setAllObjects(openngc15Objects);
+      setObjects(openngc15Objects);
     }
   }
 
@@ -113,7 +111,7 @@ export default function AutoGoto() {
       >
         <option>Select object lists</option>
         <option value="dwarflab">Dwarf Lab&apos;s list</option>
-        <option value="michaelc">List of objects ~18&apos; or larger.</option>
+        <option value="openngc15">List of objects 15&apos; or larger.</option>
       </select>
       <p className="mt-3">{observationListsMenu[objectList]?.description}</p>
 

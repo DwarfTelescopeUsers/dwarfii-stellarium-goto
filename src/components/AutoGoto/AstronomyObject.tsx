@@ -89,6 +89,7 @@ export default function AstronomyObject(props: AstronomyObjectPropType) {
 
   function renderRiseSetTime(object: ObservationObject) {
     if (connectionCtx.latitude && connectionCtx.longitude) {
+      // TODO: add component to let user set the time and save time in context
       let date = new Date();
       let jd = julian.CalendarGregorianToJD(
         date.getFullYear(),
@@ -131,7 +132,10 @@ export default function AstronomyObject(props: AstronomyObjectPropType) {
       <td>
         {object.displayName}
         <br />
-        {object.objtype}
+        {object.type}
+        <br />
+        Size: {object.size}, Magnitude: {object.magnitude}, Constellation:{" "}
+        {object.constellation}
       </td>
       <td>
         Magnitude: {object.magnitude}
