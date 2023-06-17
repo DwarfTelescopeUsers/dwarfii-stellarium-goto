@@ -9,7 +9,7 @@
     "lint": "next lint",
     "format": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",
     "typecheck": "tsc --noEmit",
-    "CI": "npm run lint && npm run format && npm run typecheck",
+    "CI": "npm run lint && npm run format && npm run typecheck && npm run test",
     "test": "jest",
     "test:watch": "jest . --watch",
     "zipsite": "npm run build &&  tar -czvf DwarfStellariumGoto.tar.gz DwarfStellariumGoto && rm -rf DwarfStellariumGoto"
