@@ -1,0 +1,9 @@
+Apparent magnitude (V),Object,Name,Seen from...,Notes,type,category,catalog,order
+-3.69,Moon,Moon,"lit by earthlight, reflecting earthshine seen from Earth (maximum)[23]",,Moon,moon_planets,-,0
++0.23,planet Mercury,Mercury,seen from Earth,mean brightness[32],Planet,moon_planets,-,1
+-4.14,planet Venus,Venus,seen from Earth,mean brightness[32],Planet,moon_planets,-,2
++0.71,planet Mars,Mars,seen from Earth,mean brightness[32],Planet,moon_planets,-,4
+-2.20,planet Jupiter,Jupiter,seen from Earth,mean brightness[32],Planet,moon_planets,-,5
++0.46,planet Saturn,Saturn,seen from Earth,mean brightness[32],Planet,moon_planets,-,6
++5.68,planet Uranus,Uranus,seen from Earth,mean brightness[32],Planet,moon_planets,-,7
++7.78,planet Neptune,Neptune,seen from Earth,mean brightness[32],Planet,moon_planets,-,8
