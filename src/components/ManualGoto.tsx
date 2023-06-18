@@ -4,9 +4,13 @@ import { useContext, useState } from "react";
 import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { objectInfoPath, formatObjectName } from "@/lib/stellarium_utils";
-import { StellariumObjectInfo } from "@/types";
+import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
+import { ParsedStellariumData } from "@/types";
 import { startGotoHandler, errorHandler } from "@/lib/goto_utils";
+import {
+  convertHMSToDecimalDegrees,
+  convertDMSToDecimalDegrees,
+} from "@/lib/math_utils";
 
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
@@ -23,11 +27,22 @@ export default function ManualGoto() {
     setObjectName(undefined);
   }
 
-  function validDataHandler(objectData: StellariumObjectInfo) {
-    console.log("fetchStellariumData", objectData);
-    setRA(objectData.ra);
-    setDeclination(objectData.dec);
-    setObjectName(formatObjectName(objectData));
+  function validDataHandler(objectData: ParsedStellariumData) {
+    let parsedRA = convertHMSToDecimalDegrees(objectData.RA);
+    if (parsedRA) {
+      setRA(parsedRA);
+    } else {
+      setErrors("Invalid RA: " + objectData.RA);
+    }
+
+    let parsedDeclination = convertDMSToDecimalDegrees(objectData.declination);
+    if (parsedDeclination) {
+      setDeclination(parsedDeclination);
+    } else {
+      setErrors("Invalid declination: " + objectData.declination);
+    }
+
+    setObjectName(objectData.objectName);
   }
 
   function resetData() {
@@ -42,7 +57,7 @@ export default function ManualGoto() {
 
     let url = connectionCtx.urlStellarium;
     if (url) {
-      fetch(`${url}${objectInfoPath}`, {
+      fetch(`${url}${statusPath}`, {
         signal: AbortSignal.timeout(2000),
       })
         .then((response) => {
@@ -58,7 +73,15 @@ export default function ManualGoto() {
           return response.json();
         })
         .then((data) => {
-          validDataHandler(data);
+          if (data.selectioninfo === "") {
+            noObjectSelectedHandler();
+          } else {
+            const objectData = parseStellariumData(data.selectioninfo);
+            console.log(objectData);
+            if (objectData) {
+              validDataHandler(objectData);
+            }
+          }
         })
         .catch((err) => errorHandler(err, setErrors));
     } else {
