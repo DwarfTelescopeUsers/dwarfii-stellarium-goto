@@ -13,6 +13,7 @@ import vsop87Bneptune from "astronomia/data/vsop87Bneptune";
 import vsop87Bsaturn from "astronomia/data/vsop87Bsaturn";
 import vsop87Buranus from "astronomia/data/vsop87Buranus";
 import vsop87Bvenus from "astronomia/data/vsop87Bvenus";
+import { julian } from "astronomia";
 
 import {
   globe,
@@ -49,11 +50,7 @@ type RiseSet = {
 };
 
 function notLocalPlanet(object: ObservationObject) {
-  return (
-    object.type !== "moon" &&
-    object.type !== "planet" &&
-    object.designation !== "Sun"
-  );
+  return object.typeCategory !== "moon_planets";
 }
 
 // ==================
@@ -250,7 +247,7 @@ export function getRiseSetTimeLocalV2(
 
   if (notLocalPlanet(object)) {
     tmp = getRiseSetTimeV2(object, lat, lon, jd);
-  } else if (object.type === "planet") {
+  } else {
     let date = new Date();
     tmp = getRiseSetTimePlanetV2(object, lat, lon, date);
   }
@@ -296,7 +293,9 @@ export function convertTimePartsToString(
   }
   let hour = pad(timeParts.hours);
   let minute = pad(timeParts.minutes);
-  let second = pad(timeParts.seconds);
+  // HACK: 60 seconds will cause invalid date error. Set 60 seconds to 59
+  // to avoid invalid date and avoid incrementing minute and hour.
+  let second = pad(timeParts.seconds === 60 ? 59 : timeParts.seconds);
 
   // convert utc time to local time for a given timezone
   let options: any = {
@@ -308,7 +307,46 @@ export function convertTimePartsToString(
     minute: "numeric",
     hour12: !use24Hour,
   };
+
   let formatter = new Intl.DateTimeFormat([], options);
   let utc = new Date(`2001-02-03T${hour}:${minute}:${second}.000Z`);
   return formatter.format(utc);
+}
+
+export function renderLocalRiseSetTime(
+  object: ObservationObject,
+  latitude: number,
+  longitude: number
+) {
+  if (latitude && longitude) {
+    // TODO: add component to let user set the time and save time in context
+    let date = new Date();
+    let jd = julian.CalendarGregorianToJD(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate()
+    );
+    let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    let times = { rise: "--", set: "--", error: null };
+    try {
+      let result = getRiseSetTimeLocalV2(
+        object,
+        latitude,
+        longitude,
+        jd,
+        timezone
+      );
+      if (result.rise) {
+        times.rise = result.rise;
+      }
+      if (result.set) {
+        times.set = result.set;
+      }
+    } catch (err: any) {
+      console.log("err", err);
+    }
+
+    return times;
+  }
 }

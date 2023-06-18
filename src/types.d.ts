@@ -70,12 +70,12 @@ export type StellariumObservationObject = {
 };
 
 export type ObservationObject = {
-  dec: string;
+  dec: string | null;
   designation: string;
   magnitude: string | null | number;
   type: string;
   typeCategory: string;
-  ra: string;
+  ra: string | null;
   displayName: string;
   catalogue: string;
   objectNumber: number;
@@ -137,13 +137,12 @@ export type StellariumObjectInfo = {
 export type ObservationObjectOpenNGC = {
   "Catalogue Entry": string;
   "Alternative Entries": string;
-  "Familiar Name": string;
-  "Right Ascension": string;
-  Declination: string;
+  "Familiar Name": string | null;
+  "Right Ascension": string | null;
+  Declination: string | null;
   "Major Axis": number | null;
   "Minor Axis": number | null;
   Magnitude: number | null;
-  "Surface Brightness": number | null;
   "Name catalog": string;
   "Name number": number;
   Type: string;
@@ -151,4 +150,5 @@ export type ObservationObjectOpenNGC = {
   "Height (')": number | null;
   "Width (')": number | null;
   Constellation: string | null | undefined;
+  Notes: string | null;
 };

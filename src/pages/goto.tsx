@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import StellariumGoto from "@/components/ManualGoto";
-import AutoGoto from "@/components/AutoGoto/AutoGoto";
+import AutoGoto from "@/components/AutoGoto";
 import StatusBar from "@/components/shared/StatusBar";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 
