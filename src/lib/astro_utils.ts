@@ -26,9 +26,21 @@ import { ObservationObject } from "@/types";
 import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
 
 type RiseSetTransit = {
-  rise: string;
-  set: string;
-  transit: string;
+  rise: TimeParts | null;
+  set: TimeParts | null;
+  transit: TimeParts | null;
+};
+
+type RiseSetTransitLocalTime = {
+  rise: string | null;
+  set: string | null;
+  transit: string | null;
+};
+
+type TimeParts = {
+  hours: number;
+  minutes: number;
+  seconds: number;
 };
 
 type RiseSet = {
@@ -43,6 +55,11 @@ function notLocalPlanet(object: ObservationObject) {
     object.designation !== "Sun"
   );
 }
+
+// ==================
+// star-rise-and-set-times
+// star-rise-and-set-times can get rise, set times for DSO
+// ==================
 
 export function getRiseSetTime(
   object: ObservationObject,
@@ -112,6 +129,11 @@ export function formatRiseSetTime(hmsString: string, timezone: string) {
   return formatter.format(utc);
 }
 
+// ==================
+// astronomia
+// astronomia can get rise, set, transit times for DSO and planets
+// ==================
+
 export function getRiseSetTimeV2(
   object: ObservationObject,
   lat: number,
@@ -140,9 +162,18 @@ export function getRiseSetTimeV2(
   const rs = rise.approxTimes(p, h0, Th0, α, δ);
 
   return {
-    rise: new sexa.Time(rs.rise).toString(0),
-    transit: new sexa.Time(rs.transit).toString(0),
-    set: new sexa.Time(rs.set).toString(0),
+    rise: formatTimeParts(rs.rise),
+    transit: formatTimeParts(rs.transit),
+    set: formatTimeParts(rs.set),
+  };
+}
+
+function formatTimeParts(date: any): TimeParts {
+  let time = new sexa.Time(date).toHMS();
+  return {
+    hours: time[1],
+    minutes: time[2],
+    seconds: Math.round(time[3]),
   };
 }
 
@@ -187,14 +218,18 @@ export function getRiseSetTimePlanetV2(
   }).approxTimes();
 
   return {
-    rise: formatHMS(rs.rise),
-    transit: formatHMS(rs.transit),
-    set: formatHMS(rs.set),
+    rise: formatTimePartsPlanet(rs.rise),
+    transit: formatTimePartsPlanet(rs.transit),
+    set: formatTimePartsPlanet(rs.set),
   };
 }
 
-function formatHMS(date: Date) {
-  return `${date.getUTCHours()}ʰ${date.getUTCMinutes()}ᵐ${date.getUTCSeconds()}ˢ`;
+function formatTimePartsPlanet(date: Date): TimeParts {
+  return {
+    hours: date.getUTCHours(),
+    minutes: date.getUTCMinutes(),
+    seconds: date.getUTCSeconds(),
+  };
 }
 
 export function getRiseSetTimeLocalV2(
@@ -202,58 +237,78 @@ export function getRiseSetTimeLocalV2(
   lat: number,
   lon: number,
   jd: number,
-  timezone: string
-): RiseSetTransit {
+  timezone: string,
+  useDaylightSavings = false,
+  use24Hour = false
+): RiseSetTransitLocalTime {
+  let results: RiseSetTransitLocalTime = {
+    rise: null,
+    set: null,
+    transit: null,
+  };
+  let tmp = {} as RiseSetTransit;
+
   if (notLocalPlanet(object)) {
-    let times = getRiseSetTimeV2(object, lat, lon, jd);
-    return formatTimes(times, timezone);
+    tmp = getRiseSetTimeV2(object, lat, lon, jd);
   } else if (object.type === "planet") {
     let date = new Date();
-    let times = getRiseSetTimePlanetV2(object, lat, lon, date);
-    return formatTimes(times, timezone);
-  } else {
-    return { rise: "--", set: "--", transit: "--" };
+    tmp = getRiseSetTimePlanetV2(object, lat, lon, date);
   }
-}
 
-function formatTimes(times: RiseSetTransit, timezone: string): RiseSetTransit {
-  let results = { rise: "--", set: "--", transit: "--" };
-  let formattedRise = formatRiseSetTimeV2(times.rise, timezone);
-  if (formattedRise) {
-    results.rise = formattedRise;
+  if (tmp.rise !== null) {
+    results.rise = convertTimePartsToString(
+      tmp.rise,
+      timezone,
+      useDaylightSavings,
+      use24Hour
+    );
   }
-  let formattedSet = formatRiseSetTimeV2(times.set, timezone);
-  if (formattedSet) {
-    results.set = formattedSet;
+  if (tmp.transit !== null) {
+    results.transit = convertTimePartsToString(
+      tmp.transit,
+      timezone,
+      useDaylightSavings,
+      use24Hour
+    );
   }
-  let formattedTransit = formatRiseSetTimeV2(times.transit, timezone);
-  if (formattedTransit) {
-    results.transit = formattedTransit;
+  if (tmp.set !== null) {
+    results.set = convertTimePartsToString(
+      tmp.set,
+      timezone,
+      useDaylightSavings,
+      use24Hour
+    );
   }
 
   return results;
 }
 
-export function formatRiseSetTimeV2(hmsString: string, timezone: string) {
+export function convertTimePartsToString(
+  timeParts: TimeParts,
+  timezone: string,
+  useDaylightSavings: boolean,
+  use24Hour: boolean
+): string {
   let pad = (num: number) => num.toString().padStart(2, "0");
 
-  let matches = hmsString.match(/(\d+)ʰ(\d+)ᵐ(\d+)ˢ/);
-  if (matches) {
-    let hour = pad(Number(matches[1]));
-    let minute = pad(Number(matches[2]));
-    let second = pad(Number(matches[3]));
-
-    let options: any = {
-      timeZone: timezone,
-      year: undefined,
-      month: undefined,
-      day: undefined,
-      hour: "numeric",
-      minute: "numeric",
-      hour12: false,
-    };
-    let formatter = new Intl.DateTimeFormat([], options);
-    let utc = new Date(`2001-02-03T${hour}:${minute}:${second}.000Z`);
-    return formatter.format(utc);
+  if (useDaylightSavings) {
+    timeParts.hours += 1;
   }
+  let hour = pad(timeParts.hours);
+  let minute = pad(timeParts.minutes);
+  let second = pad(timeParts.seconds);
+
+  // convert utc time to local time for a given timezone
+  let options: any = {
+    timeZone: timezone,
+    year: undefined,
+    month: undefined,
+    day: undefined,
+    hour: "numeric",
+    minute: "numeric",
+    hour12: !use24Hour,
+  };
+  let formatter = new Intl.DateTimeFormat([], options);
+  let utc = new Date(`2001-02-03T${hour}:${minute}:${second}.000Z`);
+  return formatter.format(utc);
 }
