@@ -344,7 +344,13 @@ export function renderLocalRiseSetTime(
         times.set = result.set;
       }
     } catch (err: any) {
-      console.log("err", err);
+      if (err.message === "always above horizon") {
+        times.error = err.message;
+      } else if (err.message === "always below horizon") {
+        times.error = err.message;
+      } else {
+        console.log("err", err);
+      }
     }
 
     return times;

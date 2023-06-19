@@ -30,6 +30,8 @@ export default function DSOObject(props: AstronomyObjectPropType) {
         connectionCtx.longitude
       );
 
+      if (times?.error) {
+        return <span>{times.error}</span>;
       }
 
       if (times) {

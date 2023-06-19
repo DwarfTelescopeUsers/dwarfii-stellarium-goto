@@ -30,6 +30,8 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
         connectionCtx.longitude
       );
 
+      if (times?.error) {
+        return <span>{times.error}</span>;
       }
 
       if (times) {
