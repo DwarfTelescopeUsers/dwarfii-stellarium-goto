@@ -2,9 +2,10 @@ import {
   getRiseSetTime,
   getRiseSetTimeLocal,
   getRiseSetTimePlanet,
+  computeRaDecToAltAz,
 } from "@/lib/astro_utils";
 import { ObservationObject } from "@/types";
-import { julian } from "astronomia";
+import { julian, sexagesimal as sexa } from "astronomia";
 
 let Vega: ObservationObject = {
   dec: "+38°47'01.0\"",
@@ -232,6 +233,24 @@ describe("getRiseSetTimePlanet", () => {
     };
 
     let res = getRiseSetTimePlanet(object, 42.333333, -71.083333, date);
+    expect(res).toEqual(expected);
+  });
+});
+
+describe("computeRaDecToAltAz", () => {
+  it("returns alt Az data for a given RA and Dec", () => {
+    const jd = julian.CalendarGregorianToJD(2023, 6, 2);
+    let lat = lat_NYC;
+    let lon = lon_NYC;
+    let ra = 250.43;
+    let dec = 36.462;
+    let expected = {
+      alt: 74.023750612345,
+      az: 260.9587436261306,
+    };
+
+    let res = computeRaDecToAltAz(jd, lat, lon, ra, dec);
+
     expect(res).toEqual(expected);
   });
 });

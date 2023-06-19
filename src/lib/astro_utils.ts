@@ -9,6 +9,11 @@ import vsop87Bvenus from "astronomia/data/vsop87Bvenus";
 import { julian } from "astronomia";
 
 import {
+  raDecToAltAz,
+  JDToNow,
+} from "@/lib/celestialprogramming/ra_dec_to_az_alt.js";
+
+import {
   globe,
   rise,
   sidereal,
@@ -238,41 +243,55 @@ export function renderLocalRiseSetTime(
   latitude: number,
   longitude: number
 ) {
-  if (latitude && longitude) {
-    // TODO: add component to let user set the time and save time in context
-    let date = new Date();
-    let jd = julian.CalendarGregorianToJD(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate()
-    );
-    let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    let times = { rise: "--", set: "--", error: null };
-    try {
-      let result = getRiseSetTimeLocal(
-        object,
-        latitude,
-        longitude,
-        jd,
-        timezone
-      );
-      if (result.rise) {
-        times.rise = result.rise;
-      }
-      if (result.set) {
-        times.set = result.set;
-      }
-    } catch (err: any) {
-      if (err.message === "always above horizon") {
-        times.error = err.message;
-      } else if (err.message === "always below horizon") {
-        times.error = err.message;
-      } else {
-        console.log("err", err);
-      }
+  // TODO: add component to let user set the time and save time in context
+  let date = new Date();
+  let jd = julian.CalendarGregorianToJD(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
+  );
+  let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let times = { rise: "--", set: "--", error: null };
+  try {
+    let result = getRiseSetTimeLocal(object, latitude, longitude, jd, timezone);
+    if (result.rise) {
+      times.rise = result.rise;
     }
-
-    return times;
+    if (result.set) {
+      times.set = result.set;
+    }
+  } catch (err: any) {
+    if (err.message === "always above horizon") {
+      times.error = err.message;
+    } else if (err.message === "always below horizon") {
+      times.error = err.message;
+    } else {
+      console.log("err", err);
+    }
   }
+
+  return times;
+}
+
+export function computeRaDecToAltAz(
+  latDecimal: number,
+  lonDecimal: number,
+  raDecimal: number,
+  decDecimal: number
+) {
+  let jd = JDToNow();
+
+  //Convert all values to radians
+  const toRad = Math.PI / 180;
+  const lat = latDecimal * toRad;
+  const lon = lonDecimal * toRad;
+  const ra = raDecimal * toRad * 15; //Convert RA from hours to degrees, then to radians
+  const dec = decDecimal * toRad;
+
+  const altaz = raDecToAltAz(ra, dec, lat, lon, jd);
+
+  return {
+    alt: altaz[1] / toRad,
+    az: altaz[0] / toRad,
+  };
 }
