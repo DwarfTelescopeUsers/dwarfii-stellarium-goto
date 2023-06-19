@@ -1,10 +1,3 @@
-import {
-  buildLocation,
-  buildClock,
-  buildRightAscension,
-  buildDeclination,
-  buildCalculator,
-} from "star-rise-and-set-times";
 import vsop87Bearth from "astronomia/data/vsop87Bearth";
 import vsop87Bjupiter from "astronomia/data/vsop87Bjupiter";
 import vsop87Bmars from "astronomia/data/vsop87Bmars";
@@ -44,99 +37,23 @@ type TimeParts = {
   seconds: number;
 };
 
-type RiseSet = {
-  rise: string;
-  set: string;
-};
-
 function notLocalPlanet(object: ObservationObject) {
   return object.typeCategory !== "moon_planets";
 }
-
-// ==================
-// star-rise-and-set-times
-// star-rise-and-set-times can get rise, set times for DSO
-// ==================
 
 export function getRiseSetTime(
   object: ObservationObject,
   lat: number,
   lon: number,
-  clock: any = buildClock().withRealTime()
-) {
-  const location = buildLocation().fromDegrees(lat, lon);
-
-  let raParts = extractHMSValues(object.ra);
-  if (raParts === undefined) return;
-  let decParts = extractDMSValues(object.dec);
-  if (decParts === undefined) return;
-
-  const ra = buildRightAscension().fromHourMinSec(
-    raParts.hour,
-    raParts.minute,
-    Math.floor(raParts.second)
-  );
-
-  const dec = buildDeclination().fromDegreesMinSec(
-    decParts.negative,
-    decParts.degree,
-    decParts.minute,
-    Math.floor(decParts.second)
-  );
-  const calculator = buildCalculator().forLocation(location).withClock(clock);
-
-  return calculator.calculate(ra, dec);
-}
-
-export function getRiseSetTimeLocal(
-  object: ObservationObject,
-  lat: number,
-  lon: number,
-  clock: any = buildClock().withRealTime(),
-  timezone: string
-): RiseSet {
-  let riseSetData = getRiseSetTime(object, lat, lon, clock);
-
-  let riseTime = "--";
-  if (riseSetData.riseTime?.text && notLocalPlanet(object)) {
-    riseTime = formatRiseSetTime(riseSetData.riseTime.text, timezone);
-  }
-
-  let setTime = "--";
-  if (riseSetData.setTime?.text && notLocalPlanet(object)) {
-    setTime = formatRiseSetTime(riseSetData.setTime.text, timezone);
-  }
-
-  return { rise: riseTime, set: setTime };
-}
-
-export function formatRiseSetTime(hmsString: string, timezone: string) {
-  // utc to local time https://stackoverflow.com/a/31453408
-  let options: any = {
-    timeZone: timezone,
-    year: undefined,
-    month: undefined,
-    day: undefined,
-    hour: "numeric",
-    minute: "numeric",
-    hour12: false,
-  };
-  let formatter = new Intl.DateTimeFormat([], options);
-  let utc = new Date(`2001-02-03T${hmsString}.000Z`);
-  return formatter.format(utc);
-}
-
-// ==================
-// astronomia
-// astronomia can get rise, set, transit times for DSO and planets
-// ==================
-
-export function getRiseSetTimeV2(
-  object: ObservationObject,
-  lat: number,
-  lon: number,
   jd: number
-): RiseSetTransit {
+): RiseSetTransit | undefined {
+  if (object.ra === null) {
+    return;
+  }
+  if (object.dec === null) {
+    return;
+  }
+
   const coord = {
     lat: new sexa.Angle(...sexa.degToDMS(lat)),
     lon: new sexa.Angle(...sexa.degToDMS(lon * -1)),
@@ -174,7 +91,7 @@ function formatTimeParts(date: any): TimeParts {
   };
 }
 
-export function getRiseSetTimePlanetV2(
+export function getRiseSetTimePlanet(
   object: ObservationObject,
   lat: number,
   lon: number,
@@ -229,7 +146,7 @@ function formatTimePartsPlanet(date: Date): TimeParts {
   };
 }
 
-export function getRiseSetTimeLocalV2(
+export function getRiseSetTimeLocal(
   object: ObservationObject,
   lat: number,
   lon: number,
@@ -246,10 +163,13 @@ export function getRiseSetTimeLocalV2(
   let tmp = {} as RiseSetTransit;
 
   if (notLocalPlanet(object)) {
-    tmp = getRiseSetTimeV2(object, lat, lon, jd);
+    let times = getRiseSetTime(object, lat, lon, jd);
+    if (times) {
+      tmp = times;
+    }
   } else {
     let date = new Date();
-    tmp = getRiseSetTimePlanetV2(object, lat, lon, date);
+    tmp = getRiseSetTimePlanet(object, lat, lon, date);
   }
 
   if (tmp.rise !== null) {
@@ -330,7 +250,7 @@ export function renderLocalRiseSetTime(
 
     let times = { rise: "--", set: "--", error: null };
     try {
-      let result = getRiseSetTimeLocalV2(
+      let result = getRiseSetTimeLocal(
         object,
         latitude,
         longitude,
