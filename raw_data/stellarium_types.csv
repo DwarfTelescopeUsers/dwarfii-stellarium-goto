@@ -1,13 +1,13 @@
 objtype,type,category
 globular star cluster,Nebula,clusters
-planet,Planet,solar_system
+planet,Planet,moon_planets
 galaxy,Nebula,galaxies
 HII region,Nebula,nebulae
 open star cluster,Nebula,clusters
 star,Planet,stars
 supernova remnant,Nebula,nebulae
 cluster associated with nebulosity,Nebula,nebulae
-moon,Planet,solar_system
+moon,Planet,moon_planets
 planetary nebula,Nebula,nebulae
 emission nebula,Nebula,nebulae
 "double star, pulsating variable star",Star,stars
