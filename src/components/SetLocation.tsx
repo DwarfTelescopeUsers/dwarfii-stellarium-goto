@@ -58,20 +58,6 @@ export default function SetLocation() {
         In order for goto to work, this site needs your latitude and longitude.
       </p>
 
-      <p>
-        Latitude: {connectionCtx.latitude}
-        <br />
-        Longitude: {connectionCtx.longitude}
-      </p>
-
-      <h3>Option 1</h3>
-      <p>Allow website to access your location.</p>
-      <button className="btn btn-primary" onClick={browserCoordinatesHandler}>
-        Allow
-      </button>
-      {errors && <p className="text-danger">{errors}</p>}
-      <h3 className="mt-3">Option 2</h3>
-      <p>Enter in your coordinates.</p>
       <form>
         <div className="row mb-3">
           <div className="col">
@@ -107,6 +93,11 @@ export default function SetLocation() {
           </div>
         </div>
       </form>
+
+      <button className="btn btn-primary" onClick={browserCoordinatesHandler}>
+        Use Current Location
+      </button>
+      {errors && <p className="text-danger">{errors}</p>}
     </>
   );
 }

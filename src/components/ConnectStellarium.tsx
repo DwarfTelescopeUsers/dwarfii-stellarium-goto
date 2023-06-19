@@ -60,10 +60,10 @@ export default function ConnectStellarium() {
       return <></>;
     }
     if (connectionCtx.connectionStatusStellarium === false) {
-      return <span>Connection failed.</span>;
+      return <span className="text-danger">Connection failed.</span>;
     }
 
-    return <span>Connection successful.</span>;
+    return <span className="text-success">Connection successful.</span>;
   }
 
   return (

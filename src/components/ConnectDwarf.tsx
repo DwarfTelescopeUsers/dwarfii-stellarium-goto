@@ -89,10 +89,10 @@ export default function ConnectDwarf() {
       return <></>;
     }
     if (connectionCtx.connectionStatus === false) {
-      return <span>Connection failed.</span>;
+      return <span className="text-danger">Connection failed.</span>;
     }
 
-    return <span>Connection successful.</span>;
+    return <span className="text-success">Connection successful.</span>;
   }
 
   return (

@@ -12,7 +12,8 @@ export default function Home() {
         </Link>{" "}
         and Stellarium remote control plugin. Once Dwarf II and Stellarium are
         connected, you can select an object in Stellarium, and then tell Dwarf
-        II to go to that object.
+        II to go to that object. You can also select an object from a predefined
+        object lists and view that object in Stellarium.
       </p>
 
       <Link href="/setup-scope" className="btn btn-primary">
