@@ -41,6 +41,15 @@ export default function Nav() {
                 Goto
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                className="nav-link active"
+                aria-current="page"
+                href="/about"
+              >
+                About
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
