@@ -295,3 +295,23 @@ export function computeRaDecToAltAz(
     az: altaz[0] / toRad,
   };
 }
+
+export function convertAzToCardinal(azDecimal: number) {
+  if (azDecimal >= 0 && azDecimal <= 45) {
+    return "N";
+  } else if (azDecimal > 45 && azDecimal <= 90) {
+    return "NE";
+  } else if (azDecimal > 90 && azDecimal <= 135) {
+    return "E";
+  } else if (azDecimal > 135 && azDecimal <= 180) {
+    return "SE";
+  } else if (azDecimal > 180 && azDecimal <= 225) {
+    return "S";
+  } else if (azDecimal > 225 && azDecimal <= 270) {
+    return "SW";
+  } else if (azDecimal > 270 && azDecimal <= 315) {
+    return "W";
+  } else {
+    return "NW";
+  }
+}
