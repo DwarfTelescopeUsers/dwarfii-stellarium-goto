@@ -13,13 +13,10 @@ export default function PlanetsList() {
       <h4 className="mt-3">
         {objects.length} {pluralize(objects.length, "Object", "Objects")}
       </h4>
-      <table className="table">
-        <tbody>
-          {objects.map((object, i) => (
-            <PlanetObject key={i} object={object} />
-          ))}
-        </tbody>
-      </table>
+
+      {objects.map((object, i) => (
+        <PlanetObject key={i} object={object} />
+      ))}
     </div>
   );
 }

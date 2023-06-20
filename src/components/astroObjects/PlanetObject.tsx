@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { ObservationObject } from "@/types";
@@ -45,30 +45,32 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
   }
 
   return (
-    <tr>
-      <td>{object.displayName}</td>
-      <td>
-        {/* {JSON.stringify(object)} */}
-        Average magnitude: {object.magnitude}
-        <br />
-        {renderRiseSetTime(object)}
-      </td>
-      <td>
-        <button
-          className="btn btn-primary me-2 mb-2"
-          onClick={() => centerHandler(object, connectionCtx, setErrors)}
-        >
-          Center
-        </button>
-        <button
-          className="btn btn-primary mb-2"
-          onClick={() => centerGotoHandler(object, connectionCtx, setErrors)}
-        >
-          Goto
-        </button>
-        <br />
-        {errors && <span className="text-danger">{errors}</span>}
-      </td>
-    </tr>
+    <div className="border-bottom p-2">
+      <h3 className="fs-5">{object.displayName}</h3>
+      <div className="row">
+        <div className="col-md-9">
+          {/* {JSON.sdivingify(object)} */}
+          Average magnitude: {object.magnitude}
+          <br />
+          {renderRiseSetTime(object)}
+        </div>
+        <div className="col-md-3">
+          <button
+            className="btn btn-primary me-2 mb-2"
+            onClick={() => centerHandler(object, connectionCtx, setErrors)}
+          >
+            Center
+          </button>
+          <button
+            className="btn btn-primary mb-2"
+            onClick={() => centerGotoHandler(object, connectionCtx, setErrors)}
+          >
+            Goto
+          </button>
+          <br />
+          {errors && <span className="text-danger">{errors}</span>}
+        </div>
+      </div>
+    </div>
   );
 }
