@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import StellariumGoto from "@/components/ManualGoto";
-import AutoGoto from "@/components/AutoGoto";
+import GotoStellarium from "@/components/GotoStellarium";
+import GotoLists from "@/components/GotoLists";
 import StatusBar from "@/components/shared/StatusBar";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 
@@ -23,15 +23,15 @@ export default function Goto() {
         </li>
         <li
           className={`nav-item nav-link ${
-            gotoType === "manual" ? "active" : ""
+            gotoType === "stellarium" ? "active" : ""
           }`}
-          onClick={() => setGotoType("manual")}
+          onClick={() => setGotoType("stellarium")}
         >
-          Manual
+          Stellarium
         </li>
       </ul>
-      {gotoType === "lists" && <AutoGoto />}
-      {gotoType === "manual" && <StellariumGoto />}
+      {gotoType === "lists" && <GotoLists />}
+      {gotoType === "stellarium" && <GotoStellarium />}
     </div>
   );
 }
