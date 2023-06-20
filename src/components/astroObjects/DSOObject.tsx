@@ -7,7 +7,7 @@ import {
   computeRaDecToAltAz,
   convertAzToCardinal,
 } from "@/lib/astro_utils";
-import { centerHandler, centerGotoHandler } from "@/lib/goto_utils";
+import { centerHandler, startGotoHandler } from "@/lib/goto_utils";
 import eventBus from "@/lib/event_bus";
 import {
   convertHMSToDecimalDegrees,
@@ -129,7 +129,9 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           </button>
           <button
             className="btn btn-primary mb-2"
-            onClick={() => centerGotoHandler(object, connectionCtx, setErrors)}
+            onClick={() =>
+              startGotoHandler(connectionCtx, setErrors, raDecimal, decDecimal)
+            }
           >
             Goto
           </button>
