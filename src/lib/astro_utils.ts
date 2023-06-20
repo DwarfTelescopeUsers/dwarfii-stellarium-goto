@@ -23,6 +23,7 @@ import {
 
 import { ObservationObject } from "@/types";
 import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
+import { isDstObserved } from "@/lib/date_utils";
 
 type RiseSetTransit = {
   rise: TimeParts | null;
@@ -252,8 +253,17 @@ export function renderLocalRiseSetTime(
   );
   let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   let times = { rise: "--", set: "--", error: null };
+  let useDaylightSavings = isDstObserved(date);
+
   try {
-    let result = getRiseSetTimeLocal(object, latitude, longitude, jd, timezone);
+    let result = getRiseSetTimeLocal(
+      object,
+      latitude,
+      longitude,
+      jd,
+      timezone,
+      useDaylightSavings
+    );
     if (result.rise) {
       times.rise = result.rise;
     }
