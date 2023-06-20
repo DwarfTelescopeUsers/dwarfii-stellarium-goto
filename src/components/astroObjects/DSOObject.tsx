@@ -72,7 +72,8 @@ export default function DSOObject(props: AstronomyObjectPropType) {
         connectionCtx.latitude,
         connectionCtx.longitude,
         raDecimal,
-        decDecimal
+        decDecimal,
+        new Date()
       );
 
       if (results) {

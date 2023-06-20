@@ -9,11 +9,6 @@ import vsop87Bvenus from "astronomia/data/vsop87Bvenus";
 import { julian } from "astronomia";
 
 import {
-  raDecToAltAz,
-  JDToNow,
-} from "@/lib/celestialprogramming/ra_dec_to_az_alt.js";
-
-import {
   globe,
   rise,
   sidereal,
@@ -283,27 +278,105 @@ export function renderLocalRiseSetTime(
   return times;
 }
 
+// https://stackoverflow.com/a/14779469
+// get difference for local timezone and with day-light saving awareness.
+function diffDays(date1: Date, date2: Date): number {
+  var utc1 = Date.UTC(
+    date1.getFullYear(),
+    date1.getMonth(),
+    date1.getDate(),
+    date1.getHours(),
+    date1.getMinutes(),
+    date1.getSeconds(),
+    date1.getMilliseconds()
+  );
+  var utc2 = Date.UTC(
+    date2.getFullYear(),
+    date2.getMonth(),
+    date2.getDate(),
+    date2.getHours(),
+    date2.getMinutes(),
+    date2.getSeconds(),
+    date2.getMilliseconds()
+  );
+
+  return (utc1 - utc2) / 86400000;
+}
+
 export function computeRaDecToAltAz(
-  latDecimal: number,
-  lonDecimal: number,
+  lat: number,
+  lon: number,
   raDecimal: number,
-  decDecimal: number
+  decDecimal: number,
+  date: Date
 ) {
-  let jd = JDToNow();
+  // https://www.cloudynights.com/topic/446389-alt-az-calculator-spreadsheet/
+  // http://www.stargazing.net/kepler/altaz.html
 
-  //Convert all values to radians
-  const toRad = Math.PI / 180;
-  const lat = latDecimal * toRad;
-  const lon = lonDecimal * toRad;
-  const ra = raDecimal * toRad * 15; //Convert RA from hours to degrees, then to radians
-  const dec = decDecimal * toRad;
+  let toRad = Math.PI / 180;
 
-  const altaz = raDecToAltAz(ra, dec, lat, lon, jd);
+  function calculateLST(longitudeDecimal: number, date: Date) {
+    let past = new Date("2000-01-01T00:00:00.000Z");
+    let daysSinceJ2000 = diffDays(date, past) - 0.2;
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+    let offset = date.getTimezoneOffset() / 60;
+    let UT_diff = offset > 0 ? offset * -1 : offset;
 
-  return {
-    alt: altaz[1] / toRad,
-    az: altaz[0] / toRad,
-  };
+    let UT = (hour + minute / 60 + second / 3600 - UT_diff) % 24;
+    let LST =
+      (100.46 + 0.985647 * daysSinceJ2000 + longitudeDecimal + 15 * UT) % 360;
+    return LST;
+  }
+
+  function calculateHA(raDecimal: number, LST: number) {
+    return LST - raDecimal;
+  }
+
+  function calculateAlt(
+    latitude: number,
+    decDegree: number,
+    decMinute: number,
+    HA: number
+  ) {
+    return (
+      Math.asin(
+        Math.sin(toRad * (decDegree + decMinute / 60)) * Math.sin(toRad * lat) +
+          Math.cos(toRad * (decDegree + decMinute / 60)) *
+            Math.cos(toRad * latitude) *
+            Math.cos(toRad * HA)
+      ) / toRad
+    );
+  }
+
+  function calculateAz(
+    latitudeDecimal: number,
+    decDegree: number,
+    decMinute: number,
+    HA: number,
+    alt: number
+  ) {
+    let azTemp =
+      Math.acos(
+        (Math.sin(toRad * (decDegree + decMinute / 60)) -
+          Math.sin(toRad * alt) * Math.sin(toRad * latitudeDecimal)) /
+          (Math.cos(toRad * alt) * Math.cos(toRad * latitudeDecimal))
+      ) / toRad;
+
+    return Math.sin(toRad * HA) < 0 ? azTemp : 360 - azTemp;
+  }
+
+  let decDegree =
+    decDecimal > 0 ? Math.floor(decDecimal) : Math.ceil(decDecimal);
+  let decMinute = decDecimal - decDegree;
+
+  let LST = calculateLST(lon, date);
+  let HA = calculateHA(raDecimal, LST);
+  let alt = calculateAlt(lat, decDegree, decMinute, HA);
+  let az = calculateAz(lat, decDegree, decMinute, HA, alt);
+
+  return { alt, az };
 }
 
 export function convertAzToCardinal(azDecimal: number) {
