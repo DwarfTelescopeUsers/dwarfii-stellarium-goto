@@ -51,7 +51,7 @@ export function convertHMSToDecimalDegrees(
 }
 
 export function extractHMSValues(text: string) {
-  let hmsMatches = text.match(/(\d{1,2})[hH](\d{1,2})[mM]([0-9.]+)[sS]/);
+  let hmsMatches = text.match(/(\d{1,2})[hH] *(\d{1,2})[mM'] *([0-9.]+)[sS"]+/);
   if (hmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let [_, hour, minute, second] = hmsMatches;
@@ -112,7 +112,7 @@ export function convertDMSToDecimalDegrees(
 }
 
 export function extractDMSValues(text: string) {
-  let dmsMatches = text.match(/(\d{1,3})°(\d{1,2})'([0-9.]+)"/);
+  let dmsMatches = text.match(/(\d{1,3})° *(\d{1,2})' *([0-9.]+)"/);
   if (dmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let [_, degree, minute, second] = dmsMatches;

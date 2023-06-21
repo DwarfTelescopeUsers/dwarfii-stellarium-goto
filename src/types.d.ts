@@ -153,3 +153,26 @@ export type ObservationObjectOpenNGC = {
   Constellation: string | null | undefined;
   Notes: string | null;
 };
+
+export type ObservationObjectTelescopius = {
+  "Alternative Entries": string;
+  "Apparent Magnitude": string;
+  "Catalogue Entry": string;
+  Constellation: string;
+  Declination: string;
+  DEC: string;
+  "Familiar Name": string;
+  Magnitude: string;
+  "Maximum Altitude": string;
+  Name: string;
+  Notes: string;
+  "Orbit Type": string;
+  "Position Angle (East)": string;
+  RA: string;
+  "Right Ascension": string;
+  Size: string;
+  "Surface Brightness": string;
+  "Transit Time": string;
+  Type: string;
+  [k: string]: string;
+};
