@@ -2,11 +2,8 @@ import React, { useState, useEffect } from "react";
 
 import { ObservationObject } from "@/types";
 import DSOObject from "@/components/astroObjects/DSOObject";
-import dsoCatalog from "../../../data/catalogs/dso_catalog.json";
 import { pluralize } from "@/lib/text_utils";
-import { processObservationListOpenNGC } from "@/lib/observation_lists_utils";
 
-let dsoObjects: ObservationObject[] = processObservationListOpenNGC(dsoCatalog);
 let objectTypesMenu = [
   { value: "all", label: "All" },
   { value: "clusters", label: "Clusters" },
@@ -15,7 +12,13 @@ let objectTypesMenu = [
   { value: "stars", label: "Stars" },
 ];
 
-export default function DSOList() {
+type PropType = {
+  objects: ObservationObject[];
+};
+
+export default function DSOList(props: PropType) {
+  let dsoObjects: ObservationObject[] = props.objects;
+
   const [objects, setObjects] = useState(dsoObjects);
   const [selectedCategories, setSelectedCategories] = useState(["all"]);
 

@@ -3,9 +3,12 @@ import type { ChangeEvent } from "react";
 
 import DSOList from "@/components/astroObjects/DSOList";
 import PlanetsList from "@/components/astroObjects/PlanetsList";
+import dsoCatalog from "../../data/catalogs/dso_catalog.json";
+import { processObservationListOpenNGC } from "@/lib/observation_lists_utils";
 
 export default function AutoGoto() {
   const [objectList, setObjectList] = useState("dso");
+  let dsoObject = processObservationListOpenNGC(dsoCatalog);
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
     setObjectList(e.target.value);
@@ -23,8 +26,7 @@ export default function AutoGoto() {
         <option value="dso">DSO</option>
         <option value="planets">Planets and Moon</option>
       </select>
-
-      {objectList === "dso" && <DSOList></DSOList>}
+      {objectList === "dso" && <DSOList objects={dsoObject}></DSOList>}
       {objectList === "planets" && <PlanetsList></PlanetsList>}
     </div>
   );
