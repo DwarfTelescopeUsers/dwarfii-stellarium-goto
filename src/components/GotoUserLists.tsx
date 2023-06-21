@@ -1,8 +1,11 @@
+// save current list in context store and database
+
 import React, { useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 
 import DSOList from "@/components/astroObjects/DSOList";
-import ImportObservationList from "@/components/ImportObservationListModal";
+import ImportObservationListModal from "@/components/ImportObservationListModal";
+import DeleteObservationListModal from "./DeleteObservationListModal";
 import { ObservationObject } from "@/types";
 import {
   fetchObservationListsDb,
@@ -15,7 +18,8 @@ export default function AutoGoto() {
   let [objectLists, setObjectLists] = useState<{
     [k: string]: ObservationObject[];
   }>({});
-  const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     // get observations lists from local storage on page load
@@ -36,17 +40,21 @@ export default function AutoGoto() {
 
   let showInstructions = objectListsNames.length === 0;
 
-  function handleShowModal() {
-    setShowModal(true);
+  function importListModalHandle() {
+    setShowImportModal(true);
+  }
+
+  function deleteListModalHandle() {
+    setShowDeleteModal(true);
   }
 
   return (
     <div>
       <h2>Custom Observations Lists</h2>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-md-8">
           <select
-            className="form-select"
+            className="form-select mb-2"
             value={currentObjectListName}
             onChange={selectListHandler}
           >
@@ -59,12 +67,18 @@ export default function AutoGoto() {
           </select>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-md-4">
           <button
-            className="btn btn-outline-secondary"
-            onClick={handleShowModal}
+            className="btn btn-outline-secondary me-2 mb-2"
+            onClick={importListModalHandle}
           >
-            Import list
+            Add new list
+          </button>
+          <button
+            className="btn btn-outline-secondary  mb-2"
+            onClick={deleteListModalHandle}
+          >
+            Delete list
           </button>
         </div>
       </div>
@@ -86,9 +100,19 @@ export default function AutoGoto() {
           </p>
         </>
       )}
-      <ImportObservationList
-        showModal={showModal}
-        setShowModal={setShowModal}
+      <ImportObservationListModal
+        showModal={showImportModal}
+        setShowModal={setShowImportModal}
+        setCurrentObjectListName={setCurrentObjectListName}
+        objectListsNames={objectListsNames}
+        setObjectListsNames={setObjectListsNames}
+        objectLists={objectLists}
+        setObjectLists={setObjectLists}
+      />
+      <DeleteObservationListModal
+        currentObjectListName={currentObjectListName}
+        showModal={showDeleteModal}
+        setShowModal={setShowDeleteModal}
         setCurrentObjectListName={setCurrentObjectListName}
         objectListsNames={objectListsNames}
         setObjectListsNames={setObjectListsNames}
