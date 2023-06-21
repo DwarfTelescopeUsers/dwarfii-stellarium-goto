@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { ObservationObject } from "@/types";
@@ -104,7 +104,8 @@ export default function DSOObject(props: AstronomyObjectPropType) {
 
   return (
     <div className="border-bottom p-2">
-      <h3 className="fs-5">{object.displayName}</h3>
+      <h3 className="fs-5 mb-0">{object.displayName}</h3>
+      <div className="mb-2">{object.alternateNames}</div>
       <div className="row">
         <div className="col-md-4">
           {object.type} {object.constellation && " in " + object.constellation}
