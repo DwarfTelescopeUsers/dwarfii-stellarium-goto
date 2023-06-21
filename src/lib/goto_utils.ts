@@ -59,16 +59,20 @@ export function startGotoHandler(
   });
 }
 
-export function errorHandler(
+export function stellariumErrorHandler(
   err: any,
   setErrors: Dispatch<SetStateAction<string | undefined>>
 ) {
-  if (err.name === "AbortError" || err.message === "Failed to fetch") {
+  if (
+    err.name === "AbortError" ||
+    err.message === "Failed to fetch" ||
+    err.message === "Load failed"
+  ) {
     setErrors("Can not connect to Stellarium");
   } else if (err.message === "StellariumError") {
     setErrors(err.cause);
   } else {
-    setErrors("Error processing Stellarium data");
+    setErrors(`Error processing Stellarium data>> ${err}`);
   }
 }
 
@@ -92,7 +96,7 @@ export function centerHandler(
           throw Error("foo");
         }
       })
-      .catch((err) => errorHandler(err, setErrors));
+      .catch((err) => stellariumErrorHandler(err, setErrors));
   } else {
     setErrors("App is not connect to Stellarium.");
   }
@@ -137,7 +141,7 @@ export function centerGotoHandler(
       .then((data) => {
         startGotoHandler(connectionCtx, setErrors, data.ra, data.dec);
       })
-      .catch((err) => errorHandler(err, setErrors));
+      .catch((err) => stellariumErrorHandler(err, setErrors));
   } else {
     setErrors("App is not connect to Stellarium.");
   }

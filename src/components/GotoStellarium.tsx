@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
 import { ParsedStellariumData } from "@/types";
-import { startGotoHandler, errorHandler } from "@/lib/goto_utils";
+import { startGotoHandler, stellariumErrorHandler } from "@/lib/goto_utils";
 import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
@@ -83,7 +83,7 @@ export default function ManualGoto() {
             }
           }
         })
-        .catch((err) => errorHandler(err, setErrors));
+        .catch((err) => stellariumErrorHandler(err, setErrors));
     } else {
       setErrors("App is not connect to Stellarium.");
     }
