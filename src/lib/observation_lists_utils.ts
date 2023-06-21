@@ -8,30 +8,33 @@ import { typesTypesCategories } from "../../data/objectTypes";
 import { abbrevNameConstellations } from "../../data/constellations";
 
 function formatObservationStellarium(
-  object: StellariumObservationObject
+  observation: StellariumObservationObject
 ): ObservationObject {
   let data = {
-    dec: object.dec,
-    designation: object.designation,
-    magnitude: object.magnitude,
-    type: object.objtype,
+    dec: observation.dec,
+    designation: observation.designation,
+    magnitude: observation.magnitude,
+    type: observation.objtype,
     typeCategory:
-      typesTypesCategories[object.objtype as keyof typeof typesTypesCategories],
-    ra: object.ra,
-    displayName: formatObjectNameStellarium(object),
+      typesTypesCategories[
+        observation.objtype as keyof typeof typesTypesCategories
+      ],
+    ra: observation.ra,
+    displayName: formatObjectNameStellarium(observation),
+    alternateNames: "",
     constellation:
       abbrevNameConstellations[
-        object.constellation as keyof typeof abbrevNameConstellations
+        observation.constellation as keyof typeof abbrevNameConstellations
       ],
   } as ObservationObject;
 
-  if (object.designation) {
-    let parts = object.designation.split(" ");
+  if (observation.designation) {
+    let parts = observation.designation.split(" ");
     if (catalogs.includes(parts[0]) && parts.length === 2) {
       data.catalogue = parts[0];
       data.objectNumber = Number(parts[1]);
     } else {
-      data.catalogue = object.designation;
+      data.catalogue = observation.designation;
       data.objectNumber = -1;
     }
   }
@@ -39,9 +42,9 @@ function formatObservationStellarium(
 }
 
 export function processObservationListStellarium(
-  objects: StellariumObservationObject[]
+  observations: StellariumObservationObject[]
 ): ObservationObject[] {
-  let formattedObjects = objects.map(formatObservationStellarium);
+  let formattedObjects = observations.map(formatObservationStellarium);
   let noCatalogObjects = formattedObjects
     .filter((obj) => obj.objectNumber == -1)
     .sort((a, b) => a.catalogue.localeCompare(b.catalogue));
@@ -60,25 +63,29 @@ export function processObservationListStellarium(
 export function processObservationListOpenNGC(
   observations: ObservationObjectOpenNGC[]
 ) {
-  return observations.map(formatObservationOpenNGC);
-}
-
-function formatObservationOpenNGC(
-  observation: ObservationObjectOpenNGC
-): ObservationObject {
-  return {
-    dec: observation.Declination,
-    designation: observation["Catalogue Entry"],
-    magnitude: observation.Magnitude,
-    type: observation.Type,
-    typeCategory: observation["Type Category"],
-    ra: observation["Right Ascension"],
-    displayName: formatObjectNameOpenNGC(observation),
-    catalogue: observation["Name catalog"],
-    objectNumber: observation["Name number"],
-    constellation: observation.Constellation,
-    size: formatObjectSizeOpenNGC(observation),
-  };
+  return observations
+    .map((observation) => {
+      return {
+        dec: observation.Declination,
+        designation: observation["Catalogue Entry"],
+        magnitude: observation.Magnitude,
+        type: observation.Type,
+        typeCategory: observation["Type Category"],
+        ra: observation["Right Ascension"],
+        displayName: formatObjectNameOpenNGC(observation),
+        alternateNames: observation["Alternative Entries"],
+        catalogue: observation["Name catalog"],
+        objectNumber: observation["Name number"],
+        constellation: observation.Constellation,
+        size: formatObjectSizeOpenNGC(observation),
+      };
+    })
+    .sort((a, b) => {
+      return (
+        a.catalogue.localeCompare(b.catalogue) ||
+        a.objectNumber - b.objectNumber
+      );
+    });
 }
 
 function formatObjectSizeOpenNGC(observation: ObservationObjectOpenNGC) {
@@ -103,7 +110,7 @@ function formatObjectSizeOpenNGC(observation: ObservationObjectOpenNGC) {
 }
 
 function formatObjectNameOpenNGC(observation: ObservationObjectOpenNGC) {
-  let name = observation["Alternative Entries"];
+  let name = observation["Catalogue Entry"];
   if (observation["Familiar Name"]) {
     name += ` - ${observation["Familiar Name"]}`;
   }

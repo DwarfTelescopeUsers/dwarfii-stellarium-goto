@@ -77,6 +77,7 @@ export type ObservationObject = {
   typeCategory: string;
   ra: string | null;
   displayName: string;
+  alternateNames: string;
   catalogue: string;
   objectNumber: number;
   size?: string;

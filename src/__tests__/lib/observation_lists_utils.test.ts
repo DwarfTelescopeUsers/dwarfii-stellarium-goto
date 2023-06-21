@@ -178,6 +178,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "Jupiter",
         objectNumber: -1,
         constellation: "Aries",
+        alternateNames: "",
       },
       {
         dec: "+24°21'08\"",
@@ -190,6 +191,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "Venus",
         objectNumber: -1,
         constellation: "Gemini",
+        alternateNames: "",
       },
       {
         dec: "+31°44'22\"",
@@ -202,6 +204,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "C",
         objectNumber: 33,
         constellation: "Cygnus",
+        alternateNames: "",
       },
       {
         dec: "+30°42'18\"",
@@ -214,6 +217,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "C",
         objectNumber: 34,
         constellation: "Cygnus",
+        alternateNames: "",
       },
       {
         dec: "-2°30'04\"",
@@ -226,6 +230,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "IC",
         objectNumber: 434,
         constellation: "Orion",
+        alternateNames: "",
       },
       {
         dec: "+61°26'50\"",
@@ -238,6 +243,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "IC",
         objectNumber: 1805,
         constellation: "Cassiopeia",
+        alternateNames: "",
       },
       {
         dec: "-32°15'10\"",
@@ -250,6 +256,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "M",
         objectNumber: 6,
         constellation: "Scorpius",
+        alternateNames: "",
       },
       {
         dec: "-20°45'32\"",
@@ -262,6 +269,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "M",
         objectNumber: 41,
         constellation: "Canis Major",
+        alternateNames: "",
       },
       {
         dec: "+13°05'33\"",
@@ -274,6 +282,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "M",
         objectNumber: 65,
         constellation: "Leo",
+        alternateNames: "",
       },
       {
         dec: "-69°45'27\"",
@@ -286,6 +295,7 @@ describe("processObservationListStellarium", () => {
         catalogue: "PGC",
         objectNumber: 17223,
         constellation: "Dorado",
+        alternateNames: "",
       },
     ];
 
