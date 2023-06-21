@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import GotoStellarium from "@/components/GotoStellarium";
 import GotoLists from "@/components/GotoLists";
+import GotoUserLists from "@/components/GotoUserLists";
 import StatusBar from "@/components/shared/StatusBar";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 
@@ -23,6 +24,14 @@ export default function Goto() {
         </li>
         <li
           className={`nav-item nav-link ${
+            gotoType === "userLists" ? "active" : ""
+          }`}
+          onClick={() => setGotoType("userLists")}
+        >
+          Custom Lists
+        </li>
+        <li
+          className={`nav-item nav-link ${
             gotoType === "stellarium" ? "active" : ""
           }`}
           onClick={() => setGotoType("stellarium")}
@@ -32,6 +41,7 @@ export default function Goto() {
       </ul>
       {gotoType === "lists" && <GotoLists />}
       {gotoType === "stellarium" && <GotoStellarium />}
+      {gotoType === "userLists" && <GotoUserLists />}
     </div>
   );
 }

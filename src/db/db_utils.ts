@@ -100,6 +100,30 @@ export function fetchUrlStellariumDB(): string | undefined {
   }
 }
 
+export function saveObservationListsNamesDb(names: string) {
+  localStorage.setItem("observationListsNames", names);
+}
+
+export function fetchObservationListsNamesDb(): string[] | undefined {
+  let data = localStorage.getItem("observationListsNames");
+  if (data) {
+    let names = data.split("|");
+    names.sort();
+    return names;
+  }
+}
+
+export function saveObservationListsDb(names: string) {
+  localStorage.setItem("observationLists", names);
+}
+
+export function fetchObservationListsDb() {
+  let data = localStorage.getItem("observationLists");
+  if (data) {
+    return JSON.parse(data);
+  }
+}
+
 export function deleteConnectionDB(): void {
   [
     "connectionStatus",

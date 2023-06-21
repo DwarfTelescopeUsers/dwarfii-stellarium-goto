@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import { ObservationObject } from "@/types";
 import DSOObject from "@/components/astroObjects/DSOObject";
@@ -24,7 +24,7 @@ export default function DSOList(props: PropType) {
 
   useEffect(() => {
     filterObjects();
-  }, [selectedCategories]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCategories, dsoObjects]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function selectCategoryHandler(targetCategory: string) {
     if (targetCategory === "all") {
