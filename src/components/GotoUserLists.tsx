@@ -89,14 +89,26 @@ export default function AutoGoto() {
 
       {showInstructions && (
         <>
-          <p className="mt-4 fs-5">
-            To create custom observation lists, create an observation list at{" "}
+          <p className="mt-4">
+            To add custom observation lists, create an observation list at{" "}
             <a href="https://telescopius.com">Telescopius</a>, download the CSV,
             and click &quot;Add new list&quot;.
           </p>
-          <p className="fs-5">
-            The list will be saved to the browser&apos;s database and will only
-            be accessible in this browser. No one else can access your lists.
+          <p>
+            The lists are stored in the browser&apos;s database (localStorage).
+            Since the data is stored in your browser, other users of the site
+            will not be able to access your lists.
+          </p>
+          <p>
+            If you want to share your list with other people, you have two
+            options:
+            <ol>
+              <li>Send other people the csv from Telescopius.</li>
+              <li>
+                Contact the developer of this site to add your list to
+                &quot;Lists&quot; tab.
+              </li>
+            </ol>
           </p>
         </>
       )}

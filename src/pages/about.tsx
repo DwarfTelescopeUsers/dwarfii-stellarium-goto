@@ -5,18 +5,16 @@ export default function about() {
     <div>
       <h1>About</h1>
       <p>
-        This website is a side project to combine my interest in coding and
-        astronomy. To report bugs or view the code, vist the{" "}
+        This website is a side project to combine my interest in coding,
+        astronomy and the Dwarf II API. To report bugs or view the code, vist
+        the{" "}
         <a href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto">
           Github repo.
         </a>
       </p>
 
       <h2>Data Credits</h2>
-      <p>
-        The data from the predefined observation list comes from several
-        sources.
-      </p>
+      <p>The data for the observation lists comes from several sources.</p>
       <ul>
         <li>
           The data about the DSO comes from{" "}
@@ -70,10 +68,11 @@ export default function about() {
 
       <h2>User Data</h2>
       <p>
-        The info entered in by the users is stored in the browser (local
-        storage). Pros of browser storage: easier to maintain the site, zero
-        database costs. Cons of browser storage: cannot sync data from multiple
-        browsers when user uses multiple browsers or multiple devices.
+        The info entered in by the users is stored in the browser&apos;s
+        database (localStorage). Since the data is stored in your browser, other
+        users of the site will not be able to access your data. This also means
+        if a user uses multiple browsers or devices, the data can not be synced
+        between the different browsers or devices.
       </p>
     </div>
   );
