@@ -43,7 +43,7 @@ def merge_type_constellation(df, types_path, constellation_path):
 
     merge_df.rename(columns={
         'Name': 'Catalogue Entry',
-        'Names':'Alternative Entries',
+        'Alternate Names': 'Alternative Entries',
         'Common Names': 'Familiar Name',
         'RA': 'Right Ascension',
         'Dec': 'Declination',

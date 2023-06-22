@@ -1,7 +1,7 @@
 [
   {
     "Catalogue Entry": "C 9",
-    "Alternative Entries": "C 9",
+    "Alternative Entries": null,
     "Familiar Name": "Cave Nebula",
     "Right Ascension": "22:57:54.0",
     "Declination": "+62:31:06",
@@ -19,7 +19,7 @@
   },
   {
     "Catalogue Entry": "C 14",
-    "Alternative Entries": "C 14",
+    "Alternative Entries": null,
     "Familiar Name": "Double Cluster, h & chi Persei",
     "Right Ascension": "02:20:42.0",
     "Declination": "+57:08:15",
@@ -37,7 +37,7 @@
   },
   {
     "Catalogue Entry": "C 41",
-    "Alternative Entries": "C 41",
+    "Alternative Entries": null,
     "Familiar Name": "Hyades",
     "Right Ascension": "04:26:54.0",
     "Declination": "+15:52:00",
@@ -55,7 +55,7 @@
   },
   {
     "Catalogue Entry": "C 99",
-    "Alternative Entries": "C 99",
+    "Alternative Entries": null,
     "Familiar Name": "Coalsack Nebula",
     "Right Ascension": "12:31:19.0",
     "Declination": "-63:44:36",
@@ -73,7 +73,7 @@
   },
   {
     "Catalogue Entry": "Cl 399",
-    "Alternative Entries": "Cl 399",
+    "Alternative Entries": null,
     "Familiar Name": "Brocchi's Cluster, Al Sufi's Cluster, Coathanger Asterism",
     "Right Ascension": "19:25:24.0",
     "Declination": "+20:11:00",
@@ -91,7 +91,7 @@
   },
   {
     "Catalogue Entry": "ESO 56",
-    "Alternative Entries": "ESO 56",
+    "Alternative Entries": null,
     "Familiar Name": "Large Magellanic Cloud,Nubecula Major",
     "Right Ascension": "05:23:34.5",
     "Declination": "-69:45:22",
@@ -109,7 +109,7 @@
   },
   {
     "Catalogue Entry": "ESO 351",
-    "Alternative Entries": "ESO 351",
+    "Alternative Entries": null,
     "Familiar Name": "Sculptor Dwarf Elliptical",
     "Right Ascension": "01:00:09.35",
     "Declination": "-33:42:32.5",
@@ -127,7 +127,7 @@
   },
   {
     "Catalogue Entry": "ESO 356",
-    "Alternative Entries": "ESO 356",
+    "Alternative Entries": null,
     "Familiar Name": "Fornax Dwarf Spheroidal",
     "Right Ascension": "02:39:59.33",
     "Declination": "-34:26:57.1",
@@ -145,7 +145,7 @@
   },
   {
     "Catalogue Entry": "HIP 7588",
-    "Alternative Entries": "HIP 7588, HD 10144, HR 472",
+    "Alternative Entries": "HD 10144, HR 472",
     "Familiar Name": "Achernar",
     "Right Ascension": "01:37:42.80",
     "Declination": "-57:14:12.33",
@@ -163,7 +163,7 @@
   },
   {
     "Catalogue Entry": "HIP 11767",
-    "Alternative Entries": "HIP 11767, HD 8890, HR 424",
+    "Alternative Entries": "HD 8890, HR 424",
     "Familiar Name": "Polaris",
     "Right Ascension": "02:31:47.10",
     "Declination": "+89:15:50.79",
@@ -181,7 +181,7 @@
   },
   {
     "Catalogue Entry": "HIP 15863",
-    "Alternative Entries": "HIP 15863, HD 20902, HR 1017",
+    "Alternative Entries": "HD 20902, HR 1017",
     "Familiar Name": "Mirfak",
     "Right Ascension": "03:24:19.36",
     "Declination": "+49:51:40.25",
@@ -199,7 +199,7 @@
   },
   {
     "Catalogue Entry": "HIP 21421",
-    "Alternative Entries": "HIP 21421, HD 29139, HR 1457",
+    "Alternative Entries": "HD 29139, HR 1457",
     "Familiar Name": "Aldebaran",
     "Right Ascension": "04:35:55.24",
     "Declination": "+16:30:33.48",
@@ -217,7 +217,7 @@
   },
   {
     "Catalogue Entry": "HIP 24436",
-    "Alternative Entries": "HIP 24436, HD 34085, HR 1713",
+    "Alternative Entries": "HD 34085, HR 1713",
     "Familiar Name": "Rigel",
     "Right Ascension": "05:14:32.27",
     "Declination": "-08:12:05.90",
@@ -235,7 +235,7 @@
   },
   {
     "Catalogue Entry": "HIP 24608",
-    "Alternative Entries": "HIP 24608, HD 34029, HR 1708",
+    "Alternative Entries": "HD 34029, HR 1708",
     "Familiar Name": "Capella",
     "Right Ascension": "05:16:41.34",
     "Declination": "+45:59:52.77",
@@ -253,7 +253,7 @@
   },
   {
     "Catalogue Entry": "HIP 25336",
-    "Alternative Entries": "HIP 25336, HD 35468, HR 1790",
+    "Alternative Entries": "HD 35468, HR 1790",
     "Familiar Name": "Bellatrix",
     "Right Ascension": "05:25:07.86",
     "Declination": "+06:20:58.93",
@@ -271,7 +271,7 @@
   },
   {
     "Catalogue Entry": "HIP 25428",
-    "Alternative Entries": "HIP 25428, HD 35497, HR 1791",
+    "Alternative Entries": "HD 35497, HR 1791",
     "Familiar Name": "Elnath",
     "Right Ascension": "05:26:17.51",
     "Declination": "+28:36:26.82",
@@ -289,7 +289,7 @@
   },
   {
     "Catalogue Entry": "HIP 26311",
-    "Alternative Entries": "HIP 26311, HD 37128, HR 1903",
+    "Alternative Entries": "HD 37128, HR 1903",
     "Familiar Name": "Alnilam",
     "Right Ascension": "05:36:12.81",
     "Declination": "-01:12:06.91",
@@ -307,7 +307,7 @@
   },
   {
     "Catalogue Entry": "HIP 26727",
-    "Alternative Entries": "HIP 26727, HD 37742, HR 1948",
+    "Alternative Entries": "HD 37742, HR 1948",
     "Familiar Name": "Alnitak",
     "Right Ascension": "05:40:45.53",
     "Declination": "-01:56:33.26",
@@ -325,7 +325,7 @@
   },
   {
     "Catalogue Entry": "HIP 27989",
-    "Alternative Entries": "HIP 27989, HD 39801, HR 2061",
+    "Alternative Entries": "HD 39801, HR 2061",
     "Familiar Name": "Betelgeuse",
     "Right Ascension": "05:55:10.30",
     "Declination": "+07:24:25.43",
@@ -343,7 +343,7 @@
   },
   {
     "Catalogue Entry": "HIP 28360",
-    "Alternative Entries": "HIP 28360, HD 40183, HR 2088",
+    "Alternative Entries": "HD 40183, HR 2088",
     "Familiar Name": "Menkalinan",
     "Right Ascension": "05:59:31.74",
     "Declination": "+44:56:50.76",
@@ -361,7 +361,7 @@
   },
   {
     "Catalogue Entry": "HIP 30324",
-    "Alternative Entries": "HIP 30324, HD 44743, HR 2294",
+    "Alternative Entries": "HD 44743, HR 2294",
     "Familiar Name": "Mirzam",
     "Right Ascension": "06:22:41.98",
     "Declination": "-17:57:21.30",
@@ -379,7 +379,7 @@
   },
   {
     "Catalogue Entry": "HIP 30438",
-    "Alternative Entries": "HIP 30438, HD 45348, HR 2326",
+    "Alternative Entries": "HD 45348, HR 2326",
     "Familiar Name": "Canopus",
     "Right Ascension": "06:23:57.10",
     "Declination": "-52:41:44.38",
@@ -397,7 +397,7 @@
   },
   {
     "Catalogue Entry": "HIP 31681",
-    "Alternative Entries": "HIP 31681, HD 47105, HR 2421",
+    "Alternative Entries": "HD 47105, HR 2421",
     "Familiar Name": "Alhena",
     "Right Ascension": "06:37:42.70",
     "Declination": "+16:23:57.31",
@@ -415,7 +415,7 @@
   },
   {
     "Catalogue Entry": "HIP 32349",
-    "Alternative Entries": "HIP 32349, HD 48915, HR 2491",
+    "Alternative Entries": "HD 48915, HR 2491",
     "Familiar Name": "Sirius",
     "Right Ascension": "06:45:08.93",
     "Declination": "-16:42:58.02",
@@ -433,7 +433,7 @@
   },
   {
     "Catalogue Entry": "HIP 33579",
-    "Alternative Entries": "HIP 33579, HD 52089, HR 2618",
+    "Alternative Entries": "HD 52089, HR 2618",
     "Familiar Name": "Adhara",
     "Right Ascension": "06:58:37.55",
     "Declination": "-28:58:19.50",
@@ -451,7 +451,7 @@
   },
   {
     "Catalogue Entry": "HIP 34444",
-    "Alternative Entries": "HIP 34444, HD 54605, HR 2693",
+    "Alternative Entries": "HD 54605, HR 2693",
     "Familiar Name": "Wezen",
     "Right Ascension": "07:08:23.49",
     "Declination": "-26:23:35.52",
@@ -469,7 +469,7 @@
   },
   {
     "Catalogue Entry": "HIP 36850",
-    "Alternative Entries": "HIP 36850, HD 60179, HR 2891",
+    "Alternative Entries": "HD 60179, HR 2891",
     "Familiar Name": "Castor",
     "Right Ascension": "07:34:35.88",
     "Declination": "+31:53:17.79",
@@ -487,7 +487,7 @@
   },
   {
     "Catalogue Entry": "HIP 37279",
-    "Alternative Entries": "HIP 37279, HD 61421, HR 2943",
+    "Alternative Entries": "HD 61421, HR 2943",
     "Familiar Name": "Procyon",
     "Right Ascension": "07:39:18.12",
     "Declination": "+05:13:29.97",
@@ -505,7 +505,7 @@
   },
   {
     "Catalogue Entry": "HIP 37826",
-    "Alternative Entries": "HIP 37826, HD 62509, HR 2990",
+    "Alternative Entries": "HD 62509, HR 2990",
     "Familiar Name": "Pollux",
     "Right Ascension": "07:45:19.00",
     "Declination": "+28:01:34.32",
@@ -523,7 +523,7 @@
   },
   {
     "Catalogue Entry": "HIP 41037",
-    "Alternative Entries": "HIP 41037, HD 71129, HR 3307",
+    "Alternative Entries": "HD 71129, HR 3307",
     "Familiar Name": "Avior",
     "Right Ascension": "08:22:30.85",
     "Declination": "-59:30:34.14",
@@ -541,7 +541,7 @@
   },
   {
     "Catalogue Entry": "HIP 42913",
-    "Alternative Entries": "HIP 42913, HD 74956, HR 3485",
+    "Alternative Entries": "HD 74956, HR 3485",
     "Familiar Name": "Alsephina",
     "Right Ascension": "08:44:42.21",
     "Declination": "-54:42:31.76",
@@ -559,7 +559,7 @@
   },
   {
     "Catalogue Entry": "HIP 45238",
-    "Alternative Entries": "HIP 45238, HD 80007, HR 3685",
+    "Alternative Entries": "HD 80007, HR 3685",
     "Familiar Name": "Miaplacidus",
     "Right Ascension": "09:13:12.15",
     "Declination": "-69:43:01.95",
@@ -577,7 +577,7 @@
   },
   {
     "Catalogue Entry": "HIP 46390",
-    "Alternative Entries": "HIP 46390, HD 81797, HR 3748",
+    "Alternative Entries": "HD 81797, HR 3748",
     "Familiar Name": "Alphard",
     "Right Ascension": "09:27:35.24",
     "Declination": "-08:39:30.97",
@@ -595,7 +595,7 @@
   },
   {
     "Catalogue Entry": "HIP 49669",
-    "Alternative Entries": "HIP 49669, HD 87901, HR 3982",
+    "Alternative Entries": "HD 87901, HR 3982",
     "Familiar Name": "Regulus",
     "Right Ascension": "10:08:22.32",
     "Declination": "+11:58:01.95",
@@ -613,7 +613,7 @@
   },
   {
     "Catalogue Entry": "HIP 54061",
-    "Alternative Entries": "HIP 54061, HD 95689, HR 4301",
+    "Alternative Entries": "HD 95689, HR 4301",
     "Familiar Name": "Dubhe",
     "Right Ascension": "11:03:43.76",
     "Declination": "+61:45:03.72",
@@ -631,7 +631,7 @@
   },
   {
     "Catalogue Entry": "HIP 60718",
-    "Alternative Entries": "HIP 60718, HD 108248, HR 4730",
+    "Alternative Entries": "HD 108248, HR 4730",
     "Familiar Name": "Acrux",
     "Right Ascension": "12:26:35.92",
     "Declination": "-63:05:56.73",
@@ -649,7 +649,7 @@
   },
   {
     "Catalogue Entry": "HIP 61084",
-    "Alternative Entries": "HIP 61084, HD 108903, HR 4763",
+    "Alternative Entries": "HD 108903, HR 4763",
     "Familiar Name": "Gacrux",
     "Right Ascension": "12:31:09.94",
     "Declination": "-57:06:47.56",
@@ -667,7 +667,7 @@
   },
   {
     "Catalogue Entry": "HIP 62434",
-    "Alternative Entries": "HIP 62434, HD 111123, HR 4853",
+    "Alternative Entries": "HD 111123, HR 4853",
     "Familiar Name": "Mimosa",
     "Right Ascension": "12:47:43.29",
     "Declination": "-59:41:19.55",
@@ -685,7 +685,7 @@
   },
   {
     "Catalogue Entry": "HIP 62956",
-    "Alternative Entries": "HIP 62956, HD 112185, HR 4905",
+    "Alternative Entries": "HD 112185, HR 4905",
     "Familiar Name": "Alioth",
     "Right Ascension": "12:54:01.70",
     "Declination": "+55:57:35.36",
@@ -703,7 +703,7 @@
   },
   {
     "Catalogue Entry": "HIP 65474",
-    "Alternative Entries": "HIP 65474, HD 116658, HR 5056",
+    "Alternative Entries": "HD 116658, HR 5056",
     "Familiar Name": "Spica",
     "Right Ascension": "13:25:11.58",
     "Declination": "-11:09:40.76",
@@ -721,7 +721,7 @@
   },
   {
     "Catalogue Entry": "HIP 67301",
-    "Alternative Entries": "HIP 67301, HD 120315, HR 5191",
+    "Alternative Entries": "HD 120315, HR 5191",
     "Familiar Name": "Alkaid",
     "Right Ascension": "13:47:32.47",
     "Declination": "+49:18:47.75",
@@ -739,7 +739,7 @@
   },
   {
     "Catalogue Entry": "HIP 68702",
-    "Alternative Entries": "HIP 68702, HD 122451, HR 5267",
+    "Alternative Entries": "HD 122451, HR 5267",
     "Familiar Name": "Hadar",
     "Right Ascension": "14:03:49.42",
     "Declination": "-60:22:22.94",
@@ -757,7 +757,7 @@
   },
   {
     "Catalogue Entry": "HIP 69673",
-    "Alternative Entries": "HIP 69673, HD 124897, HR 5340",
+    "Alternative Entries": "HD 124897, HR 5340",
     "Familiar Name": "Arcturus",
     "Right Ascension": "14:15:39.71",
     "Declination": "+19:10:56.68",
@@ -775,7 +775,7 @@
   },
   {
     "Catalogue Entry": "HIP 71681",
-    "Alternative Entries": "HIP 71681, HD 128621, HR 5460",
+    "Alternative Entries": "HD 128621, HR 5460",
     "Familiar Name": "Toliman",
     "Right Ascension": "14:39:37.25",
     "Declination": "-60:50:17.88",
@@ -793,7 +793,7 @@
   },
   {
     "Catalogue Entry": "HIP 71683",
-    "Alternative Entries": "HIP 71683, HD 128620, HR 5459",
+    "Alternative Entries": "HD 128620, HR 5459",
     "Familiar Name": "Rigil Kentaurus",
     "Right Ascension": "14:39:38.75",
     "Declination": "-60:50:02.31",
@@ -811,7 +811,7 @@
   },
   {
     "Catalogue Entry": "HIP 80763",
-    "Alternative Entries": "HIP 80763, HD 148478, HR 6134",
+    "Alternative Entries": "HD 148478, HR 6134",
     "Familiar Name": "Antares",
     "Right Ascension": "16:29:24.46",
     "Declination": "-26:25:55.21",
@@ -829,7 +829,7 @@
   },
   {
     "Catalogue Entry": "HIP 82273",
-    "Alternative Entries": "HIP 82273, HD 150798, HR 6217",
+    "Alternative Entries": "HD 150798, HR 6217",
     "Familiar Name": "Atria",
     "Right Ascension": "16:48:39.88",
     "Declination": "-69:01:39.77",
@@ -847,7 +847,7 @@
   },
   {
     "Catalogue Entry": "HIP 85927",
-    "Alternative Entries": "HIP 85927, HD 158926, HR 6527",
+    "Alternative Entries": "HD 158926, HR 6527",
     "Familiar Name": "Shaula",
     "Right Ascension": "17:33:36.52",
     "Declination": "-37:06:13.76",
@@ -865,7 +865,7 @@
   },
   {
     "Catalogue Entry": "HIP 86228",
-    "Alternative Entries": "HIP 86228, HD 159532, HR 6553",
+    "Alternative Entries": "HD 159532, HR 6553",
     "Familiar Name": "Sargas",
     "Right Ascension": "17:37:19.13",
     "Declination": "-42:59:52.17",
@@ -883,7 +883,7 @@
   },
   {
     "Catalogue Entry": "HIP 90185",
-    "Alternative Entries": "HIP 90185, HD 169022, HR 6879",
+    "Alternative Entries": "HD 169022, HR 6879",
     "Familiar Name": "Kaus Australis",
     "Right Ascension": "18:24:10.32",
     "Declination": "-34:23:04.62",
@@ -901,7 +901,7 @@
   },
   {
     "Catalogue Entry": "HIP 91262",
-    "Alternative Entries": "HIP 91262, HD 172167, HR 7001",
+    "Alternative Entries": "HD 172167, HR 7001",
     "Familiar Name": "Vega",
     "Right Ascension": "18:36:56.30",
     "Declination": "+38:47:01.29",
@@ -919,7 +919,7 @@
   },
   {
     "Catalogue Entry": "HIP 97649",
-    "Alternative Entries": "HIP 97649, HD 187642, HR 7557",
+    "Alternative Entries": "HD 187642, HR 7557",
     "Familiar Name": "Altair",
     "Right Ascension": "19:50:47.00",
     "Declination": "+08:52:05.96",
@@ -937,7 +937,7 @@
   },
   {
     "Catalogue Entry": "HIP 100751",
-    "Alternative Entries": "HIP 100751, HD 193924, HR 7790",
+    "Alternative Entries": "HD 193924, HR 7790",
     "Familiar Name": "Peacock",
     "Right Ascension": "20:25:38.85",
     "Declination": "-56:44:06.32",
@@ -955,7 +955,7 @@
   },
   {
     "Catalogue Entry": "HIP 102098",
-    "Alternative Entries": "HIP 102098, HD 197345, HR 7924",
+    "Alternative Entries": "HD 197345, HR 7924",
     "Familiar Name": "Deneb",
     "Right Ascension": "20:41:25.92",
     "Declination": "+45:16:49.22",
@@ -973,7 +973,7 @@
   },
   {
     "Catalogue Entry": "HIP 109268",
-    "Alternative Entries": "HIP 109268, HD 209952, HR 8425",
+    "Alternative Entries": "HD 209952, HR 8425",
     "Familiar Name": "Alnair",
     "Right Ascension": "22:08:13.95",
     "Declination": "-46:57:39.51",
@@ -991,7 +991,7 @@
   },
   {
     "Catalogue Entry": "HIP 113368",
-    "Alternative Entries": "HIP 113368, HD 216956, HR 8728",
+    "Alternative Entries": "HD 216956, HR 8728",
     "Familiar Name": "Fomalhaut",
     "Right Ascension": "22:57:39.02",
     "Declination": "-29:37:20.05",
@@ -1009,7 +1009,7 @@
   },
   {
     "Catalogue Entry": "IC 341",
-    "Alternative Entries": "IC 341",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "03:40:55.69",
     "Declination": "+21:57:36.7",
@@ -1027,7 +1027,7 @@
   },
   {
     "Catalogue Entry": "IC 342",
-    "Alternative Entries": "C 5, IC 342",
+    "Alternative Entries": "C 5",
     "Familiar Name": null,
     "Right Ascension": "03:46:48.50",
     "Declination": "+68:05:46.9",
@@ -1045,7 +1045,7 @@
   },
   {
     "Catalogue Entry": "IC 349",
-    "Alternative Entries": "IC 349",
+    "Alternative Entries": null,
     "Familiar Name": "Barnard's Merope Nebula",
     "Right Ascension": "03:46:20.11",
     "Declination": "+23:56:23.3",
@@ -1063,7 +1063,7 @@
   },
   {
     "Catalogue Entry": "IC 353",
-    "Alternative Entries": "IC 353",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "03:53:01.07",
     "Declination": "+25:50:52.8",
@@ -1081,7 +1081,7 @@
   },
   {
     "Catalogue Entry": "IC 354",
-    "Alternative Entries": "IC 354",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "03:53:57.91",
     "Declination": "+23:08:49.2",
@@ -1099,7 +1099,7 @@
   },
   {
     "Catalogue Entry": "IC 359A",
-    "Alternative Entries": "IC 359A",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:18:41.00",
     "Declination": "+28:17:24.0",
@@ -1117,7 +1117,7 @@
   },
   {
     "Catalogue Entry": "IC 360",
-    "Alternative Entries": "IC 360",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:09:02.57",
     "Declination": "+26:07:52.3",
@@ -1135,7 +1135,7 @@
   },
   {
     "Catalogue Entry": "IC 405",
-    "Alternative Entries": "C 31, IC 405",
+    "Alternative Entries": "C 31",
     "Familiar Name": "Flaming Star Nebula",
     "Right Ascension": "05:16:29.48",
     "Declination": "+34:21:22.2",
@@ -1153,7 +1153,7 @@
   },
   {
     "Catalogue Entry": "IC 410",
-    "Alternative Entries": "IC 410",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "05:22:42.00",
     "Declination": "+33:22:00.0",
@@ -1171,7 +1171,7 @@
   },
   {
     "Catalogue Entry": "IC 434",
-    "Alternative Entries": "IC 434",
+    "Alternative Entries": null,
     "Familiar Name": "Flame Nebula,Orion B, Horsehead nebula",
     "Right Ascension": "05:41:00.88",
     "Declination": "-02:27:13.6",
@@ -1189,7 +1189,7 @@
   },
   {
     "Catalogue Entry": "IC 443",
-    "Alternative Entries": "IC 443",
+    "Alternative Entries": null,
     "Familiar Name": "Gem A",
     "Right Ascension": "06:16:37.41",
     "Declination": "+22:31:54.0",
@@ -1207,7 +1207,7 @@
   },
   {
     "Catalogue Entry": "IC 447",
-    "Alternative Entries": "IC 0447, IC 447",
+    "Alternative Entries": "IC 0447",
     "Familiar Name": null,
     "Right Ascension": "06:31:00.32",
     "Declination": "+09:53:50.8",
@@ -1225,7 +1225,7 @@
   },
   {
     "Catalogue Entry": "IC 448",
-    "Alternative Entries": "IC 448",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "06:32:45.34",
     "Declination": "+07:23:19.1",
@@ -1243,7 +1243,7 @@
   },
   {
     "Catalogue Entry": "IC 468",
-    "Alternative Entries": "IC 468",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:17:19.00",
     "Declination": "-13:13:07.3",
@@ -1261,7 +1261,7 @@
   },
   {
     "Catalogue Entry": "IC 1274",
-    "Alternative Entries": "IC 1274",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:09:51.03",
     "Declination": "-23:38:53.6",
@@ -1279,7 +1279,7 @@
   },
   {
     "Catalogue Entry": "IC 1283",
-    "Alternative Entries": "IC 1283",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:17:16.85",
     "Declination": "-19:45:44.0",
@@ -1297,7 +1297,7 @@
   },
   {
     "Catalogue Entry": "IC 1284",
-    "Alternative Entries": "IC 1284",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:17:39.63",
     "Declination": "-19:40:19.3",
@@ -1315,7 +1315,7 @@
   },
   {
     "Catalogue Entry": "IC 1287",
-    "Alternative Entries": "IC 1287",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:31:25.69",
     "Declination": "-10:47:44.9",
@@ -1333,7 +1333,7 @@
   },
   {
     "Catalogue Entry": "IC 1310",
-    "Alternative Entries": "IC 1310",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:10:00.98",
     "Declination": "+34:58:08.0",
@@ -1351,7 +1351,7 @@
   },
   {
     "Catalogue Entry": "IC 1318",
-    "Alternative Entries": "IC 1318",
+    "Alternative Entries": null,
     "Familiar Name": "gam Cyg, gamma Cyg nebula",
     "Right Ascension": "20:22:13.69",
     "Declination": "+40:15:24.1",
@@ -1369,7 +1369,7 @@
   },
   {
     "Catalogue Entry": "IC 1340",
-    "Alternative Entries": "IC 1340",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:56:08.25",
     "Declination": "+31:02:52.3",
@@ -1387,7 +1387,7 @@
   },
   {
     "Catalogue Entry": "IC 1396",
-    "Alternative Entries": "IC 1396",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "21:38:57.62",
     "Declination": "+57:29:20.6",
@@ -1405,7 +1405,7 @@
   },
   {
     "Catalogue Entry": "IC 1613",
-    "Alternative Entries": "IC 1613",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "01:04:47.79",
     "Declination": "+02:07:04.0",
@@ -1423,7 +1423,7 @@
   },
   {
     "Catalogue Entry": "IC 1795",
-    "Alternative Entries": "IC 1795",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:26:31.96",
     "Declination": "+62:02:29.9",
@@ -1441,7 +1441,7 @@
   },
   {
     "Catalogue Entry": "IC 1805",
-    "Alternative Entries": "IC 1805",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:32:41.51",
     "Declination": "+61:27:24.8",
@@ -1459,7 +1459,7 @@
   },
   {
     "Catalogue Entry": "IC 1831",
-    "Alternative Entries": "IC 1831",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:43:56.40",
     "Declination": "+62:24:41.9",
@@ -1477,7 +1477,7 @@
   },
   {
     "Catalogue Entry": "IC 1848",
-    "Alternative Entries": "IC 1848",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:51:10.59",
     "Declination": "+60:24:08.9",
@@ -1495,7 +1495,7 @@
   },
   {
     "Catalogue Entry": "IC 2177",
-    "Alternative Entries": "IC 2177",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:04:36.91",
     "Declination": "-10:28:15.8",
@@ -1513,7 +1513,7 @@
   },
   {
     "Catalogue Entry": "IC 2391",
-    "Alternative Entries": "C 85, IC 2391",
+    "Alternative Entries": "C 85",
     "Familiar Name": "Omicron Vel Cluster, omi Vel Cluster",
     "Right Ascension": "08:40:31.88",
     "Declination": "-53:02:07.7",
@@ -1531,7 +1531,7 @@
   },
   {
     "Catalogue Entry": "IC 2599",
-    "Alternative Entries": "IC 2599",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "10:37:27.09",
     "Declination": "-58:44:00.2",
@@ -1549,7 +1549,7 @@
   },
   {
     "Catalogue Entry": "IC 2602",
-    "Alternative Entries": "C 102, IC 2602",
+    "Alternative Entries": "C 102",
     "Familiar Name": "Theta Car Cluster, Southern Pleiades",
     "Right Ascension": "10:42:57.47",
     "Declination": "-64:23:39.1",
@@ -1567,7 +1567,7 @@
   },
   {
     "Catalogue Entry": "IC 2872",
-    "Alternative Entries": "IC 2872",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "11:28:08.03",
     "Declination": "-62:59:20.2",
@@ -1585,7 +1585,7 @@
   },
   {
     "Catalogue Entry": "IC 2944",
-    "Alternative Entries": "IC 2944",
+    "Alternative Entries": null,
     "Familiar Name": "lam Cen Nebula, lambda Cen nebula",
     "Right Ascension": "11:35:46.93",
     "Declination": "-63:01:11.4",
@@ -1603,7 +1603,7 @@
   },
   {
     "Catalogue Entry": "IC 2948",
-    "Alternative Entries": "IC 2948",
+    "Alternative Entries": null,
     "Familiar Name": "lambda Cen nebula",
     "Right Ascension": "11:39:05.94",
     "Declination": "-63:26:37.9",
@@ -1621,7 +1621,7 @@
   },
   {
     "Catalogue Entry": "IC 4592",
-    "Alternative Entries": "IC 4592",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:11:58.67",
     "Declination": "-19:27:16.8",
@@ -1639,7 +1639,7 @@
   },
   {
     "Catalogue Entry": "IC 4601",
-    "Alternative Entries": "IC 4601",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:20:17.80",
     "Declination": "-20:05:14.3",
@@ -1657,7 +1657,7 @@
   },
   {
     "Catalogue Entry": "IC 4603",
-    "Alternative Entries": "IC 4603",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:25:24.48",
     "Declination": "-24:28:06.1",
@@ -1675,7 +1675,7 @@
   },
   {
     "Catalogue Entry": "IC 4604",
-    "Alternative Entries": "IC 4604",
+    "Alternative Entries": null,
     "Familiar Name": "rho Oph Nebula, rho Oph nebula",
     "Right Ascension": "16:25:31.17",
     "Declination": "-23:26:11.7",
@@ -1693,7 +1693,7 @@
   },
   {
     "Catalogue Entry": "IC 4605",
-    "Alternative Entries": "IC 4605",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:30:12.48",
     "Declination": "-25:06:54.6",
@@ -1711,7 +1711,7 @@
   },
   {
     "Catalogue Entry": "IC 4628",
-    "Alternative Entries": "IC 4628",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:56:58.43",
     "Declination": "-40:27:03.5",
@@ -1729,7 +1729,7 @@
   },
   {
     "Catalogue Entry": "IC 4665",
-    "Alternative Entries": "IC 4665",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "17:46:27.18",
     "Declination": "+05:38:55.4",
@@ -1747,7 +1747,7 @@
   },
   {
     "Catalogue Entry": "IC 4685",
-    "Alternative Entries": "IC 4685",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:09:17.50",
     "Declination": "-23:59:14.1",
@@ -1765,7 +1765,7 @@
   },
   {
     "Catalogue Entry": "IC 4701",
-    "Alternative Entries": "IC 4701",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:16:35.74",
     "Declination": "-16:38:53.8",
@@ -1783,7 +1783,7 @@
   },
   {
     "Catalogue Entry": "IC 4703",
-    "Alternative Entries": "IC 4703",
+    "Alternative Entries": null,
     "Familiar Name": "Eagle Nebula,Star Queen",
     "Right Ascension": "18:18:56.22",
     "Declination": "-13:50:43.4",
@@ -1801,7 +1801,7 @@
   },
   {
     "Catalogue Entry": "IC 4756",
-    "Alternative Entries": "IC 4756",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:38:51.51",
     "Declination": "+05:27:43.8",
@@ -1819,7 +1819,7 @@
   },
   {
     "Catalogue Entry": "IC 4954",
-    "Alternative Entries": "IC 4954",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:04:45.02",
     "Declination": "+29:15:10.1",
@@ -1837,7 +1837,7 @@
   },
   {
     "Catalogue Entry": "IC 5068",
-    "Alternative Entries": "IC 5068",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:50:29.76",
     "Declination": "+42:28:39.7",
@@ -1855,7 +1855,7 @@
   },
   {
     "Catalogue Entry": "IC 5070",
-    "Alternative Entries": "IC 5070",
+    "Alternative Entries": null,
     "Familiar Name": "Pelican Nebula, Pelican nebula",
     "Right Ascension": "20:51:00.72",
     "Declination": "+44:24:05.4",
@@ -1873,7 +1873,7 @@
   },
   {
     "Catalogue Entry": "IC 5146",
-    "Alternative Entries": "IC 5146",
+    "Alternative Entries": null,
     "Familiar Name": "Cocoon Nebula",
     "Right Ascension": "21:53:28.76",
     "Declination": "+47:16:00.9",
@@ -1891,7 +1891,7 @@
   },
   {
     "Catalogue Entry": "M 1",
-    "Alternative Entries": "M 1",
+    "Alternative Entries": null,
     "Familiar Name": "Crab Nebula",
     "Right Ascension": "05:34:31.97",
     "Declination": "+22:00:52.1",
@@ -1909,7 +1909,7 @@
   },
   {
     "Catalogue Entry": "M 3",
-    "Alternative Entries": "M 3",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "13:42:11.23",
     "Declination": "+28:22:31.6",
@@ -1927,7 +1927,7 @@
   },
   {
     "Catalogue Entry": "M 4",
-    "Alternative Entries": "M 4, NGC 6121",
+    "Alternative Entries": "NGC 6121",
     "Familiar Name": null,
     "Right Ascension": "16:23:35.40",
     "Declination": "-26:31:31.9",
@@ -1945,7 +1945,7 @@
   },
   {
     "Catalogue Entry": "M 5",
-    "Alternative Entries": "M 5",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "15:18:33.75",
     "Declination": "+02:04:57.7",
@@ -1963,7 +1963,7 @@
   },
   {
     "Catalogue Entry": "M 6",
-    "Alternative Entries": "M 6, NGC 6405",
+    "Alternative Entries": "NGC 6405",
     "Familiar Name": "Butterfly Cluster",
     "Right Ascension": "17:40:20.75",
     "Declination": "-32:15:15.0",
@@ -1981,7 +1981,7 @@
   },
   {
     "Catalogue Entry": "M 7",
-    "Alternative Entries": "M 7, NGC 6475",
+    "Alternative Entries": "NGC 6475",
     "Familiar Name": "Ptolemy's Cluster",
     "Right Ascension": "17:53:51.18",
     "Declination": "-34:47:34.2",
@@ -1999,7 +1999,7 @@
   },
   {
     "Catalogue Entry": "M 8",
-    "Alternative Entries": "M 8, NGC 6523",
+    "Alternative Entries": "NGC 6523",
     "Familiar Name": "Lagoon Nebula",
     "Right Ascension": "18:03:41.27",
     "Declination": "-24:22:48.6",
@@ -2017,7 +2017,7 @@
   },
   {
     "Catalogue Entry": "M 11",
-    "Alternative Entries": "M 11",
+    "Alternative Entries": null,
     "Familiar Name": "Amas de l'Ecu de Sobieski,Wild Duck Cluster",
     "Right Ascension": "18:51:05.99",
     "Declination": "-06:16:12.1",
@@ -2035,7 +2035,7 @@
   },
   {
     "Catalogue Entry": "M 13",
-    "Alternative Entries": "M 13, NGC 6205",
+    "Alternative Entries": "NGC 6205",
     "Familiar Name": "Great Hercules Globular, Hercules Globular Cluster",
     "Right Ascension": "16:41:41.63",
     "Declination": "+36:27:40.7",
@@ -2053,7 +2053,7 @@
   },
   {
     "Catalogue Entry": "M 16",
-    "Alternative Entries": "M 16, NGC 6611",
+    "Alternative Entries": "NGC 6611",
     "Familiar Name": "Eagle Nebula, Eagle nebula",
     "Right Ascension": "18:18:48.17",
     "Declination": "-13:48:26.0",
@@ -2071,7 +2071,7 @@
   },
   {
     "Catalogue Entry": "M 17",
-    "Alternative Entries": "M 17, NGC 6618",
+    "Alternative Entries": "NGC 6618",
     "Familiar Name": "Checkmark Nebula,Lobster Nebula,Swan Nebula,omega Nebula, M  17",
     "Right Ascension": "18:20:47.11",
     "Declination": "-16:10:17.5",
@@ -2089,7 +2089,7 @@
   },
   {
     "Catalogue Entry": "M 20",
-    "Alternative Entries": "M 20, NGC 6514",
+    "Alternative Entries": "NGC 6514",
     "Familiar Name": "Trifid Nebula",
     "Right Ascension": "18:02:42.11",
     "Declination": "-22:58:18.8",
@@ -2107,7 +2107,7 @@
   },
   {
     "Catalogue Entry": "M 22",
-    "Alternative Entries": "M 22, NGC 6656",
+    "Alternative Entries": "NGC 6656",
     "Familiar Name": "Sagittarius Cluster",
     "Right Ascension": "18:36:24.20",
     "Declination": "-23:54:12.3",
@@ -2125,7 +2125,7 @@
   },
   {
     "Catalogue Entry": "M 23",
-    "Alternative Entries": "M 23, NGC 6494",
+    "Alternative Entries": "NGC 6494",
     "Familiar Name": null,
     "Right Ascension": "17:57:04.77",
     "Declination": "-18:59:07.2",
@@ -2143,7 +2143,7 @@
   },
   {
     "Catalogue Entry": "M 24",
-    "Alternative Entries": "IC 4715, M 24",
+    "Alternative Entries": "IC 4715",
     "Familiar Name": "Sagittarius Star Cloud, Small Sgr Star Cloud",
     "Right Ascension": "18:16:56.12",
     "Declination": "-18:30:52.4",
@@ -2161,7 +2161,7 @@
   },
   {
     "Catalogue Entry": "M 25",
-    "Alternative Entries": "IC 4725, M 25",
+    "Alternative Entries": "IC 4725, IC C4725",
     "Familiar Name": null,
     "Right Ascension": "18:31:46.77",
     "Declination": "-19:06:53.8",
@@ -2173,13 +2173,13 @@
     "Type": "Open Cluster",
     "Type Category": "clusters",
     "Constellation": "Sagittarius",
-    "Width (')": 32.0,
-    "Height (')": 32.0,
+    "Width (')": 40.0,
+    "Height (')": 40.0,
     "Notes": "large_dso"
   },
   {
     "Catalogue Entry": "M 27",
-    "Alternative Entries": "M 27",
+    "Alternative Entries": null,
     "Familiar Name": "Dumbbell Nebula",
     "Right Ascension": "19:59:36.38",
     "Declination": "+22:43:15.7",
@@ -2197,7 +2197,7 @@
   },
   {
     "Catalogue Entry": "M 31",
-    "Alternative Entries": "M 31, NGC 224",
+    "Alternative Entries": "NGC 224",
     "Familiar Name": "Andromeda Galaxy",
     "Right Ascension": "00:42:44.35",
     "Declination": "+41:16:08.6",
@@ -2215,7 +2215,7 @@
   },
   {
     "Catalogue Entry": "M 33",
-    "Alternative Entries": "M 33, NGC 598",
+    "Alternative Entries": "NGC 598",
     "Familiar Name": "Triangulum Galaxy, Triangulum Galaxy,Triangulum Pinwheel",
     "Right Ascension": "01:33:50.89",
     "Declination": "+30:39:36.8",
@@ -2233,7 +2233,7 @@
   },
   {
     "Catalogue Entry": "M 34",
-    "Alternative Entries": "M 34, NGC 1039",
+    "Alternative Entries": "NGC 1039",
     "Familiar Name": null,
     "Right Ascension": "02:42:07.40",
     "Declination": "+42:44:46.1",
@@ -2251,7 +2251,7 @@
   },
   {
     "Catalogue Entry": "M 35",
-    "Alternative Entries": "M 35, NGC 2168",
+    "Alternative Entries": "NGC 2168",
     "Familiar Name": null,
     "Right Ascension": "06:09:05.06",
     "Declination": "+24:20:19.1",
@@ -2269,7 +2269,7 @@
   },
   {
     "Catalogue Entry": "M 37",
-    "Alternative Entries": "M 37, NGC 2099",
+    "Alternative Entries": "NGC 2099",
     "Familiar Name": null,
     "Right Ascension": "05:52:18.35",
     "Declination": "+32:33:10.8",
@@ -2287,7 +2287,7 @@
   },
   {
     "Catalogue Entry": "M 38",
-    "Alternative Entries": "M 38, NGC 1912",
+    "Alternative Entries": "NGC 1912",
     "Familiar Name": null,
     "Right Ascension": "05:28:42.49",
     "Declination": "+35:51:17.7",
@@ -2305,7 +2305,7 @@
   },
   {
     "Catalogue Entry": "M 39",
-    "Alternative Entries": "M 39, NGC 7092",
+    "Alternative Entries": "NGC 7092",
     "Familiar Name": null,
     "Right Ascension": "21:31:48.32",
     "Declination": "+48:26:17.4",
@@ -2323,7 +2323,7 @@
   },
   {
     "Catalogue Entry": "M 41",
-    "Alternative Entries": "M 41, NGC 2287",
+    "Alternative Entries": "NGC 2287",
     "Familiar Name": null,
     "Right Ascension": "06:45:59.94",
     "Declination": "-20:45:15.2",
@@ -2341,7 +2341,7 @@
   },
   {
     "Catalogue Entry": "M 42",
-    "Alternative Entries": "M 42, NGC 1976",
+    "Alternative Entries": "NGC 1976",
     "Familiar Name": "Great Nebula in Orion, Great Orion Nebula,Orion Nebula",
     "Right Ascension": "05:35:16.48",
     "Declination": "-05:23:22.8",
@@ -2359,7 +2359,7 @@
   },
   {
     "Catalogue Entry": "M 43",
-    "Alternative Entries": "M 43, NGC 1982",
+    "Alternative Entries": "NGC 1982",
     "Familiar Name": "De Mairan's Nebula, Mairan's Nebula",
     "Right Ascension": "05:35:31.38",
     "Declination": "-05:16:02.9",
@@ -2377,7 +2377,7 @@
   },
   {
     "Catalogue Entry": "M 44",
-    "Alternative Entries": "M 44, NGC 2632",
+    "Alternative Entries": "NGC 2632",
     "Familiar Name": "Beehive Cluster, Beehive,Praesepe Cluster",
     "Right Ascension": "08:40:22.20",
     "Declination": "+19:40:19.4",
@@ -2395,7 +2395,7 @@
   },
   {
     "Catalogue Entry": "M 45",
-    "Alternative Entries": "M 45",
+    "Alternative Entries": null,
     "Familiar Name": "Pleiades",
     "Right Ascension": "03:47:28.6",
     "Declination": "+24:06:19",
@@ -2413,7 +2413,7 @@
   },
   {
     "Catalogue Entry": "M 46",
-    "Alternative Entries": "M 46, NGC 2437",
+    "Alternative Entries": "NGC 2437",
     "Familiar Name": null,
     "Right Ascension": "07:41:46.82",
     "Declination": "-14:48:36.0",
@@ -2431,7 +2431,7 @@
   },
   {
     "Catalogue Entry": "M 47",
-    "Alternative Entries": "M 47, NGC 2422",
+    "Alternative Entries": "NGC 2422",
     "Familiar Name": null,
     "Right Ascension": "07:36:35.02",
     "Declination": "-14:28:57.4",
@@ -2449,7 +2449,7 @@
   },
   {
     "Catalogue Entry": "M 48",
-    "Alternative Entries": "M 48, NGC 2548",
+    "Alternative Entries": "NGC 2548",
     "Familiar Name": null,
     "Right Ascension": "08:13:43.18",
     "Declination": "-05:45:01.6",
@@ -2467,7 +2467,7 @@
   },
   {
     "Catalogue Entry": "M 51",
-    "Alternative Entries": "M 51",
+    "Alternative Entries": null,
     "Familiar Name": "Whirlpool Galaxy",
     "Right Ascension": "13:29:52.71",
     "Declination": "+47:11:42.6",
@@ -2485,7 +2485,7 @@
   },
   {
     "Catalogue Entry": "M 55",
-    "Alternative Entries": "M 55, NGC 6809",
+    "Alternative Entries": "NGC 6809",
     "Familiar Name": null,
     "Right Ascension": "19:39:59.40",
     "Declination": "-30:57:43.5",
@@ -2503,7 +2503,7 @@
   },
   {
     "Catalogue Entry": "M 57",
-    "Alternative Entries": "M 57",
+    "Alternative Entries": null,
     "Familiar Name": "Ring Nebula",
     "Right Ascension": "18:53:35.01",
     "Declination": "+33:01:42.9",
@@ -2521,7 +2521,7 @@
   },
   {
     "Catalogue Entry": "M 63",
-    "Alternative Entries": "M 63",
+    "Alternative Entries": null,
     "Familiar Name": "Sunflower Galaxy",
     "Right Ascension": "13:15:49.33",
     "Declination": "+42:01:45.4",
@@ -2539,7 +2539,7 @@
   },
   {
     "Catalogue Entry": "M 64",
-    "Alternative Entries": "M 64",
+    "Alternative Entries": null,
     "Familiar Name": "Black Eye Galaxy,Evil Eye Galaxy",
     "Right Ascension": "12:56:43.64",
     "Declination": "+21:40:58.7",
@@ -2557,7 +2557,7 @@
   },
   {
     "Catalogue Entry": "M 65",
-    "Alternative Entries": "M 65",
+    "Alternative Entries": null,
     "Familiar Name": "Leo Triplet",
     "Right Ascension": "11:18:55.92",
     "Declination": "+13:05:32.5",
@@ -2575,7 +2575,7 @@
   },
   {
     "Catalogue Entry": "M 67",
-    "Alternative Entries": "M 67, NGC 2682",
+    "Alternative Entries": "NGC 2682",
     "Familiar Name": null,
     "Right Ascension": "08:51:20.13",
     "Declination": "+11:48:43.0",
@@ -2593,7 +2593,7 @@
   },
   {
     "Catalogue Entry": "M 81",
-    "Alternative Entries": "M 81, NGC 3031",
+    "Alternative Entries": "NGC 3031",
     "Familiar Name": "Bode's Galaxy",
     "Right Ascension": "09:55:33.17",
     "Declination": "+69:03:55.1",
@@ -2611,7 +2611,7 @@
   },
   {
     "Catalogue Entry": "M 82",
-    "Alternative Entries": "M 82",
+    "Alternative Entries": null,
     "Familiar Name": "Cigar Galaxy",
     "Right Ascension": "09:55:52.73",
     "Declination": "+69:40:45.8",
@@ -2629,7 +2629,7 @@
   },
   {
     "Catalogue Entry": "M 83",
-    "Alternative Entries": "M 83",
+    "Alternative Entries": null,
     "Familiar Name": "Southern Pinwheel Galaxy",
     "Right Ascension": "13:37:00.95",
     "Declination": "-29:51:55.5",
@@ -2647,7 +2647,7 @@
   },
   {
     "Catalogue Entry": "M 87",
-    "Alternative Entries": "M 87",
+    "Alternative Entries": null,
     "Familiar Name": "Virgo Galaxy",
     "Right Ascension": "12:30:49.42",
     "Declination": "+12:23:28.0",
@@ -2665,7 +2665,7 @@
   },
   {
     "Catalogue Entry": "M 93",
-    "Alternative Entries": "M 93, NGC 2447",
+    "Alternative Entries": "NGC 2447",
     "Familiar Name": null,
     "Right Ascension": "07:44:29.23",
     "Declination": "-23:51:11.1",
@@ -2683,7 +2683,7 @@
   },
   {
     "Catalogue Entry": "M 97",
-    "Alternative Entries": "M 97",
+    "Alternative Entries": null,
     "Familiar Name": "Owl Nebula",
     "Right Ascension": "11:14:47.71",
     "Declination": "+55:01:08.5",
@@ -2701,7 +2701,7 @@
   },
   {
     "Catalogue Entry": "M 99",
-    "Alternative Entries": "M 99",
+    "Alternative Entries": null,
     "Familiar Name": "Coma Pinwheel,Virgo Cluster Pinwheel",
     "Right Ascension": "12:18:49.60",
     "Declination": "+14:24:59.4",
@@ -2719,7 +2719,7 @@
   },
   {
     "Catalogue Entry": "M 101",
-    "Alternative Entries": "M 101, NGC 5457",
+    "Alternative Entries": "NGC 5457",
     "Familiar Name": "Pinwheel Galaxy",
     "Right Ascension": "14:03:12.54",
     "Declination": "+54:20:56.2",
@@ -2737,7 +2737,7 @@
   },
   {
     "Catalogue Entry": "M 104",
-    "Alternative Entries": "M 104",
+    "Alternative Entries": null,
     "Familiar Name": "Sombrero Galaxy",
     "Right Ascension": "12:39:59.43",
     "Declination": "-11:37:23.0",
@@ -2755,7 +2755,7 @@
   },
   {
     "Catalogue Entry": "M 106",
-    "Alternative Entries": "M 106, NGC 4258",
+    "Alternative Entries": "NGC 4258",
     "Familiar Name": null,
     "Right Ascension": "12:18:57.50",
     "Declination": "+47:18:14.3",
@@ -2773,7 +2773,7 @@
   },
   {
     "Catalogue Entry": "M 110",
-    "Alternative Entries": "M 110",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "00:40:22.08",
     "Declination": "+41:41:07.1",
@@ -2791,7 +2791,7 @@
   },
   {
     "Catalogue Entry": "Mel 111",
-    "Alternative Entries": "Mel 111",
+    "Alternative Entries": null,
     "Familiar Name": "Coma Star Cluster",
     "Right Ascension": "12:25:06.0",
     "Declination": "+26:06:00",
@@ -2809,7 +2809,7 @@
   },
   {
     "Catalogue Entry": "NGC 55",
-    "Alternative Entries": "C 72, NGC 55",
+    "Alternative Entries": "C 72",
     "Familiar Name": null,
     "Right Ascension": "00:14:53.60",
     "Declination": "-39:11:47.9",
@@ -2827,7 +2827,7 @@
   },
   {
     "Catalogue Entry": "NGC 104",
-    "Alternative Entries": "C 106, NGC 104",
+    "Alternative Entries": "C 106",
     "Familiar Name": "47 Tuc Cluster, 47 Tucanae",
     "Right Ascension": "00:24:05.36",
     "Declination": "-72:04:53.2",
@@ -2845,7 +2845,7 @@
   },
   {
     "Catalogue Entry": "NGC 129",
-    "Alternative Entries": "NGC 129",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "00:29:58.19",
     "Declination": "+60:12:40.2",
@@ -2863,7 +2863,7 @@
   },
   {
     "Catalogue Entry": "NGC 188",
-    "Alternative Entries": "NGC 188",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "00:47:27.53",
     "Declination": "+85:16:10.7",
@@ -2881,7 +2881,7 @@
   },
   {
     "Catalogue Entry": "NGC 247",
-    "Alternative Entries": "C 62, NGC 247",
+    "Alternative Entries": "C 62",
     "Familiar Name": null,
     "Right Ascension": "00:47:08.55",
     "Declination": "-20:45:37.4",
@@ -2899,7 +2899,7 @@
   },
   {
     "Catalogue Entry": "NGC 281",
-    "Alternative Entries": "NGC 281",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "00:52:59.35",
     "Declination": "+56:37:18.8",
@@ -2917,7 +2917,7 @@
   },
   {
     "Catalogue Entry": "NGC 292",
-    "Alternative Entries": "NGC 292",
+    "Alternative Entries": null,
     "Familiar Name": "Small Magellanic Cloud",
     "Right Ascension": "00:52:44.78",
     "Declination": "-72:49:43.0",
@@ -2935,7 +2935,7 @@
   },
   {
     "Catalogue Entry": "NGC 300",
-    "Alternative Entries": "C 70, NGC 300",
+    "Alternative Entries": "C 70",
     "Familiar Name": null,
     "Right Ascension": "00:54:53.48",
     "Declination": "-37:41:03.8",
@@ -2953,7 +2953,7 @@
   },
   {
     "Catalogue Entry": "NGC 457",
-    "Alternative Entries": "NGC 457",
+    "Alternative Entries": null,
     "Familiar Name": "Owl Cluster",
     "Right Ascension": "01:19:32.65",
     "Declination": "+58:17:26.5",
@@ -2971,7 +2971,7 @@
   },
   {
     "Catalogue Entry": "NGC 752",
-    "Alternative Entries": "C 28, NGC 752",
+    "Alternative Entries": "C 28",
     "Familiar Name": null,
     "Right Ascension": "01:57:34.82",
     "Declination": "+37:50:00.2",
@@ -2989,7 +2989,7 @@
   },
   {
     "Catalogue Entry": "NGC 869",
-    "Alternative Entries": "NGC 869",
+    "Alternative Entries": null,
     "Familiar Name": "Double cluster, h Persei Cluster",
     "Right Ascension": "02:18:58.56",
     "Declination": "+57:07:02.1",
@@ -3007,7 +3007,7 @@
   },
   {
     "Catalogue Entry": "NGC 884",
-    "Alternative Entries": "NGC 884",
+    "Alternative Entries": null,
     "Familiar Name": "Double cluster, chi Persei Cluster",
     "Right Ascension": "02:22:32.10",
     "Declination": "+57:08:38.8",
@@ -3025,7 +3025,7 @@
   },
   {
     "Catalogue Entry": "NGC 896",
-    "Alternative Entries": "NGC 896",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:25:27.82",
     "Declination": "+62:01:09.7",
@@ -3043,7 +3043,7 @@
   },
   {
     "Catalogue Entry": "NGC 1027",
-    "Alternative Entries": "NGC 1027",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "02:42:35.06",
     "Declination": "+61:35:39.7",
@@ -3061,7 +3061,7 @@
   },
   {
     "Catalogue Entry": "NGC 1316",
-    "Alternative Entries": "NGC 1316",
+    "Alternative Entries": null,
     "Familiar Name": "Fornax A",
     "Right Ascension": "03:22:41.72",
     "Declination": "-37:12:29.6",
@@ -3079,7 +3079,7 @@
   },
   {
     "Catalogue Entry": "NGC 1333",
-    "Alternative Entries": "NGC 1333",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "03:28:55.2",
     "Declination": "+31:22:12",
@@ -3097,7 +3097,7 @@
   },
   {
     "Catalogue Entry": "NGC 1432",
-    "Alternative Entries": "NGC 1432",
+    "Alternative Entries": null,
     "Familiar Name": "Maia Nebula, Maia nebula",
     "Right Ascension": "03:45:49.59",
     "Declination": "+24:22:04.3",
@@ -3115,7 +3115,7 @@
   },
   {
     "Catalogue Entry": "NGC 1435",
-    "Alternative Entries": "NGC 1435",
+    "Alternative Entries": null,
     "Familiar Name": "Merope Nebula, Merope nebula",
     "Right Ascension": "03:46:10.09",
     "Declination": "+23:45:53.9",
@@ -3133,7 +3133,7 @@
   },
   {
     "Catalogue Entry": "NGC 1499",
-    "Alternative Entries": "NGC 1499",
+    "Alternative Entries": null,
     "Familiar Name": "California Nebula, California nebula",
     "Right Ascension": "04:03:14.42",
     "Declination": "+36:22:02.9",
@@ -3151,7 +3151,7 @@
   },
   {
     "Catalogue Entry": "NGC 1502",
-    "Alternative Entries": "NGC 1502",
+    "Alternative Entries": null,
     "Familiar Name": "Jolly Roger Cluster",
     "Right Ascension": "04:07:49.30",
     "Declination": "+62:19:53.5",
@@ -3169,7 +3169,7 @@
   },
   {
     "Catalogue Entry": "NGC 1528",
-    "Alternative Entries": "NGC 1528",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:15:18.87",
     "Declination": "+51:12:41.3",
@@ -3187,7 +3187,7 @@
   },
   {
     "Catalogue Entry": "NGC 1545",
-    "Alternative Entries": "NGC 1545",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:20:56.26",
     "Declination": "+50:15:19.2",
@@ -3205,7 +3205,7 @@
   },
   {
     "Catalogue Entry": "NGC 1582",
-    "Alternative Entries": "NGC 1582",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:31:46.79",
     "Declination": "+43:47:05.4",
@@ -3223,7 +3223,7 @@
   },
   {
     "Catalogue Entry": "NGC 1647",
-    "Alternative Entries": "NGC 1647",
+    "Alternative Entries": null,
     "Familiar Name": "Pirate Moon Cluster",
     "Right Ascension": "04:45:55.57",
     "Declination": "+19:05:42.4",
@@ -3241,7 +3241,7 @@
   },
   {
     "Catalogue Entry": "NGC 1662",
-    "Alternative Entries": "NGC 1662",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:48:28.95",
     "Declination": "+10:55:49.4",
@@ -3259,7 +3259,7 @@
   },
   {
     "Catalogue Entry": "NGC 1664",
-    "Alternative Entries": "NGC 1664",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:51:05.43",
     "Declination": "+43:40:34.2",
@@ -3277,7 +3277,7 @@
   },
   {
     "Catalogue Entry": "NGC 1746",
-    "Alternative Entries": "NGC 1746",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "05:03:50.19",
     "Declination": "+23:46:03.5",
@@ -3295,7 +3295,7 @@
   },
   {
     "Catalogue Entry": "NGC 1763",
-    "Alternative Entries": "NGC 1763",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "04:56:49.19",
     "Declination": "-66:24:32.7",
@@ -3313,7 +3313,7 @@
   },
   {
     "Catalogue Entry": "NGC 1909",
-    "Alternative Entries": "NGC 1909",
+    "Alternative Entries": null,
     "Familiar Name": "Witch Head nebula, the Witch Head Nebula",
     "Right Ascension": "05:04:55.44",
     "Declination": "-07:15:56.3",
@@ -3331,7 +3331,7 @@
   },
   {
     "Catalogue Entry": "NGC 1977",
-    "Alternative Entries": "NGC 1977",
+    "Alternative Entries": null,
     "Familiar Name": "Running Man, the Running Man Nebula",
     "Right Ascension": "05:35:15.80",
     "Declination": "-04:50:39.6",
@@ -3349,7 +3349,7 @@
   },
   {
     "Catalogue Entry": "NGC 1980",
-    "Alternative Entries": "NGC 1980",
+    "Alternative Entries": null,
     "Familiar Name": "Lower Sword",
     "Right Ascension": "05:35:25.99",
     "Declination": "-05:54:35.6",
@@ -3367,7 +3367,7 @@
   },
   {
     "Catalogue Entry": "NGC 1981",
-    "Alternative Entries": "NGC 1981",
+    "Alternative Entries": null,
     "Familiar Name": "Upper Sword",
     "Right Ascension": "05:35:09.59",
     "Declination": "-04:25:30.2",
@@ -3385,7 +3385,7 @@
   },
   {
     "Catalogue Entry": "NGC 1990",
-    "Alternative Entries": "NGC 1990",
+    "Alternative Entries": null,
     "Familiar Name": "Alnilam",
     "Right Ascension": "05:36:12.82",
     "Declination": "-01:12:06.9",
@@ -3403,7 +3403,7 @@
   },
   {
     "Catalogue Entry": "NGC 2024",
-    "Alternative Entries": "NGC 2024",
+    "Alternative Entries": null,
     "Familiar Name": "Flame Nebula",
     "Right Ascension": "05:41:42.57",
     "Declination": "-01:51:22.6",
@@ -3421,7 +3421,7 @@
   },
   {
     "Catalogue Entry": "NGC 2052",
-    "Alternative Entries": "NGC 2052",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "05:37:11.05",
     "Declination": "-69:46:27.1",
@@ -3439,7 +3439,7 @@
   },
   {
     "Catalogue Entry": "NGC 2070",
-    "Alternative Entries": "C 103, NGC 2070",
+    "Alternative Entries": "C 103",
     "Familiar Name": "30 Dor Cluster,Tarantula Nebula, Tarantula Nebula",
     "Right Ascension": "05:38:42.36",
     "Declination": "-69:06:03.2",
@@ -3457,7 +3457,7 @@
   },
   {
     "Catalogue Entry": "NGC 2112",
-    "Alternative Entries": "NGC 2112",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "05:53:45.21",
     "Declination": "+00:24:38.9",
@@ -3475,7 +3475,7 @@
   },
   {
     "Catalogue Entry": "NGC 2174",
-    "Alternative Entries": "NGC 2174",
+    "Alternative Entries": null,
     "Familiar Name": "Monkey Head Nebula",
     "Right Ascension": "06:09:23.62",
     "Declination": "+20:39:34.5",
@@ -3493,7 +3493,7 @@
   },
   {
     "Catalogue Entry": "NGC 2175",
-    "Alternative Entries": "NGC 2175",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "06:09:39.55",
     "Declination": "+20:29:15.3",
@@ -3511,7 +3511,7 @@
   },
   {
     "Catalogue Entry": "NGC 2232",
-    "Alternative Entries": "NGC 2232",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "06:28:01.13",
     "Declination": "-04:50:50.8",
@@ -3529,7 +3529,7 @@
   },
   {
     "Catalogue Entry": "NGC 2237",
-    "Alternative Entries": "C 49, NGC 2237",
+    "Alternative Entries": "C 49",
     "Familiar Name": "Rosette A, Rosette Nebula",
     "Right Ascension": "06:30:54.61",
     "Declination": "+05:02:57.0",
@@ -3547,7 +3547,7 @@
   },
   {
     "Catalogue Entry": "NGC 2238",
-    "Alternative Entries": "NGC 2238",
+    "Alternative Entries": null,
     "Familiar Name": "Rosette Nebula",
     "Right Ascension": "06:30:40.37",
     "Declination": "+05:00:47.0",
@@ -3565,7 +3565,7 @@
   },
   {
     "Catalogue Entry": "NGC 2239",
-    "Alternative Entries": "C 50, NGC 2239",
+    "Alternative Entries": "C 50",
     "Familiar Name": null,
     "Right Ascension": "06:31:55.56",
     "Declination": "+04:56:34.6",
@@ -3583,7 +3583,7 @@
   },
   {
     "Catalogue Entry": "NGC 2252",
-    "Alternative Entries": "NGC 2252",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "06:34:42.97",
     "Declination": "+05:21:58.5",
@@ -3601,7 +3601,7 @@
   },
   {
     "Catalogue Entry": "NGC 2264",
-    "Alternative Entries": "NGC 2264",
+    "Alternative Entries": null,
     "Familiar Name": "Christmas Tree Cluster, Christmas Tree cluster",
     "Right Ascension": "06:40:58.25",
     "Declination": "+09:53:43.7",
@@ -3619,7 +3619,7 @@
   },
   {
     "Catalogue Entry": "NGC 2301",
-    "Alternative Entries": "NGC 2301",
+    "Alternative Entries": null,
     "Familiar Name": "Great Bird Cluster",
     "Right Ascension": "06:51:45.30",
     "Declination": "+00:27:33.1",
@@ -3637,7 +3637,7 @@
   },
   {
     "Catalogue Entry": "NGC 2331",
-    "Alternative Entries": "NGC 2331",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:06:59.83",
     "Declination": "+27:15:41.7",
@@ -3655,7 +3655,7 @@
   },
   {
     "Catalogue Entry": "NGC 2353",
-    "Alternative Entries": "NGC 2353",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:14:30.31",
     "Declination": "-10:15:57.1",
@@ -3673,7 +3673,7 @@
   },
   {
     "Catalogue Entry": "NGC 2354",
-    "Alternative Entries": "NGC 2354",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:14:05.27",
     "Declination": "-25:41:20.1",
@@ -3691,7 +3691,7 @@
   },
   {
     "Catalogue Entry": "NGC 2360",
-    "Alternative Entries": "NGC 2360",
+    "Alternative Entries": null,
     "Familiar Name": "Caroline's Cluster",
     "Right Ascension": "07:17:43.12",
     "Declination": "-15:38:28.7",
@@ -3709,7 +3709,7 @@
   },
   {
     "Catalogue Entry": "NGC 2374",
-    "Alternative Entries": "NGC 2374",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:23:56.07",
     "Declination": "-13:15:48.1",
@@ -3727,7 +3727,7 @@
   },
   {
     "Catalogue Entry": "NGC 2403",
-    "Alternative Entries": "C 7, NGC 2403",
+    "Alternative Entries": "C 7",
     "Familiar Name": null,
     "Right Ascension": "07:36:51.40",
     "Declination": "+65:36:09.2",
@@ -3745,7 +3745,7 @@
   },
   {
     "Catalogue Entry": "NGC 2423",
-    "Alternative Entries": "NGC 2423",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:37:06.73",
     "Declination": "-13:52:17.4",
@@ -3763,7 +3763,7 @@
   },
   {
     "Catalogue Entry": "NGC 2451",
-    "Alternative Entries": "NGC 2451",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "07:45:15.01",
     "Declination": "-37:58:02.8",
@@ -3781,7 +3781,7 @@
   },
   {
     "Catalogue Entry": "NGC 2477",
-    "Alternative Entries": "C 71, NGC 2477",
+    "Alternative Entries": "C 71",
     "Familiar Name": null,
     "Right Ascension": "07:52:09.78",
     "Declination": "-38:31:59.7",
@@ -3799,7 +3799,7 @@
   },
   {
     "Catalogue Entry": "NGC 2516",
-    "Alternative Entries": "C 96, NGC 2516",
+    "Alternative Entries": "C 96",
     "Familiar Name": null,
     "Right Ascension": "07:58:07.06",
     "Declination": "-60:45:12.5",
@@ -3817,7 +3817,7 @@
   },
   {
     "Catalogue Entry": "NGC 2520",
-    "Alternative Entries": "NGC 2520",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "08:04:58.18",
     "Declination": "-28:08:48.0",
@@ -3835,7 +3835,7 @@
   },
   {
     "Catalogue Entry": "NGC 2539",
-    "Alternative Entries": "NGC 2539",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "08:10:36.98",
     "Declination": "-12:49:14.4",
@@ -3853,7 +3853,7 @@
   },
   {
     "Catalogue Entry": "NGC 2546",
-    "Alternative Entries": "NGC 2546",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "08:12:15.63",
     "Declination": "-37:35:39.5",
@@ -3871,7 +3871,7 @@
   },
   {
     "Catalogue Entry": "NGC 2547",
-    "Alternative Entries": "NGC 2547",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "08:10:09.49",
     "Declination": "-49:12:20.4",
@@ -3889,7 +3889,7 @@
   },
   {
     "Catalogue Entry": "NGC 2736",
-    "Alternative Entries": "NGC 2736",
+    "Alternative Entries": null,
     "Familiar Name": "Pencil Nebula",
     "Right Ascension": "09:00:16.94",
     "Declination": "-45:56:53.0",
@@ -3907,7 +3907,7 @@
   },
   {
     "Catalogue Entry": "NGC 3114",
-    "Alternative Entries": "NGC 3114",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "10:02:29.57",
     "Declination": "-60:07:49.9",
@@ -3925,7 +3925,7 @@
   },
   {
     "Catalogue Entry": "NGC 3115",
-    "Alternative Entries": "NGC 3115",
+    "Alternative Entries": null,
     "Familiar Name": "Spindle Galaxy",
     "Right Ascension": "10:05:13.98",
     "Declination": "-07:43:06.9",
@@ -3943,7 +3943,7 @@
   },
   {
     "Catalogue Entry": "NGC 3199",
-    "Alternative Entries": "NGC 3199",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "10:17:24.43",
     "Declination": "-57:55:20.0",
@@ -3961,7 +3961,7 @@
   },
   {
     "Catalogue Entry": "NGC 3201",
-    "Alternative Entries": "C 79, NGC 3201",
+    "Alternative Entries": "C 79",
     "Familiar Name": null,
     "Right Ascension": "10:17:36.76",
     "Declination": "-46:24:40.4",
@@ -3979,7 +3979,7 @@
   },
   {
     "Catalogue Entry": "NGC 3228",
-    "Alternative Entries": "NGC 3228",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "10:21:22.24",
     "Declination": "-51:43:21.3",
@@ -3997,7 +3997,7 @@
   },
   {
     "Catalogue Entry": "NGC 3242",
-    "Alternative Entries": "NGC 3242",
+    "Alternative Entries": null,
     "Familiar Name": "Ghost of Jupiter, Jupiter's Ghost Nebula",
     "Right Ascension": "10:24:46.08",
     "Declination": "-18:38:32.0",
@@ -4015,7 +4015,7 @@
   },
   {
     "Catalogue Entry": "NGC 3293",
-    "Alternative Entries": "NGC 3293",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "10:35:48.77",
     "Declination": "-58:13:28.1",
@@ -4033,7 +4033,7 @@
   },
   {
     "Catalogue Entry": "NGC 3372",
-    "Alternative Entries": "C 92, NGC 3372",
+    "Alternative Entries": "C 92",
     "Familiar Name": "Carina Nebula,eta Car Nebula, Eta Carinae Nebula",
     "Right Ascension": "10:45:08.53",
     "Declination": "-59:52:00.1",
@@ -4051,7 +4051,7 @@
   },
   {
     "Catalogue Entry": "NGC 3532",
-    "Alternative Entries": "C 91, NGC 3532",
+    "Alternative Entries": "C 91",
     "Familiar Name": "Wishing Well Cluster",
     "Right Ascension": "11:05:47.82",
     "Declination": "-58:46:13.8",
@@ -4069,7 +4069,7 @@
   },
   {
     "Catalogue Entry": "NGC 3572",
-    "Alternative Entries": "NGC 3572",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "11:10:19.20",
     "Declination": "-60:14:54.1",
@@ -4087,7 +4087,7 @@
   },
   {
     "Catalogue Entry": "NGC 3576",
-    "Alternative Entries": "NGC 3576",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "11:11:31.67",
     "Declination": "-61:21:46.8",
@@ -4105,7 +4105,7 @@
   },
   {
     "Catalogue Entry": "NGC 3579",
-    "Alternative Entries": "NGC 3579",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "11:11:59.60",
     "Declination": "-61:14:35.6",
@@ -4123,7 +4123,7 @@
   },
   {
     "Catalogue Entry": "NGC 3766",
-    "Alternative Entries": "NGC 3766",
+    "Alternative Entries": null,
     "Familiar Name": "Pearl Cluster",
     "Right Ascension": "11:36:14.39",
     "Declination": "-61:36:18.6",
@@ -4141,7 +4141,7 @@
   },
   {
     "Catalogue Entry": "NGC 4236",
-    "Alternative Entries": "C 3, NGC 4236",
+    "Alternative Entries": "C 3",
     "Familiar Name": null,
     "Right Ascension": "12:16:42.12",
     "Declination": "+69:27:45.3",
@@ -4159,7 +4159,7 @@
   },
   {
     "Catalogue Entry": "NGC 4372",
-    "Alternative Entries": "C 108, NGC 4372",
+    "Alternative Entries": "C 108",
     "Familiar Name": null,
     "Right Ascension": "12:25:45.38",
     "Declination": "-72:39:32.7",
@@ -4177,7 +4177,7 @@
   },
   {
     "Catalogue Entry": "NGC 4609",
-    "Alternative Entries": "NGC 4609",
+    "Alternative Entries": null,
     "Familiar Name": "Coalsack Cluster",
     "Right Ascension": "12:42:16.83",
     "Declination": "-62:59:44.7",
@@ -4195,7 +4195,7 @@
   },
   {
     "Catalogue Entry": "NGC 4631",
-    "Alternative Entries": "NGC 4631",
+    "Alternative Entries": null,
     "Familiar Name": "Whale Galaxy",
     "Right Ascension": "12:42:08.01",
     "Declination": "+32:32:29.4",
@@ -4213,7 +4213,7 @@
   },
   {
     "Catalogue Entry": "NGC 5045",
-    "Alternative Entries": "NGC 5045",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "13:16:47.00",
     "Declination": "-63:25:00.0",
@@ -4231,7 +4231,7 @@
   },
   {
     "Catalogue Entry": "NGC 5128",
-    "Alternative Entries": "C 77, NGC 5128",
+    "Alternative Entries": "C 77",
     "Familiar Name": "Centaurus A",
     "Right Ascension": "13:25:27.62",
     "Declination": "-43:01:08.8",
@@ -4249,7 +4249,7 @@
   },
   {
     "Catalogue Entry": "NGC 5139",
-    "Alternative Entries": "C 80, NGC 5139",
+    "Alternative Entries": "C 80",
     "Familiar Name": "Omega Centauri",
     "Right Ascension": "13:26:45.89",
     "Declination": "-47:28:36.7",
@@ -4267,7 +4267,7 @@
   },
   {
     "Catalogue Entry": "NGC 5299",
-    "Alternative Entries": "NGC 5299",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "13:50:26.26",
     "Declination": "-59:56:51.8",
@@ -4285,7 +4285,7 @@
   },
   {
     "Catalogue Entry": "NGC 5460",
-    "Alternative Entries": "NGC 5460",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "14:07:27.81",
     "Declination": "-48:20:33.1",
@@ -4303,7 +4303,7 @@
   },
   {
     "Catalogue Entry": "NGC 5822",
-    "Alternative Entries": "NGC 5822",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "15:04:21.25",
     "Declination": "-54:23:47.1",
@@ -4321,7 +4321,7 @@
   },
   {
     "Catalogue Entry": "NGC 6087",
-    "Alternative Entries": "NGC 6087",
+    "Alternative Entries": null,
     "Familiar Name": "S Nor Cluster",
     "Right Ascension": "16:18:50.58",
     "Declination": "-57:56:04.5",
@@ -4339,7 +4339,7 @@
   },
   {
     "Catalogue Entry": "NGC 6124",
-    "Alternative Entries": "C 75, NGC 6124",
+    "Alternative Entries": "C 75",
     "Familiar Name": null,
     "Right Ascension": "16:25:20.06",
     "Declination": "-40:39:13.3",
@@ -4357,7 +4357,7 @@
   },
   {
     "Catalogue Entry": "NGC 6152",
-    "Alternative Entries": "NGC 6152",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "16:32:45.62",
     "Declination": "-52:38:38.4",
@@ -4375,7 +4375,7 @@
   },
   {
     "Catalogue Entry": "NGC 6188",
-    "Alternative Entries": "NGC 6188",
+    "Alternative Entries": null,
     "Familiar Name": "Rim Nebula",
     "Right Ascension": "16:40:05.84",
     "Declination": "-48:39:44.2",
@@ -4393,7 +4393,7 @@
   },
   {
     "Catalogue Entry": "NGC 6281",
-    "Alternative Entries": "NGC 6281",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "17:04:41.30",
     "Declination": "-37:59:06.8",
@@ -4411,7 +4411,7 @@
   },
   {
     "Catalogue Entry": "NGC 6334",
-    "Alternative Entries": "NGC 6334",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "17:20:49.70",
     "Declination": "-36:06:09.8",
@@ -4429,7 +4429,7 @@
   },
   {
     "Catalogue Entry": "NGC 6357",
-    "Alternative Entries": "NGC 6357",
+    "Alternative Entries": null,
     "Familiar Name": "the War and Peace Nebula",
     "Right Ascension": "17:24:43.57",
     "Declination": "-34:12:04.8",
@@ -4447,7 +4447,7 @@
   },
   {
     "Catalogue Entry": "NGC 6374",
-    "Alternative Entries": "NGC 6374",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "17:34:42.54",
     "Declination": "-32:34:52.9",
@@ -4465,7 +4465,7 @@
   },
   {
     "Catalogue Entry": "NGC 6397",
-    "Alternative Entries": "C 86, NGC 6397",
+    "Alternative Entries": "C 86",
     "Familiar Name": null,
     "Right Ascension": "17:40:41.36",
     "Declination": "-53:40:25.3",
@@ -4483,7 +4483,7 @@
   },
   {
     "Catalogue Entry": "NGC 6416",
-    "Alternative Entries": "NGC 6416",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "17:44:19.99",
     "Declination": "-32:21:39.6",
@@ -4501,7 +4501,7 @@
   },
   {
     "Catalogue Entry": "NGC 6526",
-    "Alternative Entries": "NGC 6526",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:04:06.15",
     "Declination": "-24:26:30.8",
@@ -4519,7 +4519,7 @@
   },
   {
     "Catalogue Entry": "NGC 6559",
-    "Alternative Entries": "NGC 6559",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:09:56.85",
     "Declination": "-24:06:23.0",
@@ -4537,7 +4537,7 @@
   },
   {
     "Catalogue Entry": "NGC 6604",
-    "Alternative Entries": "NGC 6604",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:18:02.96",
     "Declination": "-12:14:35.2",
@@ -4555,7 +4555,7 @@
   },
   {
     "Catalogue Entry": "NGC 6633",
-    "Alternative Entries": "NGC 6633",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "18:27:15.23",
     "Declination": "+06:30:29.6",
@@ -4573,7 +4573,7 @@
   },
   {
     "Catalogue Entry": "NGC 6727",
-    "Alternative Entries": "NGC 6727",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "19:01:42.27",
     "Declination": "-36:52:34.5",
@@ -4591,7 +4591,7 @@
   },
   {
     "Catalogue Entry": "NGC 6729",
-    "Alternative Entries": "NGC 6729",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "19:01:55.40",
     "Declination": "-36:57:27.5",
@@ -4609,7 +4609,7 @@
   },
   {
     "Catalogue Entry": "NGC 6744",
-    "Alternative Entries": "NGC 6744",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "19:09:46.10",
     "Declination": "-63:51:27.1",
@@ -4627,7 +4627,7 @@
   },
   {
     "Catalogue Entry": "NGC 6752",
-    "Alternative Entries": "C 93, NGC 6752",
+    "Alternative Entries": "C 93",
     "Familiar Name": null,
     "Right Ascension": "19:10:51.78",
     "Declination": "-59:58:54.7",
@@ -4645,7 +4645,7 @@
   },
   {
     "Catalogue Entry": "NGC 6774",
-    "Alternative Entries": "NGC 6774",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "19:16:16.30",
     "Declination": "-16:15:38.5",
@@ -4663,7 +4663,7 @@
   },
   {
     "Catalogue Entry": "NGC 6819",
-    "Alternative Entries": "NGC 6819",
+    "Alternative Entries": null,
     "Familiar Name": "Foxhead Cluster",
     "Right Ascension": "19:41:18.09",
     "Declination": "+40:11:12.3",
@@ -4681,7 +4681,7 @@
   },
   {
     "Catalogue Entry": "NGC 6820",
-    "Alternative Entries": "NGC 6820",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "19:42:28.02",
     "Declination": "+23:05:17.1",
@@ -4699,7 +4699,7 @@
   },
   {
     "Catalogue Entry": "NGC 6871",
-    "Alternative Entries": "NGC 6871",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:05:59.44",
     "Declination": "+35:46:38.1",
@@ -4717,7 +4717,7 @@
   },
   {
     "Catalogue Entry": "NGC 6888",
-    "Alternative Entries": "C 27, NGC 6888",
+    "Alternative Entries": "C 27",
     "Familiar Name": "Crescent Nebula",
     "Right Ascension": "20:12:06.55",
     "Declination": "+38:21:17.8",
@@ -4735,7 +4735,7 @@
   },
   {
     "Catalogue Entry": "NGC 6940",
-    "Alternative Entries": "NGC 6940",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:34:26.69",
     "Declination": "+28:16:57.8",
@@ -4753,7 +4753,7 @@
   },
   {
     "Catalogue Entry": "NGC 6946",
-    "Alternative Entries": "NGC 6946",
+    "Alternative Entries": null,
     "Familiar Name": "Fireworks Galaxy",
     "Right Ascension": "20:34:52.32",
     "Declination": "+60:09:14.1",
@@ -4771,7 +4771,7 @@
   },
   {
     "Catalogue Entry": "NGC 6960",
-    "Alternative Entries": "C 34, NGC 6960",
+    "Alternative Entries": "C 34",
     "Familiar Name": "Veil Nebula,Filamentary Nebula,Western Veil, West Veil Nebula",
     "Right Ascension": "20:45:58.18",
     "Declination": "+30:35:42.5",
@@ -4789,7 +4789,7 @@
   },
   {
     "Catalogue Entry": "NGC 6991",
-    "Alternative Entries": "NGC 6991",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "20:54:52.00",
     "Declination": "+47:27:42.0",
@@ -4807,7 +4807,7 @@
   },
   {
     "Catalogue Entry": "NGC 6992",
-    "Alternative Entries": "C 33, NGC 6992",
+    "Alternative Entries": "C 33",
     "Familiar Name": "East Veil Nebula, Eastern Veil,Network Nebula",
     "Right Ascension": "20:56:19.07",
     "Declination": "+31:44:33.9",
@@ -4825,7 +4825,7 @@
   },
   {
     "Catalogue Entry": "NGC 7000",
-    "Alternative Entries": "C 20, NGC 7000",
+    "Alternative Entries": "C 20",
     "Familiar Name": "North America Nebula",
     "Right Ascension": "20:59:17.14",
     "Declination": "+44:31:43.6",
@@ -4843,7 +4843,7 @@
   },
   {
     "Catalogue Entry": "NGC 7023",
-    "Alternative Entries": "C 4, NGC 7023",
+    "Alternative Entries": "C 4",
     "Familiar Name": "Iris Nebula",
     "Right Ascension": "21:01:35.62",
     "Declination": "+68:10:10.4",
@@ -4861,7 +4861,7 @@
   },
   {
     "Catalogue Entry": "NGC 7039",
-    "Alternative Entries": "NGC 7039",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "21:10:47.80",
     "Declination": "+45:37:18.5",
@@ -4879,7 +4879,7 @@
   },
   {
     "Catalogue Entry": "NGC 7082",
-    "Alternative Entries": "NGC 7082",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "21:29:17.74",
     "Declination": "+47:07:34.6",
@@ -4897,7 +4897,7 @@
   },
   {
     "Catalogue Entry": "NGC 7209",
-    "Alternative Entries": "NGC 7209",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "22:05:07.84",
     "Declination": "+46:29:00.7",
@@ -4915,7 +4915,7 @@
   },
   {
     "Catalogue Entry": "NGC 7243",
-    "Alternative Entries": "C 16, NGC 7243",
+    "Alternative Entries": "C 16",
     "Familiar Name": null,
     "Right Ascension": "22:15:08.58",
     "Declination": "+49:53:51.0",
@@ -4933,7 +4933,7 @@
   },
   {
     "Catalogue Entry": "NGC 7293",
-    "Alternative Entries": "NGC 7293",
+    "Alternative Entries": null,
     "Familiar Name": "Helix Nebula",
     "Right Ascension": "22:29:38.57",
     "Declination": "-20:50:14.4",
@@ -4951,7 +4951,7 @@
   },
   {
     "Catalogue Entry": "NGC 7380",
-    "Alternative Entries": "NGC 7380",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "22:47:21.01",
     "Declination": "+58:07:56.7",
@@ -4969,7 +4969,7 @@
   },
   {
     "Catalogue Entry": "NGC 7635",
-    "Alternative Entries": "NGC 7635",
+    "Alternative Entries": null,
     "Familiar Name": "Bubble Nebula",
     "Right Ascension": "23:20:45.60",
     "Declination": "+61:12:44.5",
@@ -4987,7 +4987,7 @@
   },
   {
     "Catalogue Entry": "NGC 7822",
-    "Alternative Entries": "NGC 7822",
+    "Alternative Entries": null,
     "Familiar Name": null,
     "Right Ascension": "00:03:35.35",
     "Declination": "+67:09:41.9",

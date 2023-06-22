@@ -76,7 +76,7 @@ export type ObservationObject = {
   typeCategory: string;
   ra: string | null;
   displayName: string;
-  alternateNames: string;
+  alternateNames: string | null;
   catalogue: string;
   objectNumber: number;
   size?: string;
@@ -136,7 +136,7 @@ export type StellariumObjectInfo = {
 
 export type ObservationObjectOpenNGC = {
   "Catalogue Entry": string;
-  "Alternative Entries": string;
+  "Alternative Entries": string | null;
   "Familiar Name": string | null;
   "Right Ascension": string | null;
   Declination: string | null;
