@@ -25,6 +25,13 @@ export type ConnectionContextType = {
   longitude: number | undefined;
   setLongitude: Dispatch<SetStateAction<number | undefined>>;
 
+  currentObservationListName: string | undefined;
+  setCurrentObservationListName: Dispatch<SetStateAction<string | undefined>>;
+  currentUserObservationListName: string | undefined;
+  setUserCurrentObservationListName: Dispatch<
+    SetStateAction<string | undefined>
+  >;
+
   deleteConnection: () => void;
 };
 

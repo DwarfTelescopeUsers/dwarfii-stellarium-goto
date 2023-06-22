@@ -11,6 +11,8 @@ import {
   saveConnectionStatusDB,
   saveInitialConnectionTimeDB,
   fetchIPDwarfDB,
+  fetchUserCurrentObservationListNameDb,
+  fetchCurrentObservationListNameDb,
 } from "@/db/db_utils";
 import { telephotoURL } from "@/lib/dwarfii_api";
 import { ConnectionContextType } from "@/types";
@@ -61,6 +63,20 @@ export function useSetupConnection() {
     if (connectionCtx.urlStellarium === undefined) {
       let data = fetchUrlStellariumDB();
       if (data !== undefined) connectionCtx.setUrlStellarium(data);
+    }
+
+    if (connectionCtx.currentObservationListName === undefined) {
+      let data = fetchCurrentObservationListNameDb();
+      if (data !== undefined) {
+        connectionCtx.setCurrentObservationListName(data);
+      }
+    }
+
+    if (connectionCtx.currentUserObservationListName === undefined) {
+      let data = fetchUserCurrentObservationListNameDb();
+      if (data !== undefined) {
+        connectionCtx.setUserCurrentObservationListName(data);
+      }
     }
 
     return () => {

@@ -1,18 +1,19 @@
 import type { FormEvent, Dispatch, SetStateAction } from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Papa from "papaparse";
 import type { ChangeEvent } from "react";
 import Modal from "react-bootstrap/Modal";
 
+import { ConnectionContext } from "@/stores/ConnectionContext";
 import { processObservationListTelescopius } from "@/lib/observation_lists_utils";
-import { ObservationObject } from "@/types";
+import { ObservationObject, ObservationObjectTelescopius } from "@/types";
 import {
   saveObservationListsDb,
   saveObservationListsNamesDb,
+  saveUserCurrentObservationListNameDb,
 } from "@/db/db_utils";
 
 type PropTypes = {
-  setCurrentObjectListName: Dispatch<SetStateAction<string>>;
   objectListsNames: string[];
   setObjectListsNames: Dispatch<SetStateAction<string[]>>;
   objectLists: { [k: string]: ObservationObject[] };
@@ -24,7 +25,6 @@ type PropTypes = {
 };
 export default function ImportObservationListModal(props: PropTypes) {
   const {
-    setCurrentObjectListName,
     objectListsNames,
     setObjectListsNames,
     objectLists,
@@ -32,6 +32,8 @@ export default function ImportObservationListModal(props: PropTypes) {
     showModal,
     setShowModal,
   } = props;
+
+  let connectionCtx = useContext(ConnectionContext);
 
   let [error, setError] = useState<string | undefined>();
 
@@ -56,7 +58,9 @@ export default function ImportObservationListModal(props: PropTypes) {
     formFile.text().then((data) => {
       const csvData = Papa.parse(data, { header: true });
       const cloneObjectLists = structuredClone(objectLists);
-      cloneObjectLists[name] = processObservationListTelescopius(csvData.data);
+      cloneObjectLists[name] = processObservationListTelescopius(
+        csvData.data as ObservationObjectTelescopius[]
+      );
       saveObservationListsDb(JSON.stringify(cloneObjectLists));
       setObjectLists(cloneObjectLists);
 
@@ -64,7 +68,8 @@ export default function ImportObservationListModal(props: PropTypes) {
       let updatedListsNames = objectListsNames.concat(name).join("|");
       saveObservationListsNamesDb(updatedListsNames);
       setObjectListsNames(objectListsNames.concat(name));
-      setCurrentObjectListName(name);
+      connectionCtx.setUserCurrentObservationListName(name);
+      saveUserCurrentObservationListNameDb(name);
 
       // close modal
       setShowModal(false);

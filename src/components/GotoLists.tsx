@@ -1,17 +1,20 @@
-import React, { useState } from "react";
+import { useContext } from "react";
 import type { ChangeEvent } from "react";
 
 import DSOList from "@/components/astroObjects/DSOList";
 import PlanetsList from "@/components/astroObjects/PlanetsList";
 import dsoCatalog from "../../data/catalogs/dso_catalog.json";
 import { processObservationListOpenNGC } from "@/lib/observation_lists_utils";
+import { ConnectionContext } from "@/stores/ConnectionContext";
+import { saveCurrentObservationListNameDb } from "@/db/db_utils";
 
 export default function AutoGoto() {
-  const [objectList, setObjectList] = useState("dso");
+  let connectionCtx = useContext(ConnectionContext);
   let dsoObject = processObservationListOpenNGC(dsoCatalog);
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
-    setObjectList(e.target.value);
+    connectionCtx.setCurrentObservationListName(e.target.value);
+    saveCurrentObservationListNameDb(e.target.value);
   }
 
   return (
@@ -19,10 +22,10 @@ export default function AutoGoto() {
       <h2>Observations Lists</h2>
       <select
         className="form-select"
-        value={objectList}
+        value={connectionCtx.currentObservationListName || "default"}
         onChange={selectListHandler}
       >
-        <option>Select object lists</option>
+        <option value="default">Select object lists</option>
         <option value="dso">DSO</option>
         <option value="planets">Planets and Moon</option>
       </select>

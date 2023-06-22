@@ -124,6 +124,28 @@ export function fetchObservationListsDb() {
   }
 }
 
+export function saveCurrentObservationListNameDb(name: string) {
+  localStorage.setItem("currentObservationListName", name);
+}
+
+export function fetchCurrentObservationListNameDb() {
+  let data = localStorage.getItem("currentObservationListName");
+  if (data) {
+    return data;
+  }
+}
+
+export function saveUserCurrentObservationListNameDb(name: string) {
+  localStorage.setItem("currentUserObservationListName", name);
+}
+
+export function fetchUserCurrentObservationListNameDb() {
+  let data = localStorage.getItem("currentUserObservationListName");
+  if (data) {
+    return data;
+  }
+}
+
 export function deleteConnectionDB(): void {
   [
     "connectionStatus",

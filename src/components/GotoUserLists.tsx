@@ -1,8 +1,7 @@
-// save current list in context store and database
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import type { ChangeEvent } from "react";
 
+import { ConnectionContext } from "@/stores/ConnectionContext";
 import DSOList from "@/components/astroObjects/DSOList";
 import ImportObservationListModal from "@/components/ImportObservationListModal";
 import DeleteObservationListModal from "./DeleteObservationListModal";
@@ -10,10 +9,12 @@ import { ObservationObject } from "@/types";
 import {
   fetchObservationListsDb,
   fetchObservationListsNamesDb,
+  saveUserCurrentObservationListNameDb,
 } from "@/db/db_utils";
 
-export default function AutoGoto() {
-  const [currentObjectListName, setCurrentObjectListName] = useState("");
+export default function GotoUserLists() {
+  let connectionCtx = useContext(ConnectionContext);
+
   let [objectListsNames, setObjectListsNames] = useState<string[]>([]);
   let [objectLists, setObjectLists] = useState<{
     [k: string]: ObservationObject[];
@@ -35,10 +36,13 @@ export default function AutoGoto() {
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
     let listName = e.target.value;
-    setCurrentObjectListName(listName);
+    connectionCtx.setUserCurrentObservationListName(listName);
+    saveUserCurrentObservationListNameDb(listName);
   }
 
-  let showInstructions = objectListsNames.length === 0;
+  let showInstructions =
+    objectListsNames.length === 0 ||
+    connectionCtx.currentUserObservationListName === "default";
 
   function importListModalHandle() {
     setShowImportModal(true);
@@ -55,10 +59,10 @@ export default function AutoGoto() {
         <div className="col-md-8">
           <select
             className="form-select mb-2"
-            value={currentObjectListName}
+            value={connectionCtx.currentUserObservationListName || "default"}
             onChange={selectListHandler}
           >
-            <option>Select object lists</option>
+            <option value="default">Select object lists</option>
             {objectListsNames.map((list, index) => (
               <option key={index} value={list}>
                 {list}
@@ -83,9 +87,12 @@ export default function AutoGoto() {
         </div>
       </div>
 
-      {currentObjectListName && objectLists[currentObjectListName] && (
-        <DSOList objects={objectLists[currentObjectListName]}></DSOList>
-      )}
+      {connectionCtx.currentUserObservationListName &&
+        objectLists[connectionCtx.currentUserObservationListName] && (
+          <DSOList
+            objects={objectLists[connectionCtx.currentUserObservationListName]}
+          ></DSOList>
+        )}
 
       {showInstructions && (
         <>
@@ -115,17 +122,14 @@ export default function AutoGoto() {
       <ImportObservationListModal
         showModal={showImportModal}
         setShowModal={setShowImportModal}
-        setCurrentObjectListName={setCurrentObjectListName}
         objectListsNames={objectListsNames}
         setObjectListsNames={setObjectListsNames}
         objectLists={objectLists}
         setObjectLists={setObjectLists}
       />
       <DeleteObservationListModal
-        currentObjectListName={currentObjectListName}
         showModal={showDeleteModal}
         setShowModal={setShowDeleteModal}
-        setCurrentObjectListName={setCurrentObjectListName}
         objectListsNames={objectListsNames}
         setObjectListsNames={setObjectListsNames}
         objectLists={objectLists}

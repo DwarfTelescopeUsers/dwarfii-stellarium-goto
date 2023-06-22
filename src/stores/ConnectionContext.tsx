@@ -30,6 +30,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
 
+  const [currentObservationListName, setCurrentObservationListName] = useState<
+    string | undefined
+  >();
+  const [currentUserObservationListName, setUserCurrentObservationListName] =
+    useState<string | undefined>();
+
   function deleteConnection() {
     setConnectionStatus(undefined);
     setInitialConnectionTime(undefined);
@@ -58,6 +64,11 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setLatitude,
     longitude,
     setLongitude,
+
+    currentObservationListName,
+    setCurrentObservationListName,
+    currentUserObservationListName,
+    setUserCurrentObservationListName,
 
     deleteConnection,
   };
