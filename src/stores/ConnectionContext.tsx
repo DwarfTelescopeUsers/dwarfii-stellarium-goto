@@ -1,9 +1,10 @@
-import React, { createContext, useState } from "react";
+import { createContext, useState } from "react";
+import type { ReactNode } from "react";
 
 import { ConnectionContextType } from "@/types";
 
 type ProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export const ConnectionContext = createContext<ConnectionContextType>(

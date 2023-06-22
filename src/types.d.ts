@@ -1,37 +1,29 @@
-import React from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export type ConnectionContextType = {
   connectionStatus: boolean | undefined;
-  setConnectionStatus: React.Dispatch<
-    React.SetStateAction<boolean | undefined>
-  >;
+  setConnectionStatus: Dispatch<SetStateAction<boolean | undefined>>;
   initialConnectionTime: number | undefined;
-  setInitialConnectionTime: React.Dispatch<
-    React.SetStateAction<number | undefined>
-  >;
+  setInitialConnectionTime: Dispatch<SetStateAction<number | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
-  setConnectionStatusStellarium: React.Dispatch<
-    React.SetStateAction<boolean | undefined>
-  >;
+  setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPDwarf: string | undefined;
-  setIPDwarf: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
-  setConnectionStatusStellarium: React.Dispatch<
-    React.SetStateAction<boolean | undefined>
-  >;
+  setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPStellarium: string | undefined;
-  setIPStellarium: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setIPStellarium: Dispatch<SetStateAction<string | undefined>>;
   portStellarium: number | undefined;
-  setPortStellarium: React.Dispatch<React.SetStateAction<number | undefined>>;
+  setPortStellarium: Dispatch<SetStateAction<number | undefined>>;
   urlStellarium: string | undefined;
-  setUrlStellarium: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setUrlStellarium: Dispatch<SetStateAction<string | undefined>>;
 
   latitude: number | undefined;
-  setLatitude: React.Dispatch<React.SetStateAction<number | undefined>>;
+  setLatitude: Dispatch<SetStateAction<number | undefined>>;
   longitude: number | undefined;
-  setLongitude: React.Dispatch<React.SetStateAction<number | undefined>>;
+  setLongitude: Dispatch<SetStateAction<number | undefined>>;
 
   deleteConnection: () => void;
 };
