@@ -50,24 +50,6 @@ export function convertHMSToDecimalDegrees(
   }
 }
 
-export function convertHMSToDecimalHour(
-  text: string,
-  decimalPlaces = 5
-): number | undefined {
-  let hmsMatches = extractHMSValues(text);
-  if (hmsMatches) {
-    // eslint-disable-next-line  no-unused-vars
-    let { hour, minute, second } = hmsMatches;
-    let decimal = Number(hour) + Number(minute) / 60 + Number(second) / 3600;
-    return formatFloatToDecimalPlaces(decimal, decimalPlaces);
-  }
-
-  let decimalMatches = text.match(/([0-9.]+)/);
-  if (decimalMatches) {
-    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
-  }
-}
-
 export function extractHMSValues(text: string) {
   let hmsMatches = text.match(/(\d{1,2})[hH] *(\d{1,2})[mM'] *([0-9.]+)[sS"]+/);
   if (hmsMatches) {

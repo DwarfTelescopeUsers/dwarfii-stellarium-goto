@@ -7,13 +7,6 @@ import {
 import { formatObjectNameStellarium, catalogs } from "@/lib/stellarium_utils";
 import { typesTypesCategories } from "../../data/objectTypes";
 import { abbrevNameConstellations } from "../../data/constellations";
-import {
-  convertHMSToDecimalDegrees,
-  convertDMSToDecimalDegrees,
-  convertHMSToDecimalHour,
-  extractHMSValues,
-  extractDMSValues,
-} from "@/lib/math_utils";
 
 function formatObservationStellarium(
   observation: StellariumObservationObject
@@ -70,10 +63,11 @@ export function processObservationListStellarium(
 
 export function processObservationListOpenNGC(
   observations: ObservationObjectOpenNGC[]
-): ObservationObject[] {
+) {
   return observations
     .map((observation) => {
-      let data = {
+      return {
+        dec: observation.Declination,
         designation: observation["Catalogue Entry"],
         magnitude: observation.Magnitude,
         type: observation.Type,
@@ -85,27 +79,7 @@ export function processObservationListOpenNGC(
         objectNumber: observation["Name number"],
         constellation: observation.Constellation,
         size: formatObjectSizeOpenNGC(observation),
-      } as ObservationObject;
-      if (observation.Declination) {
-        let decParts = extractDMSValues(observation.Declination);
-        if (decParts) {
-          let str = `${decParts.degree}° ${decParts.minute}' ${decParts.second}"`;
-          data.dec = decParts.negative ? "-" + str : str;
-        }
-        data.decDecimal = convertHMSToDecimalDegrees(observation.Declination);
-        data.decGoto = convertHMSToDecimalHour(observation.Declination);
-      }
-      if (observation["Right Ascension"]) {
-        let decParts = extractHMSValues(observation["Right Ascension"]);
-        if (decParts) {
-          data.ra = `${decParts.hour}h ${decParts.minute}m ${decParts.second}s`;
-        }
-        data.raDecimal = convertHMSToDecimalDegrees(
-          observation["Right Ascension"]
-        );
-        data.raGoto = convertHMSToDecimalHour(observation["Right Ascension"]);
-      }
-      return data;
+      };
     })
     .sort((a, b) => {
       return (
@@ -173,17 +147,6 @@ export function processObservationListTelescopius(
       } else {
         data.catalogue = observation["Catalogue Entry"];
         data.objectNumber = index;
-      }
-      if (observation.Declination) {
-        data.decDecimal = convertHMSToDecimalDegrees(observation.Declination);
-        data.decGoto = convertHMSToDecimalHour(observation.Declination);
-      }
-      if (observation["Right Ascension"]) {
-        let decimal = convertDMSToDecimalDegrees(
-          observation["Right Ascension"]
-        );
-        data.raDecimal = decimal;
-        data.raGoto = decimal;
       }
       return data;
     })
