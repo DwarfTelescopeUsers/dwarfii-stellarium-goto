@@ -45,6 +45,15 @@ export default function Nav() {
               <Link
                 className="nav-link active"
                 aria-current="page"
+                href="/astro-photos"
+              >
+                Astro
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                className="nav-link active"
+                aria-current="page"
                 href="/about"
               >
                 About

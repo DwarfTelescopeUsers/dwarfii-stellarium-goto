@@ -32,6 +32,8 @@ export type ConnectionContextType = {
     SetStateAction<string | undefined>
   >;
 
+  astroSettings: { [k: string]: number | string };
+  setAstroSettings: Dispatch<SetStateAction<{ [k: string]: number | string }>>;
   deleteConnection: () => void;
 };
 

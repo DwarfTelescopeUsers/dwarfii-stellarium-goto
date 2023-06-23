@@ -35,6 +35,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   >();
   const [currentUserObservationListName, setUserCurrentObservationListName] =
     useState<string | undefined>();
+  const [astroSettings, setAstroSettings] = useState<{
+    [k: string]: number | string;
+  }>({});
 
   function deleteConnection() {
     setConnectionStatus(undefined);
@@ -70,6 +73,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     currentUserObservationListName,
     setUserCurrentObservationListName,
 
+    astroSettings,
+    setAstroSettings,
     deleteConnection,
   };
   return (

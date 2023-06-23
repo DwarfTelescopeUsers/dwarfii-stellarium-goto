@@ -146,6 +146,26 @@ export function fetchUserCurrentObservationListNameDb() {
   }
 }
 
+export function fetchAstroSettingsDb(key: string) {
+  let data = localStorage.getItem("astroSettings");
+  if (data) {
+    let obj = JSON.parse(data);
+    return obj[key];
+  }
+}
+
+export function saveAstroSettingsDb(key: string, value: string) {
+  let data = localStorage.getItem("astroSettings");
+  if (data) {
+    let obj = JSON.parse(data);
+    obj[key] = value;
+    localStorage.setItem("astroSettings", JSON.stringify(obj));
+  } else {
+    let obj = { [key]: value };
+    localStorage.setItem("astroSettings", JSON.stringify(obj));
+  }
+}
+
 export function deleteConnectionDB(): void {
   [
     "connectionStatus",
