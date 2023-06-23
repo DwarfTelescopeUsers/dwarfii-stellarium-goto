@@ -12,6 +12,7 @@ import eventBus from "@/lib/event_bus";
 import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
+  convertHMSToDecimalHour,
 } from "@/lib/math_utils";
 
 type AstronomyObjectPropType = {
@@ -29,15 +30,6 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       setErrors(undefined);
     });
   }, []);
-
-  let raDecimal: undefined | number;
-  let decDecimal: undefined | number;
-  if (object.ra) {
-    raDecimal = convertHMSToDecimalDegrees(object.ra);
-  }
-  if (object.dec) {
-    decDecimal = convertDMSToDecimalDegrees(object.dec);
-  }
 
   function renderRiseSetTime(object: ObservationObject) {
     if (connectionCtx.latitude && connectionCtx.longitude) {
@@ -65,14 +57,14 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     if (
       connectionCtx.latitude &&
       connectionCtx.longitude &&
-      raDecimal &&
-      decDecimal
+      object.raDecimal &&
+      object.decDecimal
     ) {
       let results = computeRaDecToAltAz(
         connectionCtx.latitude,
         connectionCtx.longitude,
-        raDecimal,
-        decDecimal,
+        object.raDecimal,
+        object.decDecimal,
         new Date()
       );
 
@@ -91,12 +83,12 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     if (
       connectionCtx.latitude &&
       connectionCtx.longitude &&
-      raDecimal &&
-      decDecimal
+      object.ra &&
+      object.dec
     ) {
       return (
         <span>
-          RA: {raDecimal.toFixed(2)}, Dec: {decDecimal.toFixed(2)}
+          RA: {object.ra}, Dec: {object.dec}
         </span>
       );
     }
@@ -130,9 +122,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           </button>
           <button
             className="btn btn-primary mb-2"
-            onClick={() =>
-              startGotoHandler(connectionCtx, setErrors, raDecimal, decDecimal)
-            }
+            onClick={() => startGotoHandler(connectionCtx, setErrors, object)}
           >
             Goto
           </button>

@@ -8,8 +8,7 @@ import eventBus from "@/lib/event_bus";
 export function startGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
-  RA: number | undefined,
-  declination: number | undefined
+  observationObject: ObservationObject
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -19,9 +18,8 @@ export function startGotoHandler(
 
   let lat = connectionCtx.latitude;
   let lon = connectionCtx.longitude;
-  console.log(RA, declination, lat, lon);
-  if (RA === undefined) return;
-  if (declination === undefined) return;
+  if (observationObject.raGoto === undefined) return;
+  if (observationObject.decGoto === undefined) return;
   if (lat === undefined) return;
   if (lon === undefined) return;
 
@@ -31,8 +29,8 @@ export function startGotoHandler(
     let planet = null;
     let options = startGoto(
       planet,
-      RA,
-      declination,
+      observationObject.raGoto,
+      observationObject.decGoto,
       lat as number,
       lon as number
     );
@@ -139,7 +137,7 @@ export function centerGotoHandler(
         return response.json();
       })
       .then((data) => {
-        startGotoHandler(connectionCtx, setErrors, data.ra, data.dec);
+        startGotoHandler(connectionCtx, setErrors, data);
       })
       .catch((err) => stellariumErrorHandler(err, setErrors));
   } else {

@@ -72,11 +72,15 @@ export type StellariumObservationObject = {
 
 export type ObservationObject = {
   dec: string | null;
+  decDecimal: number | undefined;
+  decGoto: number | undefined;
   designation: string;
   magnitude: string | null | number;
   type: string;
   typeCategory: string;
   ra: string | null;
+  raDecimal: number | undefined;
+  raGoto: number | undefined;
   displayName: string;
   alternateNames: string | null;
   catalogue: string;
