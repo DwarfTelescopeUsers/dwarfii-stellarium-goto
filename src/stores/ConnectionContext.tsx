@@ -1,7 +1,7 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
-import { ConnectionContextType } from "@/types";
+import { ConnectionContextType, AstroSettings } from "@/types";
 
 type ProviderProps = {
   children: ReactNode;
@@ -35,9 +35,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   >();
   const [currentUserObservationListName, setUserCurrentObservationListName] =
     useState<string | undefined>();
-  const [astroSettings, setAstroSettings] = useState<{
-    [k: string]: number | string;
-  }>({});
+  const [astroSettings, setAstroSettings] = useState<AstroSettings>(
+    {} as AstroSettings
+  );
 
   function deleteConnection() {
     setConnectionStatus(undefined);

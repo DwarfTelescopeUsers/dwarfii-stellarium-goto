@@ -1,5 +1,6 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
@@ -22,9 +23,18 @@ import {
 } from "dwarfii_api";
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
+import { convertDMSToDecimalDegrees } from "@/lib/math_utils";
+import { validateAstroSettings } from "@/lib/form_validations";
 
-export default function TakeAstroPhoto() {
+type PropTypes = {
+  setValidSettings: any;
+};
+
+export default function TakeAstroPhoto(props: PropTypes) {
+  const { setValidSettings } = props;
+
   let connectionCtx = useContext(ConnectionContext);
+  const [imagingTime, setImagingTime] = useState(0);
 
   function updateTelescope(type: string, value: number) {
     if (connectionCtx.IPDwarf === undefined) {
@@ -74,91 +84,74 @@ export default function TakeAstroPhoto() {
     });
   }
 
-  function changeBinningHandler(e: ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "default") return;
+  function changeGainHandler(e: ChangeEvent<HTMLSelectElement>) {
+    let targetValue = e.target.value;
+    if (targetValue === "default") return;
 
-    let value = Number(e.target.value);
+    let value: number;
+    let modeValue: number;
+
+    if (targetValue === "auto") {
+      modeValue = modeAuto;
+      value = 0;
+    } else {
+      modeValue = modeManual;
+      value = Number(targetValue);
+    }
+
     connectionCtx.setAstroSettings((prev) => {
-      prev["binning"] = value;
-      return prev;
+      prev["gainMode"] = modeValue;
+      return { ...prev };
     });
-    saveAstroSettingsDb("binning", e.target.value);
-    // TODO: save binning to telescope if DL adds interface to api
+    saveAstroSettingsDb("gainMode", modeValue.toString());
+    updateTelescope("gainMode", modeValue);
+
+    setTimeout(() => {
+      connectionCtx.setAstroSettings((prev) => {
+        prev["gain"] = value;
+        return { ...prev };
+      });
+      saveAstroSettingsDb("gain", targetValue);
+      updateTelescope("gain", value);
+    }, 1000);
   }
 
   function changeExposureHandler(e: ChangeEvent<HTMLSelectElement>) {
     let targetValue = e.target.value;
     if (targetValue === "default") return;
 
+    let value: number;
+    let modeValue: number;
+
     if (targetValue === "auto") {
-      let mode = exposureTelephotoModeAuto;
-      connectionCtx.setAstroSettings((prev) => {
-        prev["exposureMode"] = mode;
-        return prev;
-      });
-      saveAstroSettingsDb("exposureMode", mode.toString());
+      modeValue = exposureTelephotoModeAuto;
+      value = 0;
     } else {
-      let mode = modeManual;
-      connectionCtx.setAstroSettings((prev) => {
-        prev["exposureMode"] = mode;
-        return prev;
-      });
-      saveAstroSettingsDb("exposureMode", mode.toString());
-      updateTelescope("exposureMode", mode);
-
-      setTimeout(() => {
-        let value = Number(targetValue);
-        connectionCtx.setAstroSettings((prev) => {
-          prev["exposure"] = value;
-          return prev;
-        });
-        saveAstroSettingsDb("exposure", targetValue);
-        updateTelescope("exposure", value);
-      }, 500);
+      modeValue = modeManual;
+      value = Number(targetValue);
     }
-  }
 
-  function changeFileFormatHandler(e: ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "default") return;
-
-    let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
-      prev["fileFormat"] = value;
-      return prev;
+      prev["exposureMode"] = modeValue;
+      return { ...prev };
     });
-    saveAstroSettingsDb("fileFormat", e.target.value);
-    // TODO: save file format to telescope if DL adds interface to api
-  }
+    saveAstroSettingsDb("exposureMode", modeValue.toString());
+    updateTelescope("exposureMode", modeValue);
 
-  function changeGainHandler(e: ChangeEvent<HTMLSelectElement>) {
-    let targetValue = e.target.value;
-    if (targetValue === "default") return;
-
-    if (targetValue === "auto") {
+    setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
-        prev["gainMode"] = modeAuto;
-        return prev;
+        prev["exposure"] = value;
+        return { ...prev };
       });
-      saveAstroSettingsDb("gainMode", modeAuto.toString());
-      updateTelescope("gainMode", modeAuto);
-    } else {
-      connectionCtx.setAstroSettings((prev) => {
-        prev["gainMode"] = modeManual;
-        return prev;
-      });
-      saveAstroSettingsDb("gainMode", modeManual.toString());
-      updateTelescope("gainMode", modeManual);
+      saveAstroSettingsDb("exposure", targetValue);
+      updateTelescope("exposure", value);
 
-      setTimeout(() => {
-        let value = Number(targetValue);
-        connectionCtx.setAstroSettings((prev) => {
-          prev["gain"] = value;
-          return prev;
-        });
-        saveAstroSettingsDb("gain", targetValue);
-        updateTelescope("gain", value);
-      }, 1000);
-    }
+      if (connectionCtx.astroSettings.count) {
+        setImagingTime(
+          Math.round((value * connectionCtx.astroSettings.count) / 60)
+        );
+      }
+    }, 500);
   }
 
   function changeIRHandler(e: ChangeEvent<HTMLSelectElement>) {
@@ -167,21 +160,69 @@ export default function TakeAstroPhoto() {
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
       prev["IR"] = value;
-      return prev;
+      return { ...prev };
     });
     saveAstroSettingsDb("IR", e.target.value);
     updateTelescope("IR", value);
   }
 
-  function changeCountHandler(e: ChangeEvent<HTMLInputElement>) {
+  function changeBinningHandler(e: ChangeEvent<HTMLSelectElement>) {
     if (e.target.value === "default") return;
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
+      prev["binning"] = value;
+      return { ...prev };
+    });
+    saveAstroSettingsDb("binning", e.target.value);
+    // TODO: save binning to telescope if DL adds interface to api
+  }
+
+  function changeFileFormatHandler(e: ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value === "default") return;
+
+    let value = Number(e.target.value);
+    connectionCtx.setAstroSettings((prev) => {
+      prev["fileFormat"] = value;
+      return { ...prev };
+    });
+    saveAstroSettingsDb("fileFormat", e.target.value);
+    // TODO: save file format to telescope if DL adds interface to api
+  }
+
+  function changeCountHandler(e: ChangeEvent<HTMLInputElement>) {
+    if (Number(e.target.value) > 999) return;
+    if (Number(e.target.value) < 1) return;
+
+    console.log(Number(e.target.value));
+
+    let value = Number(e.target.value);
+    connectionCtx.setAstroSettings((prev) => {
       prev["count"] = value;
-      return prev;
+      return { ...prev };
     });
     saveAstroSettingsDb("count", e.target.value);
+    setImagingTime(
+      Math.round((value * connectionCtx.astroSettings.exposure) / 60)
+    );
+  }
+
+  function changeRaHandler(e: ChangeEvent<HTMLInputElement>) {
+    connectionCtx.setAstroSettings((prev) => {
+      prev["rightAcension"] = e.target.value;
+      return { ...prev };
+    });
+    saveAstroSettingsDb("rightAcension", e.target.value);
+  }
+
+  function changeDecHandler(e: ChangeEvent<HTMLInputElement>) {
+    connectionCtx.setAstroSettings((prev) => {
+      prev["declination"] = e.target.value;
+      prev["declinationDecimal"] = convertDMSToDecimalDegrees(e.target.value);
+      return { ...prev };
+    });
+    saveAstroSettingsDb("declination", e.target.value);
+    saveAstroSettingsDb("declinationDecimal", e.target.value);
   }
 
   const allowedExposures = [
@@ -191,164 +232,228 @@ export default function TakeAstroPhoto() {
 
   const allowedGains = range(0, 150, 10);
 
-  let displayGain =
-    connectionCtx.astroSettings.gainMode === 1
-      ? connectionCtx.astroSettings.gain
-      : "auto";
-  let displayExp =
-    connectionCtx.astroSettings.exposureMode === 1
-      ? connectionCtx.astroSettings.exposure
-      : "auto";
-
   return (
     <div>
-      <form>
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="gain" className="form-label">
-              Gain
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <select
-              id="gain"
-              name="gain"
-              onChange={(e) => changeGainHandler(e)}
-              defaultValue={displayGain}
-            >
-              <option value="default">Select</option>
-              <option value="auto">Auto</option>
-              {allowedGains.map((exp) => (
-                <option key={exp} value={exp}>
-                  {exp}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="exposure" className="form-label">
-              Exposure (sec)
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <select
-              id="exposure"
-              name="exposure"
-              onChange={(e) => changeExposureHandler(e)}
-              defaultValue={displayExp}
-            >
-              <option value="default">Select</option>
-              <option value="auto">Auto</option>
-              {allowedExposures.map((exp) => (
-                <option key={exp} value={exp}>
-                  {exp}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="ir" className="form-label">
-              IR
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <select
-              id="ir"
-              name="ir"
-              onChange={(e) => changeIRHandler(e)}
-              defaultValue={connectionCtx.astroSettings.IR?.toString()}
-            >
-              <option value="default">Select</option>
-              <option value="0">Cut</option>
-              <option value="3">Pass</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="binning" className="form-label">
-              Binning
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <select
-              id="binning"
-              name="binning"
-              onChange={(e) => changeBinningHandler(e)}
-              defaultValue={connectionCtx.astroSettings.binning?.toString()}
-            >
-              <option value="default">Select</option>
-              <option value="0">1x1</option>
-              <option value="1">2x2</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="fileFormat" className="form-label">
-              File Format
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <select
-              id="fileFormat"
-              name="fileFormat"
-              onChange={(e) => changeFileFormatHandler(e)}
-              defaultValue={connectionCtx.astroSettings.fileFormat?.toString()}
-            >
-              <option value="default">Select</option>
-              <option value="0">FITS</option>
-              <option value="1">TIFF</option>
-            </select>
-          </div>
-        </div>
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="count" className="form-label">
-              Count
-            </label>
-          </div>
-          <div className="col-sm-8">
-            <input
-              defaultValue={connectionCtx.astroSettings.count}
-              type="number"
-              className="form-control"
-              id="count"
-              name="count"
-              placeholder="1"
-              required
-              onChange={(e) => changeCountHandler(e)}
-            />
-          </div>
-        </div>
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="ra" className="form-label">
-              Right Acension
-            </label>
-          </div>
-          <div className="col-sm-8">{connectionCtx.astroSettings.ra}</div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-sm-4">
-            <label htmlFor="declination" className="form-label">
-              Declination
-            </label>
-          </div>
-          <div className="col-sm-8">
-            {connectionCtx.astroSettings.declination}
-          </div>
-        </div>
-      </form>
+      <Formik
+        initialValues={{
+          gain: connectionCtx.astroSettings.gain,
+          exposure: connectionCtx.astroSettings.exposure,
+          IR: connectionCtx.astroSettings.IR,
+          binning: connectionCtx.astroSettings.binning,
+          fileFormat: connectionCtx.astroSettings.fileFormat,
+          count: connectionCtx.astroSettings.count || 0,
+          rightAcension: connectionCtx.astroSettings.rightAcension,
+          declination: connectionCtx.astroSettings.declination,
+        }}
+        validate={(values) => {
+          let errors = validateAstroSettings(values);
+          if (Object.keys(errors).length === 0) {
+            setValidSettings(true);
+          }
+          return errors;
+        }}
+        onSubmit={() => {}}
+      >
+        {({ values, errors, handleChange, handleBlur, handleSubmit }) => (
+          <form onSubmit={handleSubmit}>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="gain" className="form-label">
+                  Gain
+                </label>
+              </div>
+              <div className="col-8">
+                <select
+                  name="gain"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeGainHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.gain}
+                >
+                  <option value="default">Select</option>
+                  <option value="auto">Auto</option>
+                  {allowedGains.map((exp) => (
+                    <option key={exp} value={exp}>
+                      {exp}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="exposure" className="form-label">
+                  Exposure
+                </label>
+              </div>
+              <div className="col-8">
+                <select
+                  name="exposure"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeExposureHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.exposure}
+                >
+                  <option value="default">Select</option>
+                  <option value="auto">Auto</option>
+                  {allowedExposures.map((exp) => (
+                    <option key={exp} value={exp}>
+                      {exp}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="ir" className="form-label">
+                  IR
+                </label>
+              </div>
+              <div className="col-8">
+                <select
+                  name="IR"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeIRHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.IR}
+                >
+                  <option value="default">Select</option>
+                  <option value="0">Cut</option>
+                  <option value="3">Pass</option>
+                </select>
+              </div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="binning" className="form-label">
+                  Binning
+                </label>
+              </div>
+              <div className="col-8">
+                <select
+                  name="binning"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeBinningHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.binning}
+                >
+                  <option value="default">Select</option>
+                  <option value="0">1x1</option>
+                  <option value="1">2x2</option>
+                </select>
+              </div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="fileFormat" className="form-label">
+                  Format
+                </label>
+              </div>
+              <div className="col-8">
+                <select
+                  name="fileFormat"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeFileFormatHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.fileFormat}
+                >
+                  <option value="default">Select</option>
+                  <option value="0">FITS</option>
+                  <option value="1">TIFF</option>
+                </select>
+              </div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="count" className="form-label">
+                  Count
+                </label>
+              </div>
+              <div className="col-8">
+                <input
+                  type="number"
+                  className="form-control"
+                  name="count"
+                  placeholder="1"
+                  max="999"
+                  min="1"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeCountHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.count}
+                />
+              </div>
+              {errors.count && <p className="text-danger">{errors.count}</p>}
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">Total time</div>
+              <div className="col-8">{imagingTime} min</div>
+            </div>
+            <div className="row mb-md-2 mb-sm-1 mt-1">
+              <div className="col-4">
+                <label htmlFor="rightAcension" className="form-label">
+                  Right Ascension
+                </label>
+              </div>
+              <div className="col-8">
+                <input
+                  type="text"
+                  className="form-control"
+                  name="rightAcension"
+                  placeholder="00h 42m 44.10s"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeRaHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.rightAcension}
+                />
+              </div>
+              {errors.rightAcension && (
+                <p className="text-danger">{errors.rightAcension}</p>
+              )}
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="declination" className="form-label">
+                  Declination
+                </label>
+              </div>
+              <div className="col-8">
+                <input
+                  type="text"
+                  className="form-control"
+                  name="declination"
+                  placeholder={"+41° 15' 54.7\""}
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeDecHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.declination}
+                />
+              </div>
+              {errors.declination && (
+                <p className="text-danger">{errors.declination}</p>
+              )}
+            </div>
+            {/* {JSON.stringify(values)} */}
+          </form>
+        )}
+      </Formik>
     </div>
   );
 }

@@ -25,6 +25,7 @@
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "eslint-config-prettier": "^8.8.0",
+    "formik": "^2.4.2",
     "next": "13.4.2",
     "papaparse": "^5.4.1",
     "prettier": "^2.8.8",

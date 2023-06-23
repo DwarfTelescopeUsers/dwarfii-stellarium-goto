@@ -22,6 +22,7 @@ export default function ImagingMenu(props: PropType) {
   let connectionCtx = useContext(ConnectionContext);
 
   const [showPopover, setShowPopover] = useState(false);
+  const [validSettings, setValidSettings] = useState(false);
 
   function takeAstroPhotoHandler() {
     if (connectionCtx.IPDwarf == undefined) {
@@ -33,13 +34,13 @@ export default function ImagingMenu(props: PropType) {
       console.log("start takeAstroPhoto...");
 
       let payload = takeAstroPhoto(
-        connectionCtx.astroSettings.RA as number,
-        connectionCtx.astroSettings.declination as number,
-        connectionCtx.astroSettings.exposure as number,
-        connectionCtx.astroSettings.gain as number,
-        connectionCtx.astroSettings.binning as number,
-        connectionCtx.astroSettings.count as number,
-        connectionCtx.astroSettings.fileFormat as number
+        connectionCtx.astroSettings.rightAcensionDecimal,
+        connectionCtx.astroSettings.declinationDecimal,
+        connectionCtx.astroSettings.exposure,
+        connectionCtx.astroSettings.gain,
+        connectionCtx.astroSettings.binning,
+        connectionCtx.astroSettings.count,
+        connectionCtx.astroSettings.fileFormat
       );
       socketSend(socket, payload);
     });
@@ -88,7 +89,7 @@ export default function ImagingMenu(props: PropType) {
           overlay={
             <Popover id="popover-positioned-left">
               <Popover.Body>
-                <ImagingAstroSettings />
+                <ImagingAstroSettings setValidSettings={setValidSettings} />
               </Popover.Body>
             </Popover>
           }

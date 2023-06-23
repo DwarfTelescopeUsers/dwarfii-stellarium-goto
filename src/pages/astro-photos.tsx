@@ -57,14 +57,15 @@ export default function AstroPhoto() {
         <title>Astro Photos</title>
       </Head>
       <StatusBar mode="astro" />
+      <div className="container">
+        <div className="row">
+          <main className="col-11">
+            <DwarfCameras showWideangle={showWideangle} />
+          </main>
 
-      <div className="row">
-        <main className="col-md-11">
-          <DwarfCameras showWideangle={showWideangle} />
-        </main>
-
-        <div className="sidebar border border-right col-1">
-          <ImagingMenu setShowWideangle={setShowWideangle} />
+          <div className="sidebar border border-right col-1">
+            <ImagingMenu setShowWideangle={setShowWideangle} />
+          </div>
         </div>
       </div>
     </>

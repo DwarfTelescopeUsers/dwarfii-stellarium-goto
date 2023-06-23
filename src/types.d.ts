@@ -32,8 +32,8 @@ export type ConnectionContextType = {
     SetStateAction<string | undefined>
   >;
 
-  astroSettings: { [k: string]: number | string };
-  setAstroSettings: Dispatch<SetStateAction<{ [k: string]: number | string }>>;
+  astroSettings: AstroSettings;
+  setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
   deleteConnection: () => void;
 };
 
@@ -176,4 +176,19 @@ export type ObservationObjectTelescopius = {
   "Transit Time": string;
   Type: string;
   [k: string]: string;
+};
+
+export type AstroSettings = {
+  rightAcension: string;
+  rightAcensionDecimal: number;
+  declination: string;
+  declinationDecimal: number;
+  gain: number;
+  gainMode: number;
+  exposure: number;
+  exposureMode: number;
+  IR: number;
+  binning: number;
+  fileFormat: number;
+  count: number;
 };
