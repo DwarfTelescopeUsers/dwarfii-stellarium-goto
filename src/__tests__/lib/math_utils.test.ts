@@ -26,9 +26,9 @@ describe("convertHMSToDecimalDegrees", () => {
     expect(res).toEqual(expected);
   });
 
-  it("otherwise, returns undefined", () => {
+  it("otherwise, returns NaN", () => {
     let text = "random";
-    let expected = undefined;
+    let expected = NaN;
 
     let res = convertHMSToDecimalDegrees(text);
 
@@ -105,9 +105,9 @@ describe("convertDMSToDecimalDegrees", () => {
     expect(res).toEqual(expected);
   });
 
-  it("otherwise, returns undefined", () => {
+  it("otherwise, returns NaN", () => {
     let text = "random";
-    let expected = undefined;
+    let expected = NaN;
 
     let res = convertDMSToDecimalDegrees(text);
 

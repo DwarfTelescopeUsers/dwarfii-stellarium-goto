@@ -34,7 +34,7 @@ export function range(start: number, stop: number, step: number) {
 export function convertHMSToDecimalDegrees(
   text: string,
   decimalPlaces = 5
-): number | undefined {
+): number {
   let hmsMatches = extractHMSValues(text);
   if (hmsMatches) {
     // eslint-disable-next-line  no-unused-vars
@@ -48,6 +48,8 @@ export function convertHMSToDecimalDegrees(
   if (decimalMatches) {
     return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
   }
+
+  return Number(text);
 }
 
 export function extractHMSValues(text: string) {
@@ -88,7 +90,7 @@ export function convertDecimalDegreesToHMS(decimal: number) {
 export function convertDMSToDecimalDegrees(
   text: string,
   decimalPlaces = 5
-): number | undefined {
+): number {
   let dmsMatches = extractDMSValues(text);
   if (dmsMatches) {
     let { negative, degree, minute, second } = dmsMatches;
@@ -109,6 +111,8 @@ export function convertDMSToDecimalDegrees(
     let isNegative = text[0] === "-";
     return isNegative ? -1 * decimal : decimal;
   }
+
+  return Number(text);
 }
 
 export function extractDMSValues(text: string) {
