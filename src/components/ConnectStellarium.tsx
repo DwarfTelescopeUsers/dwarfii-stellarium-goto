@@ -44,7 +44,7 @@ export default function ConnectStellarium() {
           saveConnectionStatusStellariumDB(true);
         })
         .catch((err) => {
-          console.log(err);
+          console.log("Stellarium connection error:", err);
           setConnecting(false);
           connectionCtx.setConnectionStatusStellarium(false);
           saveConnectionStatusStellariumDB(false);
@@ -93,12 +93,12 @@ export default function ConnectStellarium() {
 
       <form onSubmit={checkConnection}>
         <div className="row mb-3">
-          <div className="col-sm-1">
+          <div className="col-md-1">
             <label htmlFor="ip" className="form-label">
               IP
             </label>
           </div>
-          <div className="col-sm-11">
+          <div className="col-md-11">
             <input
               className="form-control"
               id="ip"
@@ -110,12 +110,12 @@ export default function ConnectStellarium() {
           </div>
         </div>
         <div className="row mb-3">
-          <div className="col-sm-1">
+          <div className="col-md-1">
             <label htmlFor="port" className="form-label">
               Port
             </label>
           </div>
-          <div className="col-sm-11">
+          <div className="col-md-11">
             <input
               className="form-control"
               id="port"

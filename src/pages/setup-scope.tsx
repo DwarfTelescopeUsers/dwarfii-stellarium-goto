@@ -11,11 +11,11 @@ export default function SetupScope() {
   return (
     <div>
       <StatusBar mode="setup" />
+      <SetLocation />
+      <hr />
       <ConnectDwarf />
       <hr />
       <ConnectStellarium />
-      <hr />
-      <SetLocation />
     </div>
   );
 }

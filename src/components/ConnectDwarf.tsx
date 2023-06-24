@@ -124,12 +124,12 @@ export default function ConnectDwarf() {
         </li>
         <form onSubmit={checkConnection} className="mb-3">
           <div className="row mb-3">
-            <div className="col-sm-1">
+            <div className="col-md-1">
               <label htmlFor="ip" className="form-label">
                 IP
               </label>
             </div>
-            <div className="col-sm-11">
+            <div className="col-md-11">
               <input
                 className="form-control"
                 id="ip"

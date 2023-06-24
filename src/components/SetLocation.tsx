@@ -60,10 +60,12 @@ export default function SetLocation() {
 
       <form>
         <div className="row mb-3">
-          <div className="col">
+          <div className="col-lg-1 col-md-2">
             <label htmlFor="latitude" className="form-label">
               Latitude
             </label>
+          </div>
+          <div className="col-lg-11 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
@@ -75,11 +77,14 @@ export default function SetLocation() {
               onChange={(e) => latitudeHandler(e)}
             />
           </div>
-
-          <div className="col">
+        </div>
+        <div className="row mb-3">
+          <div className="col-lg-1 col-md-2">
             <label htmlFor="longitude" className="form-label">
               Longitude
             </label>
+          </div>
+          <div className="col-lg-11 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
