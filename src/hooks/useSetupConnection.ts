@@ -17,7 +17,7 @@ import {
   fetchAstroSettingsAllDb,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
-import { telephotoURL } from "@/lib/dwarfii_api";
+import { telephotoURL } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {

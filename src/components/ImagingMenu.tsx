@@ -10,7 +10,7 @@ import {
   takeAstroPhoto,
   takeAstroPhotoCmd,
   socketSend,
-} from "@/lib/dwarfii_api";
+} from "dwarfii_api";
 import ImagingAstroSettings from "@/components/ImagingAstroSettings";
 
 type PropType = {

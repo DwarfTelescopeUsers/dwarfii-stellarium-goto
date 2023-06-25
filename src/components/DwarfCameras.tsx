@@ -11,7 +11,7 @@ import {
   binning2x2,
   turnOnCamera,
   socketSend,
-} from "@/lib/dwarfii_api";
+} from "dwarfii_api";
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 

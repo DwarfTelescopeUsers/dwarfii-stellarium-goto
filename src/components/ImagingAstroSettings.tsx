@@ -19,7 +19,7 @@ import {
   modeAuto,
   exposureTelephotoModeAuto,
   socketSend,
-} from "@/lib/dwarfii_api";
+} from "dwarfii_api";
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 

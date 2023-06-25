@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import { ObservationObject, ConnectionContextType } from "@/types";
 import { focusPath, objectInfoPath } from "@/lib/stellarium_utils";
-import { wsURL, startGoto, startGotoCmd, socketSend } from "@/lib/dwarfii_api";
+import { wsURL, startGoto, startGotoCmd, socketSend } from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
 
 export function startGotoHandler(

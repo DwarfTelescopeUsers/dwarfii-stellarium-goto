@@ -9,3 +9,4 @@ declare module "astronomia/data/vsop87Bneptune";
 declare module "astronomia/data/vsop87Bsaturn";
 declare module "astronomia/data/vsop87Buranus";
 declare module "astronomia/data/vsop87Bvenus";
+declare module "dwarfii_api";

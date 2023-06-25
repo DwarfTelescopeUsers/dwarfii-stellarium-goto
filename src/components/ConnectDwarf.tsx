@@ -7,7 +7,7 @@ import {
   statusWideangleCmd,
   cameraSettings,
   socketSend,
-} from "@/lib/dwarfii_api";
+} from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   saveConnectionStatusDB,
