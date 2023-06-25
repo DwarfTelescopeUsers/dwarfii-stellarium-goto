@@ -14,6 +14,7 @@ import {
   fetchUserCurrentObservationListNameDb,
   fetchCurrentObservationListNameDb,
   fetchConnectionStatusDB,
+  fetchAstroSettingsAllDb,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
 import { telephotoURL } from "@/lib/dwarfii_api";
@@ -96,6 +97,13 @@ export function useSetupConnection() {
       let data = fetchUserCurrentObservationListNameDb();
       if (data !== undefined) {
         connectionCtx.setUserCurrentObservationListName(data);
+      }
+    }
+
+    if (connectionCtx.astroSettings.gain === undefined) {
+      let data = fetchAstroSettingsAllDb();
+      if (data !== undefined) {
+        connectionCtx.setAstroSettings(data);
       }
     }
 

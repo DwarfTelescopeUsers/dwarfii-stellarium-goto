@@ -154,6 +154,13 @@ export function fetchAstroSettingsDb(key: string) {
   }
 }
 
+export function fetchAstroSettingsAllDb() {
+  let data = localStorage.getItem("astroSettings");
+  if (data) {
+    return JSON.parse(data);
+  }
+}
+
 export function saveAstroSettingsDb(key: string, value: string) {
   let data = localStorage.getItem("astroSettings");
   if (data) {
