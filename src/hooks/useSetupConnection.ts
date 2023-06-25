@@ -14,6 +14,7 @@ import {
   fetchUserCurrentObservationListNameDb,
   fetchCurrentObservationListNameDb,
   fetchConnectionStatusDB,
+  saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
 import { telephotoURL } from "@/lib/dwarfii_api";
 import { ConnectionContextType } from "@/types";
@@ -23,6 +24,7 @@ export function useSetupConnection() {
 
   useEffect(() => {
     let timerDwarf: any;
+    let timerStellarium: any;
 
     if (connectionCtx.connectionStatus) {
       checkDwarfConnection(connectionCtx, timerDwarf);
@@ -33,10 +35,23 @@ export function useSetupConnection() {
       }, 90 * 1000);
     }
 
+    if (connectionCtx.connectionStatusStellarium) {
+      checkStellariumConnection(connectionCtx, timerStellarium);
+
+      // continously check connection status
+      timerStellarium = setInterval(() => {
+        checkStellariumConnection(connectionCtx, timerStellarium);
+      }, 90 * 1000);
+    }
+
     // load values from db
     if (connectionCtx.connectionStatus === undefined) {
       let data = fetchConnectionStatusDB();
       if (data !== undefined) connectionCtx.setConnectionStatus(data);
+    }
+    if (connectionCtx.connectionStatusStellarium === undefined) {
+      let data = fetchConnectionStatusStellariumDB();
+      if (data !== undefined) connectionCtx.setConnectionStatusStellarium(data);
     }
     if (connectionCtx.latitude === undefined) {
       let data = fetchCoordinatesDB();
@@ -85,8 +100,14 @@ export function useSetupConnection() {
     }
 
     return () => {
-      console.log("unmount: delete checkConnection timer");
-      clearInterval(timer);
+      if (connectionCtx.connectionStatus === false) {
+        console.log("unmount: delete checkDwarfConnection timer");
+        clearInterval(timerDwarf);
+      }
+      if (connectionCtx.connectionStatusStellarium === false) {
+        console.log("unmount: delete checkStellariumConnection timer");
+        clearInterval(timerStellarium);
+      }
     };
   }, [connectionCtx]);
 }
@@ -111,12 +132,48 @@ function checkDwarfConnection(
       }
     })
     .catch((err) => {
-      if (err.name === "AbortError") {
+      if (err.name === "AbortError" || err.message == "Failed to fetch") {
         console.log("Dwarf connection error");
         clearInterval(timer);
 
         connectionCtx.setConnectionStatus(false);
         saveConnectionStatusDB(false);
+      } else {
+        console.log("useSetupConnection err ???", err.name, err.message);
+      }
+    });
+}
+
+function checkStellariumConnection(
+  connectionCtx: ConnectionContextType,
+  timer: any
+) {
+  if (connectionCtx.IPStellarium === undefined) {
+    return;
+  }
+
+  // if we can't connect to camera in 2 seconds, reset connection data
+  let url = `http://${connectionCtx.IPStellarium}:${connectionCtx.portStellarium}`;
+  console.log("checkStellariumConnection...");
+  fetch(url, {
+    signal: AbortSignal.timeout(2000),
+  })
+    .then(() => {
+      console.log("Stellarium connection ok");
+      if (!connectionCtx.connectionStatusStellarium) {
+        connectionCtx.setConnectionStatusStellarium(true);
+        saveConnectionStatusStellariumDB(true);
+      }
+    })
+    .catch((err) => {
+      if (err.name === "AbortError" || err.message === "Load failed") {
+        console.log("Stellarium connection error");
+        clearInterval(timer);
+
+        connectionCtx.setConnectionStatusStellarium(false);
+        saveConnectionStatusStellariumDB(false);
+      } else {
+        console.log("useSetupConnection err >>>", err.name, err.message);
       }
     });
 }
