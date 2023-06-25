@@ -13,6 +13,7 @@ import {
   fetchIPDwarfDB,
   fetchUserCurrentObservationListNameDb,
   fetchCurrentObservationListNameDb,
+  fetchConnectionStatusDB,
 } from "@/db/db_utils";
 import { telephotoURL } from "@/lib/dwarfii_api";
 import { ConnectionContextType } from "@/types";
@@ -21,18 +22,22 @@ export function useSetupConnection() {
   let connectionCtx = useContext(ConnectionContext);
 
   useEffect(() => {
-    let timer: any;
+    let timerDwarf: any;
 
     if (connectionCtx.connectionStatus) {
-      checkConnection(connectionCtx, timer);
+      checkDwarfConnection(connectionCtx, timerDwarf);
 
       // continously check connection status
-      timer = setInterval(() => {
-        checkConnection(connectionCtx, timer);
+      timerDwarf = setInterval(() => {
+        checkDwarfConnection(connectionCtx, timerDwarf);
       }, 90 * 1000);
     }
 
     // load values from db
+    if (connectionCtx.connectionStatus === undefined) {
+      let data = fetchConnectionStatusDB();
+      if (data !== undefined) connectionCtx.setConnectionStatus(data);
+    }
     if (connectionCtx.latitude === undefined) {
       let data = fetchCoordinatesDB();
       if (data.latitude) {
@@ -86,7 +91,10 @@ export function useSetupConnection() {
   }, [connectionCtx]);
 }
 
-function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
+function checkDwarfConnection(
+  connectionCtx: ConnectionContextType,
+  timer: any
+) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
@@ -95,7 +103,7 @@ function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
     signal: AbortSignal.timeout(2000),
   })
     .then(() => {
-      console.log("connection ok");
+      console.log("Dwarf connection ok");
       if (!connectionCtx.connectionStatus) {
         connectionCtx.setConnectionStatus(true);
         saveConnectionStatusDB(true);
@@ -104,7 +112,7 @@ function checkConnection(connectionCtx: ConnectionContextType, timer: any) {
     })
     .catch((err) => {
       if (err.name === "AbortError") {
-        console.log("connection error");
+        console.log("Dwarf connection error");
         clearInterval(timer);
 
         connectionCtx.setConnectionStatus(false);
