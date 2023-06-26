@@ -1,0 +1,16 @@
+.icon {
+  color: var(--bs-body-color);
+}
+
+.outerring {
+  animation: rotate 10s linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -3,7 +3,6 @@ import { useContext, useState } from "react";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 
-import styles from "@/components/ImagingMenu.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   wsURL,
@@ -11,7 +10,9 @@ import {
   takeAstroPhotoCmd,
   socketSend,
 } from "dwarfii_api";
-import ImagingAstroSettings from "@/components/ImagingAstroSettings";
+import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
+import RecordingButton from "@/components/icons/RecordingButton";
+import RecordButton from "@/components/icons/RecordButton";
 
 type PropType = {
   setShowWideangle: Dispatch<SetStateAction<boolean>>;
@@ -23,11 +24,14 @@ export default function ImagingMenu(props: PropType) {
 
   const [showPopover, setShowPopover] = useState(false);
   const [validSettings, setValidSettings] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   function takeAstroPhotoHandler() {
     if (connectionCtx.IPDwarf == undefined) {
       return;
     }
+
+    setIsRecording(true);
     const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
     socket.addEventListener("open", () => {
@@ -59,6 +63,9 @@ export default function ImagingMenu(props: PropType) {
     });
   }
 
+  function stopAstroPhotoHandler() {
+    setIsRecording(false);
+  }
   return (
     <ul className="nav flex-column">
       <li className="nav-item">
@@ -74,10 +81,11 @@ export default function ImagingMenu(props: PropType) {
         </a>
       </li>
       <li className="nav-item">
-        <button
-          className={`btn btn-primary ${styles.shootButton}`}
-          onClick={takeAstroPhotoHandler}
-        ></button>
+        {isRecording ? (
+          <RecordingButton onClick={stopAstroPhotoHandler} />
+        ) : (
+          <RecordButton onClick={takeAstroPhotoHandler} />
+        )}
       </li>
       <li className="nav-item">
         <OverlayTrigger

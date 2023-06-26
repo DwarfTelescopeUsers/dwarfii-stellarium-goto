@@ -6,7 +6,7 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 import StatusBar from "@/components/shared/StatusBar";
 import DwarfCameras from "@/components/DwarfCameras";
-import ImagingMenu from "@/components/ImagingMenu";
+import ImagingMenu from "@/components/imaging/ImagingMenu";
 
 export default function AstroPhoto() {
   useSetupConnection();
