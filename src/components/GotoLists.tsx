@@ -19,7 +19,6 @@ export default function AutoGoto() {
 
   return (
     <div>
-      <h2>Observations Lists</h2>
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Center to work.
@@ -48,21 +47,19 @@ export default function AutoGoto() {
             the selected object in Stellarium. The &quot;Goto&quot; button will
             connect to the Dwarf II, and move the scope to the selected object.
           </p>
-          <p>
-            The DSO list has objects that are:
-            <ul>
-              <li>
-                Large (&gt; 15 arcminutes) and relatively bright (under 10
-                magnitude).
-              </li>
-              <li>Large (&gt; 15 arcminutes) and unknown brightness.</li>
-              <li>
-                Small (&lt; 15 arcminutes), relatively bright (under 10
-                magnitude), with common names.
-              </li>
-              <li>50 of the brightest stars with common names.</li>
-            </ul>
-          </p>
+          <p>The DSO list has objects that are:</p>
+          <ul>
+            <li>
+              Large (&gt; 15 arcminutes) and relatively bright (under 10
+              magnitude).
+            </li>
+            <li>Large (&gt; 15 arcminutes) and unknown brightness.</li>
+            <li>
+              Small (&lt; 15 arcminutes), relatively bright (under 10
+              magnitude), with common names.
+            </li>
+            <li>50 of the brightest stars with common names.</li>
+          </ul>
           <p>
             The Planets and Moon list has the planets in our solar system and
             the Moon.

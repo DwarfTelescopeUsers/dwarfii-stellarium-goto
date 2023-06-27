@@ -1,7 +1,6 @@
 /* eslint react/no-unescaped-entities: 0 */
 
 import { useContext, useState } from "react";
-import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
@@ -91,7 +90,6 @@ export default function ManualGoto() {
 
   return (
     <div>
-      <h2>Manual Goto</h2>
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Import Data to work.
@@ -102,6 +100,8 @@ export default function ManualGoto() {
           You must connect to Dwarf II for Goto to work.
         </p>
       )}
+
+      <p>You can use Stellarium to help pick objects.</p>
       <ol>
         <li>Select an object in Stellarium.</li>
         <li>

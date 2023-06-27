@@ -54,7 +54,6 @@ export default function GotoUserLists() {
 
   return (
     <div>
-      <h2>Custom Observations Lists</h2>
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Center to work.
@@ -84,13 +83,13 @@ export default function GotoUserLists() {
 
         <div className="col-md-4">
           <button
-            className="btn btn-outline-secondary me-2 mb-2"
+            className="btn btn-primary me-2 mb-2"
             onClick={importListModalHandle}
           >
             Add new list
           </button>
           <button
-            className="btn btn-outline-secondary  mb-2"
+            className="btn btn-outline-primary  mb-2"
             onClick={deleteListModalHandle}
           >
             Delete list
@@ -118,15 +117,8 @@ export default function GotoUserLists() {
             will not be able to access your lists.
           </p>
           <p>
-            If you want to share your list with other people, you have two
-            options:
-            <ol>
-              <li>Send other people the csv from Telescopius.</li>
-              <li>
-                Contact the developer of this site to add your list to
-                &quot;Lists&quot; tab.
-              </li>
-            </ol>
+            If you want to share your list with other people, you can send other
+            people the csv from Telescopius.
           </p>
         </>
       )}
