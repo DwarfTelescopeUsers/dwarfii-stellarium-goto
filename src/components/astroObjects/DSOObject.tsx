@@ -123,16 +123,24 @@ export default function DSOObject(props: AstronomyObjectPropType) {
         </div>
         <div className="col-md-3">
           <button
-            className="btn btn-primary me-2 mb-2"
+            className={`btn ${
+              connectionCtx.connectionStatusStellarium
+                ? "btn-primary"
+                : "btn-secondary"
+            } me-2 mb-2`}
             onClick={() => centerHandler(object, connectionCtx, setErrors)}
+            disabled={!connectionCtx.connectionStatusStellarium}
           >
             Center
           </button>
           <button
-            className="btn btn-primary mb-2"
+            className={`btn ${
+              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+            } mb-2`}
             onClick={() =>
               startGotoHandler(connectionCtx, setErrors, raDecimal, decDecimal)
             }
+            disabled={!connectionCtx.connectionStatus}
           >
             Goto
           </button>

@@ -55,6 +55,17 @@ export default function GotoUserLists() {
   return (
     <div>
       <h2>Custom Observations Lists</h2>
+      {!connectionCtx.connectionStatusStellarium && (
+        <p className="text-danger">
+          You must connect to Stellarium for Center to work.
+        </p>
+      )}
+      {!connectionCtx.connectionStatus && (
+        <p className="text-danger">
+          You must connect to Dwarf II for Goto to work.
+        </p>
+      )}
+
       <div className="row">
         <div className="col-md-8">
           <select

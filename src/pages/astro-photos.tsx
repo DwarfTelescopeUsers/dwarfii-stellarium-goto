@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
@@ -13,10 +12,15 @@ export default function AstroPhoto() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [showWideangle, setShowWideangle] = useState(true);
-  if (
+  let notConnected =
     connectionCtx.connectionStatus === undefined ||
-    connectionCtx.connectionStatus === false
-  ) {
+    connectionCtx.connectionStatus === false;
+  let noCoordinates =
+    connectionCtx.latitude === undefined ||
+    connectionCtx.longitude === undefined;
+  let hasErrors = notConnected || noCoordinates;
+
+  if (hasErrors) {
     return (
       <>
         <Head>
@@ -26,27 +30,13 @@ export default function AstroPhoto() {
 
         <h1>Astro Photos</h1>
 
-        <p>
-          You need to <Link href="/setup-scope">connect</Link> this site to
-          Dwarf II.
-        </p>
-      </>
-    );
-  }
+        {notConnected && (
+          <p className="text-danger">You must connect to Dwarf II.</p>
+        )}
 
-  if (connectionCtx.latitude === undefined) {
-    return (
-      <>
-        <Head>
-          <title>Astro Photos</title>
-        </Head>
-        <StatusBar mode="astro" />
-
-        <h1>Astro Photos</h1>
-        <p>
-          You need to <Link href="/setup-scope">set your location</Link> before
-          taking astro photos.
-        </p>
+        {noCoordinates && (
+          <p className="text-danger">You must set your location.</p>
+        )}
       </>
     );
   }

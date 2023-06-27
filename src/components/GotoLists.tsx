@@ -20,6 +20,17 @@ export default function AutoGoto() {
   return (
     <div>
       <h2>Observations Lists</h2>
+      {!connectionCtx.connectionStatusStellarium && (
+        <p className="text-danger">
+          You must connect to Stellarium for Center to work.
+        </p>
+      )}
+      {!connectionCtx.connectionStatus && (
+        <p className="text-danger">
+          You must connect to Dwarf II for Goto to work.
+        </p>
+      )}
+
       <select
         className="form-select"
         value={connectionCtx.currentObservationListName || "default"}

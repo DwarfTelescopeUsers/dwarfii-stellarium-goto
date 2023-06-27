@@ -89,21 +89,19 @@ export default function ManualGoto() {
     }
   }
 
-  if (!connectionCtx.connectionStatus) {
-    return (
-      <div>
-        <h2>Manual Goto</h2>{" "}
-        <p>
-          You must <Link href="setup-scope">connect</Link> to Dwarf II and
-          Stellarium to use goto.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
       <h2>Manual Goto</h2>
+      {!connectionCtx.connectionStatusStellarium && (
+        <p className="text-danger">
+          You must connect to Stellarium for Import Data to work.
+        </p>
+      )}
+      {!connectionCtx.connectionStatus && (
+        <p className="text-danger">
+          You must connect to Dwarf II for Goto to work.
+        </p>
+      )}
       <ol>
         <li>Select an object in Stellarium.</li>
         <li>
@@ -112,7 +110,15 @@ export default function ManualGoto() {
         </li>
         <li>Start goto by clicking 'Goto'</li>
       </ol>
-      <button className="btn btn-primary  mb-3" onClick={fetchStellariumData}>
+      <button
+        className={`btn ${
+          connectionCtx.connectionStatusStellarium
+            ? "btn-primary"
+            : "btn-secondary"
+        } mb-3`}
+        onClick={fetchStellariumData}
+        disabled={!connectionCtx.connectionStatusStellarium}
+      >
         Import Data
       </button>
       {errors && <p className="text-danger">{errors}</p>}
@@ -137,11 +143,11 @@ export default function ManualGoto() {
         <div className="col-sm-8">{declination}</div>
       </div>
       <button
-        className="btn btn-primary"
-        disabled={RA === undefined}
+        className={`btn ${RA !== undefined ? "btn-primary" : "btn-secondary"}`}
         onClick={() =>
           startGotoHandler(connectionCtx, setGotoErrors, RA, declination)
         }
+        disabled={RA === undefined}
       >
         Goto
       </button>

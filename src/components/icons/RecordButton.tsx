@@ -27,7 +27,7 @@ export default function RecordingButton(props: PropType) {
       <path
         d="M21 32C21 25.9249 25.9249 21 32 21C38.0751 21 43 25.9249 43 32C43 38.0751 38.0751 43 32 43C25.9249 43 21 38.0751 21 32Z"
         fill="currentColor"
-        fill-rule="nonzero"
+        fillRule="nonzero"
         opacity="1"
         stroke="currentColor"
         strokeLinecap="butt"
