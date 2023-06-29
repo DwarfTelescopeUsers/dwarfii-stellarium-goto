@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import type { ChangeEvent } from "react";
 import { Formik } from "formik";
 
@@ -23,7 +23,6 @@ import {
 } from "dwarfii_api";
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
-import { convertDMSToDecimalDegrees } from "@/lib/math_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 
 type PropTypes = {
@@ -34,7 +33,6 @@ export default function TakeAstroPhoto(props: PropTypes) {
   const { setValidSettings } = props;
 
   let connectionCtx = useContext(ConnectionContext);
-  const [imagingTime, setImagingTime] = useState(0);
 
   function updateTelescope(type: string, value: number) {
     if (connectionCtx.IPDwarf === undefined) {
@@ -145,12 +143,6 @@ export default function TakeAstroPhoto(props: PropTypes) {
       });
       saveAstroSettingsDb("exposure", targetValue);
       updateTelescope("exposure", value);
-
-      if (connectionCtx.astroSettings.count) {
-        setImagingTime(
-          Math.round((value * connectionCtx.astroSettings.count) / 60)
-        );
-      }
     }, 500);
   }
 
@@ -199,33 +191,24 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("count", e.target.value);
-
-    setFormattedImagingTime(value, connectionCtx.astroSettings.exposure);
   }
 
-  function setFormattedImagingTime(count: number, exposure: number) {
+  function setFormattedImagingTime(
+    count: number | undefined,
+    exposure: number | undefined
+  ) {
+    if (count === undefined || exposure === undefined) {
+      return;
+    }
+
     let minutes = Math.round((count * exposure) / 60);
     if (minutes < 60) {
-      setImagingTime(Math.round(minutes));
+      return <span>{minutes + " min"}</span>;
+    } else {
+      let hours = Math.trunc(minutes / 60);
+      minutes = minutes % 60;
+      return <span>{hours + " h " + minutes + " min"}</span>;
     }
-  }
-
-  function changeRaHandler(e: ChangeEvent<HTMLInputElement>) {
-    connectionCtx.setAstroSettings((prev) => {
-      prev["rightAcension"] = e.target.value;
-      return { ...prev };
-    });
-    saveAstroSettingsDb("rightAcension", e.target.value);
-  }
-
-  function changeDecHandler(e: ChangeEvent<HTMLInputElement>) {
-    connectionCtx.setAstroSettings((prev) => {
-      prev["declination"] = e.target.value;
-      prev["declinationDecimal"] = convertDMSToDecimalDegrees(e.target.value);
-      return { ...prev };
-    });
-    saveAstroSettingsDb("declination", e.target.value);
-    saveAstroSettingsDb("declinationDecimal", e.target.value);
   }
 
   const allowedExposures = [
@@ -403,57 +386,13 @@ export default function TakeAstroPhoto(props: PropTypes) {
             </div>
             <div className="row mb-md-2 mb-sm-1">
               <div className="col-4">Total time</div>
-              <div className="col-8">{imagingTime} min</div>
-            </div>
-            <div className="row mb-md-2 mb-sm-1 mt-1">
-              <div className="col-4">
-                <label htmlFor="rightAcension" className="form-label">
-                  Right Ascension
-                </label>
-              </div>
               <div className="col-8">
-                <input
-                  type="text"
-                  className="form-control"
-                  name="rightAcension"
-                  placeholder="00h 42m 44.10s"
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeRaHandler(e);
-                  }}
-                  onBlur={handleBlur}
-                  value={values.rightAcension}
-                />
+                {setFormattedImagingTime(
+                  connectionCtx.astroSettings.count,
+                  connectionCtx.astroSettings.exposure
+                )}
               </div>
-              {errors.rightAcension && (
-                <p className="text-danger">{errors.rightAcension}</p>
-              )}
             </div>
-            <div className="row mb-md-2 mb-sm-1">
-              <div className="col-4">
-                <label htmlFor="declination" className="form-label">
-                  Declination
-                </label>
-              </div>
-              <div className="col-8">
-                <input
-                  type="text"
-                  className="form-control"
-                  name="declination"
-                  placeholder={"+41° 15' 54.7\""}
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeDecHandler(e);
-                  }}
-                  onBlur={handleBlur}
-                  value={values.declination}
-                />
-              </div>
-              {errors.declination && (
-                <p className="text-danger">{errors.declination}</p>
-              )}
-            </div>
-            <i className="bi bi-info-circle"></i> Settings info
             {/* {JSON.stringify(values)} */}
           </form>
         )}
