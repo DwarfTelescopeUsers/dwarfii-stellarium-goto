@@ -24,6 +24,7 @@ import {
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
+import { AstroSettings } from "@/types";
 
 type PropTypes = {
   setValidSettings: any;
@@ -82,9 +83,32 @@ export default function TakeAstroPhoto(props: PropTypes) {
     });
   }
 
+  function defaultValueHandler(settingName: keyof AstroSettings) {
+    connectionCtx.setAstroSettings((prev) => {
+      delete prev[settingName];
+      if (settingName === "gain") {
+        delete prev["gainMode"];
+      }
+      if (settingName === "exposure") {
+        delete prev["exposureMode"];
+      }
+      return { ...prev };
+    });
+    saveAstroSettingsDb(settingName, undefined);
+    if (settingName === "gain") {
+      saveAstroSettingsDb("gainMode", undefined);
+    }
+    if (settingName === "exposure") {
+      saveAstroSettingsDb("exposureMode", undefined);
+    }
+  }
+
   function changeGainHandler(e: ChangeEvent<HTMLSelectElement>) {
     let targetValue = e.target.value;
-    if (targetValue === "default") return;
+    if (targetValue === "default") {
+      defaultValueHandler("gain");
+      return;
+    }
 
     let value: number;
     let modeValue: number;
@@ -116,7 +140,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
 
   function changeExposureHandler(e: ChangeEvent<HTMLSelectElement>) {
     let targetValue = e.target.value;
-    if (targetValue === "default") return;
+    if (targetValue === "default") {
+      defaultValueHandler("exposure");
+      return;
+    }
 
     let value: number;
     let modeValue: number;
@@ -147,7 +174,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   function changeIRHandler(e: ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "default") return;
+    if (e.target.value === "default") {
+      defaultValueHandler("IR");
+      return;
+    }
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
@@ -159,7 +189,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   function changeBinningHandler(e: ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "default") return;
+    if (e.target.value === "default") {
+      defaultValueHandler("binning");
+      return;
+    }
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
@@ -171,7 +204,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   function changeFileFormatHandler(e: ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "default") return;
+    if (e.target.value === "default") {
+      defaultValueHandler("fileFormat");
+      return;
+    }
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
@@ -183,7 +219,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   function changeCountHandler(e: ChangeEvent<HTMLInputElement>) {
-    if (Number(e.target.value) < 1) return;
+    if (Number(e.target.value) < 1) {
+      defaultValueHandler("fileFormat");
+      return;
+    }
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {

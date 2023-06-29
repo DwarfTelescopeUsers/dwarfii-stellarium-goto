@@ -161,11 +161,15 @@ export function fetchAstroSettingsAllDb() {
   }
 }
 
-export function saveAstroSettingsDb(key: string, value: string) {
+export function saveAstroSettingsDb(key: string, value: string | undefined) {
   let data = localStorage.getItem("astroSettings");
   if (data) {
     let obj = JSON.parse(data);
-    obj[key] = value;
+    if (value === undefined) {
+      delete obj[key];
+    } else {
+      obj[key] = value;
+    }
     localStorage.setItem("astroSettings", JSON.stringify(obj));
   } else {
     let obj = { [key]: value };
