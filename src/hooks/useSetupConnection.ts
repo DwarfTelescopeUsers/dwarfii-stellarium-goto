@@ -44,7 +44,7 @@ export function useSetupConnection() {
         clearInterval(timerStellarium);
       }
     };
-  }, [connectionCtx]);
+  }, []);
 }
 
 function checkDwarfConnection(
