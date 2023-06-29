@@ -17,7 +17,7 @@ import {
   fetchAstroSettingsAllDb,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
-import { telephotoURL } from "dwarfii_api";
+import { utcURL } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {
@@ -128,8 +128,9 @@ function checkDwarfConnection(
     return;
   }
   // if we can't connect to camera in 2 seconds, reset connection data
-  fetch(telephotoURL(connectionCtx.IPDwarf), {
+  fetch(utcURL(connectionCtx.IPDwarf), {
     signal: AbortSignal.timeout(2000),
+    mode: "no-cors",
   })
     .then(() => {
       console.log("Dwarf connection ok");
