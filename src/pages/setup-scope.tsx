@@ -4,9 +4,11 @@ import ConnectStellarium from "@/components/ConnectStellarium";
 import SetLocation from "@/components/SetLocation";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 import StatusBar from "@/components/shared/StatusBar";
+import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
 export default function SetupScope() {
   useSetupConnection();
+  useLoadIntialValues();
 
   return (
     <div>

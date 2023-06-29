@@ -5,10 +5,12 @@ import GotoLists from "@/components/GotoLists";
 import GotoUserLists from "@/components/GotoUserLists";
 import StatusBar from "@/components/shared/StatusBar";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
+import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
 export default function Goto() {
   const [gotoType, setGotoType] = useState("lists");
   useSetupConnection();
+  useLoadIntialValues();
 
   return (
     <div>

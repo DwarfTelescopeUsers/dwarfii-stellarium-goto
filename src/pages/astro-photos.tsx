@@ -3,12 +3,15 @@ import Head from "next/head";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
+import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
+
 import StatusBar from "@/components/shared/StatusBar";
 import DwarfCameras from "@/components/DwarfCameras";
 import ImagingMenu from "@/components/imaging/ImagingMenu";
 
 export default function AstroPhoto() {
   useSetupConnection();
+  useLoadIntialValues();
   let connectionCtx = useContext(ConnectionContext);
 
   const [showWideangle, setShowWideangle] = useState(true);
