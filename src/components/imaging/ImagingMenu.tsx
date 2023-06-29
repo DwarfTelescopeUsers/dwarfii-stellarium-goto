@@ -30,6 +30,9 @@ export default function ImagingMenu(props: PropType) {
     if (connectionCtx.IPDwarf == undefined) {
       return;
     }
+    if (validSettings === false) {
+      return;
+    }
 
     setIsRecording(true);
     const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
@@ -38,13 +41,13 @@ export default function ImagingMenu(props: PropType) {
       console.log("start takeAstroPhoto...");
 
       let payload = takeAstroPhoto(
-        connectionCtx.astroSettings.rightAcensionDecimal,
-        connectionCtx.astroSettings.declinationDecimal,
-        connectionCtx.astroSettings.exposure,
-        connectionCtx.astroSettings.gain,
-        connectionCtx.astroSettings.binning,
-        connectionCtx.astroSettings.count,
-        connectionCtx.astroSettings.fileFormat
+        connectionCtx.astroSettings.rightAcension as string,
+        connectionCtx.astroSettings.declination as string,
+        connectionCtx.astroSettings.exposure as number,
+        connectionCtx.astroSettings.gain as number,
+        connectionCtx.astroSettings.binning as number,
+        connectionCtx.astroSettings.count as number,
+        connectionCtx.astroSettings.fileFormat as number
       );
       socketSend(socket, payload);
     });

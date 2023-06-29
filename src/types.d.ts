@@ -179,16 +179,14 @@ export type ObservationObjectTelescopius = {
 };
 
 export type AstroSettings = {
-  rightAcension: string;
-  rightAcensionDecimal: number;
-  declination: string;
-  declinationDecimal: number;
-  gain: number;
-  gainMode: number;
-  exposure: number;
-  exposureMode: number;
-  IR: number;
-  binning: number;
-  fileFormat: number;
-  count: number;
+  rightAcension?: string;
+  declination?: string;
+  gain?: number;
+  gainMode?: number;
+  exposure?: number;
+  exposureMode?: number;
+  IR?: number;
+  binning?: number;
+  fileFormat?: number;
+  count?: number;
 };
