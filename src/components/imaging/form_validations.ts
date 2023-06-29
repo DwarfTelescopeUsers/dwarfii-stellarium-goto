@@ -11,9 +11,20 @@ type Fields = {
 
 export function validateAstroSettings(values: Fields) {
   const errors: { [k: string]: string } = {};
-  if (Number(values.count) < 1 || Number(values.count) > 999) {
-    errors.count = "Count must be between 1 and 999";
-  }
+  [
+    "gain",
+    "exposure",
+    "IR",
+    "binning",
+    "fileFormat",
+    "count",
+    "rightAcension",
+    "declination",
+  ].forEach((item) => {
+    if (values[item] === undefined) {
+      errors[item] = `${item} is required`;
+    }
+  });
 
   if (values.rightAcension) {
     let matches = values.rightAcension.match(

@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
@@ -24,7 +24,7 @@ import {
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { convertDMSToDecimalDegrees } from "@/lib/math_utils";
-import { validateAstroSettings } from "@/lib/form_validations";
+import { validateAstroSettings } from "@/components/imaging/form_validations";
 
 type PropTypes = {
   setValidSettings: any;
@@ -191,10 +191,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   function changeCountHandler(e: ChangeEvent<HTMLInputElement>) {
-    if (Number(e.target.value) > 999) return;
     if (Number(e.target.value) < 1) return;
-
-    console.log(Number(e.target.value));
 
     let value = Number(e.target.value);
     connectionCtx.setAstroSettings((prev) => {
@@ -202,9 +199,15 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("count", e.target.value);
-    setImagingTime(
-      Math.round((value * connectionCtx.astroSettings.exposure) / 60)
-    );
+
+    setFormattedImagingTime(value, connectionCtx.astroSettings.exposure);
+  }
+
+  function setFormattedImagingTime(count: number, exposure: number) {
+    let minutes = Math.round((count * exposure) / 60);
+    if (minutes < 60) {
+      setImagingTime(Math.round(minutes));
+    }
   }
 
   function changeRaHandler(e: ChangeEvent<HTMLInputElement>) {
@@ -226,11 +229,10 @@ export default function TakeAstroPhoto(props: PropTypes) {
   }
 
   const allowedExposures = [
-    0.0005, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    10, 11, 12, 13, 14, 15,
+    0.01, 0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
   ];
 
-  const allowedGains = range(0, 150, 10);
+  const allowedGains = range(30, 150, 10);
 
   return (
     <div>
@@ -249,6 +251,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
           let errors = validateAstroSettings(values);
           if (Object.keys(errors).length === 0) {
             setValidSettings(true);
+          } else {
+            setValidSettings(false);
           }
           return errors;
         }}
@@ -386,7 +390,6 @@ export default function TakeAstroPhoto(props: PropTypes) {
                   className="form-control"
                   name="count"
                   placeholder="1"
-                  max="999"
                   min="1"
                   onChange={(e) => {
                     handleChange(e);
@@ -450,6 +453,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 <p className="text-danger">{errors.declination}</p>
               )}
             </div>
+            <i className="bi bi-info-circle"></i> Settings info
             {/* {JSON.stringify(values)} */}
           </form>
         )}
