@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Formik } from "formik";
 
@@ -25,6 +25,7 @@ import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
+import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
 
 type PropTypes = {
   setValidSettings: any;
@@ -32,8 +33,8 @@ type PropTypes = {
 
 export default function TakeAstroPhoto(props: PropTypes) {
   const { setValidSettings } = props;
-
   let connectionCtx = useContext(ConnectionContext);
+  const [showSettingsInfo, setShowSettingsInfo] = useState(false);
 
   function updateTelescope(type: string, value: number) {
     if (connectionCtx.IPDwarf === undefined) {
@@ -250,11 +251,19 @@ export default function TakeAstroPhoto(props: PropTypes) {
     }
   }
 
+  function toggleShowSettingsInfo() {
+    setShowSettingsInfo(!showSettingsInfo);
+  }
+
   const allowedExposures = [
     0.01, 0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
   ];
 
   const allowedGains = range(30, 150, 10);
+
+  if (showSettingsInfo) {
+    return <AstroSettingsInfo onClick={toggleShowSettingsInfo} />;
+  }
 
   return (
     <div>
@@ -283,6 +292,15 @@ export default function TakeAstroPhoto(props: PropTypes) {
         {({ values, errors, handleChange, handleBlur, handleSubmit }) => (
           <form onSubmit={handleSubmit}>
             <div className="row mb-md-2 mb-sm-1">
+              <div className="fs-5 mb-2">
+                Camera Settings{" "}
+                <i
+                  className="bi bi-info-circle"
+                  role="button"
+                  onClick={toggleShowSettingsInfo}
+                ></i>
+              </div>
+
               <div className="col-4">
                 <label htmlFor="gain" className="form-label">
                   Gain
