@@ -75,7 +75,7 @@ function checkDwarfConnection(
         connectionCtx.setConnectionStatus(false);
         saveConnectionStatusDB(false);
       } else {
-        console.log("useSetupConnection err ???", err.name, err.message);
+        console.log("checkDwarfConnection err ???", err.name, err.message);
       }
     });
 }
@@ -102,14 +102,18 @@ function checkStellariumConnection(
       }
     })
     .catch((err) => {
-      if (err.name === "AbortError" || err.message === "Load failed") {
+      if (
+        err.name === "AbortError" ||
+        err.message === "Load failed" ||
+        err.message === "Failed to fetch"
+      ) {
         console.log("Stellarium connection error");
         clearInterval(timer);
 
         connectionCtx.setConnectionStatusStellarium(false);
         saveConnectionStatusStellariumDB(false);
       } else {
-        console.log("useSetupConnection err >>>", err.name, err.message);
+        console.log("checkStellariumConnection err >>>", err.name, err.message);
       }
     });
 }
