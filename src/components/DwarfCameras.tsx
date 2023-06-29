@@ -1,6 +1,6 @@
 /*  eslint-disable @next/next/no-img-element */
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   wsURL,
   telephotoCamera,
@@ -11,6 +11,8 @@ import {
   binning2x2,
   turnOnCamera,
   socketSend,
+  cameraWorkingState,
+  statusWorkingStateTelephotoCmd,
 } from "dwarfii_api";
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
@@ -25,10 +27,10 @@ export default function DwarfCameras(props: PropType) {
 
   const [telephotoCameraStatus, setTelephotoCameraStatus] = useState<
     string | undefined
-  >();
+  >("on");
   const [wideangleCameraStatus, setWideangleCameraStatus] = useState<
     string | undefined
-  >();
+  >("on");
 
   let IPDwarf = connectionCtx.IPDwarf || "192.168.88.1";
 
@@ -45,10 +47,6 @@ export default function DwarfCameras(props: PropType) {
     });
 
     socket.addEventListener("message", (event) => {
-      cameraId === telephotoCamera
-        ? setTelephotoCameraStatus("on")
-        : setWideangleCameraStatus("on");
-
       let message = JSON.parse(event.data);
       if (message.interface === turnOnCameraCmd) {
         console.log("turnOnCamera:", message);
@@ -72,30 +70,47 @@ export default function DwarfCameras(props: PropType) {
     }
   }
 
-  function checkCameraStatus() {
-    fetch(telephotoURL(IPDwarf), { signal: AbortSignal.timeout(2000) })
-      .then(() => {
-        setTelephotoCameraStatus("on");
-      })
-      .catch(() => {
-        setTelephotoCameraStatus("off");
-      });
+  function checkCameraStatus(camera: number) {
+    if (connectionCtx.IPDwarf === undefined) {
+      return;
+    }
 
-    fetch(wideangleURL(IPDwarf), { signal: AbortSignal.timeout(2000) })
-      .then(() => {
-        setWideangleCameraStatus("on");
-      })
-      .catch(() => {
-        setWideangleCameraStatus("off");
-      });
+    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    socket.addEventListener("open", () => {
+      console.log("start cameraWorkingState...");
+      let payload = cameraWorkingState(camera);
+      socketSend(socket, payload);
+    });
+
+    socket.addEventListener("message", (event) => {
+      let message = JSON.parse(event.data);
+      if (message.interface === statusWorkingStateTelephotoCmd) {
+        let cameraName = camera === 0 ? "telephoto" : "wideangle";
+        if (message.camState === 1) {
+          console.log(cameraName + " open");
+        } else {
+          console.log(cameraName + " closed");
+          camera === 0
+            ? setTelephotoCameraStatus("off")
+            : setWideangleCameraStatus("off");
+        }
+      }
+    });
+
+    socket.addEventListener("error", (error) => {
+      console.log("cameraWorkingState error:", error);
+    });
   }
 
-  checkCameraStatus();
+  useEffect(() => {
+    // NOTE: checkCameraStatus only works with telephotoCamera
+    checkCameraStatus(telephotoCamera);
+  }, []);
 
   return (
     <div className={styles.section}>
       {telephotoCameraStatus === "off" && (
-        <div className={styles.telephoto}>
+        <div>
           <button
             className="btn btn-primary"
             onClick={() => cameraToggleHandler(telephotoCamera)}
@@ -115,9 +130,8 @@ export default function DwarfCameras(props: PropType) {
           ></img>
         </div>
       )}
-
       {showWideangle && wideangleCameraStatus === "off" && (
-        <div className={styles.wideangle}>
+        <div>
           <button
             className="btn btn-primary"
             onClick={() => cameraToggleHandler(telephotoCamera)}

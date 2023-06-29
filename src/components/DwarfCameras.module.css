@@ -1,15 +1,12 @@
 .telephoto {
-  width: 70%;
-  height: calc(100vh - 100px);
-  border: 1px solid white;
+  width: 100%;
 }
 
 .wideangle {
   width: 20%;
   position: absolute;
   top: 0;
-  border: 1px solid greenyellow;
-  /* height: 40vh; */
+  border: 1px solid white;
 }
 
 .section {
