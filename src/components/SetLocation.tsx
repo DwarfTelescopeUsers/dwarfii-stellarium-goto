@@ -11,6 +11,8 @@ export default function SetLocation() {
 
   function browserCoordinatesHandler() {
     console.log("start getCoordinates...");
+    setErrors(undefined);
+
     getCoordinates(
       (position) => {
         let coords = position.coords;
