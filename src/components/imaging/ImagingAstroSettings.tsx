@@ -26,6 +26,7 @@ import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
+import { logger } from "@/lib/logger";
 
 type PropTypes = {
   setValidSettings: any;
@@ -51,36 +52,37 @@ export default function TakeAstroPhoto(props: PropTypes) {
     ];
 
     socket.addEventListener("open", () => {
-      console.log(`start set ${type}...`);
+      let payload = {};
       if (type === "exposure") {
-        let payload = setExposure(camera, value);
+        payload = setExposure(camera, value);
         socketSend(socket, payload);
       } else if (type === "exposureMode") {
-        let payload = setExposureMode(camera, value);
+        payload = setExposureMode(camera, value);
         socketSend(socket, payload);
       } else if (type === "gain") {
-        let payload = setGain(camera, value);
+        payload = setGain(camera, value);
         socketSend(socket, payload);
       } else if (type === "gainMode") {
-        let payload = setGainMode(camera, value);
+        payload = setGainMode(camera, value);
         socketSend(socket, payload);
       } else if (type === "IR") {
-        let payload = setIR(value);
+        payload = setIR(value);
         socketSend(socket, payload);
       }
+      logger(`start set ${type}...`, payload, connectionCtx);
     });
 
     socket.addEventListener("message", (event) => {
       let message = JSON.parse(event.data);
       if (commands.includes(message.interface)) {
-        console.log(`set ${type}:`, message);
+        logger(`set ${type}:`, message, connectionCtx);
       } else {
-        console.log(message);
+        logger("", message, connectionCtx);
       }
     });
 
     socket.addEventListener("error", (message) => {
-      console.log(`set ${type} error:`, message);
+      logger(`set ${type} error:`, message, connectionCtx);
     });
   }
 

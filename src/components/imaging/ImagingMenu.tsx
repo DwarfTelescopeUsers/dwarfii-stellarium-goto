@@ -14,6 +14,7 @@ import {
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
 import RecordButton from "@/components/icons/RecordButton";
+import { logger } from "@/lib/logger";
 
 type PropType = {
   setShowWideangle: Dispatch<SetStateAction<boolean>>;
@@ -39,8 +40,6 @@ export default function ImagingMenu(props: PropType) {
     const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
     socket.addEventListener("open", () => {
-      console.log("start takeAstroPhoto...");
-
       let payload = takeAstroPhoto(
         connectionCtx.astroSettings.rightAcension as string,
         connectionCtx.astroSettings.declination as string,
@@ -50,20 +49,22 @@ export default function ImagingMenu(props: PropType) {
         connectionCtx.astroSettings.count as number,
         connectionCtx.astroSettings.fileFormat as number
       );
+      logger("start takeAstroPhoto...", payload, connectionCtx);
+
       socketSend(socket, payload);
     });
 
     socket.addEventListener("message", (event) => {
       let message = JSON.parse(event.data);
       if (message.interface === takeAstroPhotoCmd) {
-        console.log("takeAstroPhoto:", message);
+        logger("takeAstroPhoto:", message, connectionCtx);
       } else {
-        console.log(message);
+        logger("", message, connectionCtx);
       }
     });
 
     socket.addEventListener("error", (err) => {
-      console.log("takeAstroPhoto error:", err);
+      logger("takeAstroPhoto error:", err, connectionCtx);
     });
   }
 

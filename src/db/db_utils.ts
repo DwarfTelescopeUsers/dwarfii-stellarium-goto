@@ -184,3 +184,31 @@ export function deleteConnectionDB(): void {
     "connectionStatusStellarium",
   ].forEach((item) => localStorage.removeItem(item));
 }
+
+export function fetchDebugDb(): boolean | undefined {
+  let data = localStorage.getItem("debug");
+  if (data) {
+    return data === "true" ? true : false;
+  }
+}
+
+export function saveDebugDb(value: string): void {
+  localStorage.setItem("debug", value);
+}
+
+export function fetchDebugMessagesDb() {
+  let data = localStorage.getItem("debugMessages");
+  if (data) {
+    return JSON.parse(data);
+  }
+}
+
+export function saveDebugMessagesDb(value: { [k: string]: any }): void {
+  let data = fetchDebugMessagesDb();
+  if (data) {
+    data.push(value);
+    localStorage.setItem("debugMessages", JSON.stringify(data));
+  } else {
+    localStorage.setItem("debugMessages", JSON.stringify([value]));
+  }
+}

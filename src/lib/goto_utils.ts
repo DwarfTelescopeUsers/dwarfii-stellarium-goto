@@ -27,7 +27,6 @@ export function startGotoHandler(
 
   const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
   socket.addEventListener("open", () => {
-    console.log("start startGoto...");
     let planet = null;
     let options = startGoto(
       planet,
@@ -36,6 +35,7 @@ export function startGotoHandler(
       lat as number,
       lon as number
     );
+    logger("start startGoto...", options, connectionCtx);
     socketSend(socket, options);
   });
 
@@ -48,14 +48,14 @@ export function startGotoHandler(
       if (message.code === -18) {
         setGotoErrors("Plate Solving failed");
       }
-      console.log("startGoto:", message.code, message);
+      logger("startGoto:", message, connectionCtx);
     } else {
-      console.log(message);
+      logger("", message, connectionCtx);
     }
   });
 
   socket.addEventListener("error", (message) => {
-    console.log("startGoto error:", message);
+    logger("startGoto error:", message, connectionCtx);
   });
 }
 

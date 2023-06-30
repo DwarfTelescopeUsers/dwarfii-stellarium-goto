@@ -39,6 +39,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     {} as AstroSettings
   );
 
+  const [logger, setLogger] = useState<{ [k: string]: any }[] | undefined>();
+  const [debug, setDebug] = useState<boolean | undefined>();
+
   function deleteConnection() {
     setConnectionStatus(undefined);
     setInitialConnectionTime(undefined);
@@ -76,6 +79,11 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     astroSettings,
     setAstroSettings,
     deleteConnection,
+
+    logger,
+    setLogger,
+    debug,
+    setDebug,
   };
   return (
     <ConnectionContext.Provider value={context}>

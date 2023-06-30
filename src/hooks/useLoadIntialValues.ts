@@ -13,6 +13,8 @@ import {
   fetchCurrentObservationListNameDb,
   fetchConnectionStatusDB,
   fetchAstroSettingsAllDb,
+  fetchDebugDb,
+  fetchDebugMessagesDb,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -77,6 +79,20 @@ export function useLoadIntialValues() {
       let data = fetchAstroSettingsAllDb();
       if (data !== undefined) {
         connectionCtx.setAstroSettings(data);
+      }
+    }
+
+    if (connectionCtx.debug === undefined) {
+      let data = fetchDebugDb();
+      if (data !== undefined) {
+        connectionCtx.setDebug(data);
+      }
+    }
+
+    if (connectionCtx.logger === undefined) {
+      let data = fetchDebugMessagesDb();
+      if (data !== undefined) {
+        connectionCtx.setLogger(data);
       }
     }
   }, []);

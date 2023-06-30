@@ -14,6 +14,7 @@ import {
   saveInitialConnectionTimeDB,
   saveIPDwarfDB,
 } from "@/db/db_utils";
+import { logger } from "@/lib/logger";
 
 export default function ConnectDwarf() {
   let connectionCtx = useContext(ConnectionContext);
@@ -40,8 +41,8 @@ export default function ConnectDwarf() {
     const socket = new WebSocket(wsURL(IPDwarf));
 
     socket.addEventListener("open", () => {
-      console.log("start cameraSettings...");
       let options = cameraSettings();
+      logger("start cameraSettings...", options, connectionCtx);
       socketSend(socket, options);
     });
 
@@ -62,18 +63,18 @@ export default function ConnectDwarf() {
         message.interface === statusTelephotoCmd ||
         message.interface === statusWideangleCmd
       ) {
-        console.log("cameraSettings:", message);
+        logger("cameraSettings:", message, connectionCtx);
         connectionCtx.setConnectionStatus(true);
         connectionCtx.setInitialConnectionTime(Date.now());
         saveConnectionStatusDB(true);
         saveInitialConnectionTimeDB();
       } else {
-        console.log(message);
+        logger("", message, connectionCtx);
       }
     });
 
     socket.addEventListener("error", (error) => {
-      console.log("cameraSettings error:", error);
+      logger("cameraSettings error:", error, connectionCtx);
       clearTimeout(closeSocketTimer);
       setConnecting(false);
       connectionCtx.setConnectionStatus(false);

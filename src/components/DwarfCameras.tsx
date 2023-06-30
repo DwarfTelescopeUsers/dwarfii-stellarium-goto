@@ -16,6 +16,7 @@ import {
 } from "dwarfii_api";
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
+import { logger } from "@/lib/logger";
 
 type PropType = {
   showWideangle: boolean;
@@ -41,22 +42,22 @@ export default function DwarfCameras(props: PropType) {
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
     socket.addEventListener("open", () => {
-      console.log("start turnOnCamera...");
       let payload = turnOnCamera(binning2x2, cameraId);
+      logger("start turnOnCamera...", payload, connectionCtx);
       socketSend(socket, payload);
     });
 
     socket.addEventListener("message", (event) => {
       let message = JSON.parse(event.data);
       if (message.interface === turnOnCameraCmd) {
-        console.log("turnOnCamera:", message);
+        logger("turnOnCamera:", message, connectionCtx);
       } else {
-        console.log(message);
+        logger("", message, connectionCtx);
       }
     });
 
     socket.addEventListener("error", (error) => {
-      console.log("turnOnCamera error:", error);
+      logger("turnOnCamera error:", error, connectionCtx);
     });
   }
 
@@ -77,8 +78,8 @@ export default function DwarfCameras(props: PropType) {
 
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
     socket.addEventListener("open", () => {
-      console.log("start cameraWorkingState...");
       let payload = cameraWorkingState(camera);
+      logger("start cameraWorkingState...", payload, connectionCtx);
       socketSend(socket, payload);
     });
 
@@ -87,9 +88,9 @@ export default function DwarfCameras(props: PropType) {
       if (message.interface === statusWorkingStateTelephotoCmd) {
         let cameraName = camera === 0 ? "telephoto" : "wideangle";
         if (message.camState === 1) {
-          console.log(cameraName + " open");
+          logger(cameraName + " open", {}, connectionCtx);
         } else {
-          console.log(cameraName + " closed");
+          logger(cameraName + " closed", {}, connectionCtx);
           camera === 0
             ? setTelephotoCameraStatus("off")
             : setWideangleCameraStatus("off");
@@ -98,7 +99,7 @@ export default function DwarfCameras(props: PropType) {
     });
 
     socket.addEventListener("error", (error) => {
-      console.log("cameraWorkingState error:", error);
+      logger("cameraWorkingState error:", error, connectionCtx);
     });
   }
 

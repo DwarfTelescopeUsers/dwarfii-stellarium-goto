@@ -4,26 +4,27 @@ import type { ChangeEvent } from "react";
 import { getCoordinates } from "@/lib/geolocation";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { saveLatitudeDB, saveLongitudeDB } from "@/db/db_utils";
+import { logger } from "@/lib/logger";
 
 export default function SetLocation() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
 
   function browserCoordinatesHandler() {
-    console.log("start getCoordinates...");
+    logger("start getCoordinates...", {}, connectionCtx);
     setErrors(undefined);
 
     getCoordinates(
       (position) => {
         let coords = position.coords;
-        console.log("getCoordinates:", coords);
+        logger("getCoordinates:", coords, connectionCtx);
         saveLatitudeDB(coords.latitude);
         saveLongitudeDB(coords.longitude);
         connectionCtx.setLatitude(coords.latitude);
         connectionCtx.setLongitude(coords.longitude);
       },
       (err) => {
-        console.log("getCoordinates err:", err);
+        logger("getCoordinates err:", err, connectionCtx);
         setErrors("Could not detect location.");
       }
     );

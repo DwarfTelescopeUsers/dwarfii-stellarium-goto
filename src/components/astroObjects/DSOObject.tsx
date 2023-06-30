@@ -91,12 +91,12 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     if (
       connectionCtx.latitude &&
       connectionCtx.longitude &&
-      raDecimal &&
-      decDecimal
+      object.ra &&
+      object.dec
     ) {
       return (
         <span>
-          RA: {raDecimal.toFixed(2)}, Dec: {decDecimal.toFixed(2)}
+          RA: {object.ra}, Dec: {object.dec}
         </span>
       );
     }
@@ -138,7 +138,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
             } mb-2`}
             onClick={() =>
-              startGotoHandler(connectionCtx, setErrors, raDecimal, decDecimal)
+              startGotoHandler(connectionCtx, setErrors, object.ra, object.dec)
             }
             disabled={!connectionCtx.connectionStatus}
           >

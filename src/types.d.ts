@@ -34,6 +34,12 @@ export type ConnectionContextType = {
 
   astroSettings: AstroSettings;
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
+
+  logger: { [k: string]: any }[] | undefined;
+  setLogger: Dispatch<SetStateAction<{ [k: string]: any }[] | undefined>>;
+  debug: boolean | undefined;
+  setDebug: Dispatch<SetStateAction<boolean | undefined>>;
+
   deleteConnection: () => void;
 };
 
