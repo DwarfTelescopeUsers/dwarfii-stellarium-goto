@@ -79,7 +79,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       if (results) {
         return (
           <span>
-            Alt: {results.alt.toFixed(0)}, Az: {results.az.toFixed(0)},{" "}
+            Alt: {results.alt.toFixed(0)}°, Az: {results.az.toFixed(0)}°{" "}
             {convertAzToCardinal(results.az)}
           </span>
         );
