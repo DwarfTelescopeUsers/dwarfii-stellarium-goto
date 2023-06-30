@@ -2,26 +2,59 @@ import type { Dispatch, SetStateAction } from "react";
 
 import { ObservationObject, ConnectionContextType } from "@/types";
 import { focusPath, objectInfoPath } from "@/lib/stellarium_utils";
-import { wsURL, startGoto, startGotoCmd, socketSend } from "dwarfii_api";
+import {
+  wsURL,
+  startGoto,
+  startGotoCmd,
+  socketSend,
+  formatUtcUrl,
+} from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
+import { logger } from "@/lib/logger";
 
-export function startGotoHandler(
+export async function setUTCTime(connectionCtx: ConnectionContextType) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
+  // BUG: date url only works if browser has no cors extension
+  let dateUrl = formatUtcUrl(connectionCtx.IPDwarf);
+  await fetch(dateUrl)
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      if (data.result == 0) {
+        logger("utc date ok", { "utc date ok": data.result }, connectionCtx);
+      } else {
+        logger(
+          "utc date error",
+          { "utc date error": data.result },
+          connectionCtx
+        );
+      }
+    })
+    .catch((err) => console.log(err));
+}
+
+export async function startGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
-  RA: number | undefined,
-  declination: number | undefined
+  RA: string | undefined | null,
+  declination: string | undefined | null
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
-
   setGotoErrors(undefined);
+
+  await setUTCTime(connectionCtx);
 
   let lat = connectionCtx.latitude;
   let lon = connectionCtx.longitude;
-  console.log(RA, declination, lat, lon);
   if (RA === undefined) return;
+  if (RA === null) return;
   if (declination === undefined) return;
+  if (declination === null) return;
   if (lat === undefined) return;
   if (lon === undefined) return;
 
@@ -44,9 +77,10 @@ export function startGotoHandler(
     if (message.interface === startGotoCmd) {
       if (message.code === -45) {
         setGotoErrors("GOTO target below the horizon");
-      }
-      if (message.code === -18) {
+      } else if (message.code === -18) {
         setGotoErrors("Plate Solving failed");
+      } else if (message.code === -46) {
+        setGotoErrors("GOTO bump its limit");
       }
       logger("startGoto:", message, connectionCtx);
     } else {
