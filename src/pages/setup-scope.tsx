@@ -5,6 +5,7 @@ import SetLocation from "@/components/SetLocation";
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 import StatusBar from "@/components/shared/StatusBar";
 import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
+import AppDebugger from "@/components/AppDebugger";
 
 export default function SetupScope() {
   useSetupConnection();
@@ -18,6 +19,8 @@ export default function SetupScope() {
       <ConnectDwarf />
       <hr />
       <ConnectStellarium />
+      <hr />
+      <AppDebugger />
     </div>
   );
 }
