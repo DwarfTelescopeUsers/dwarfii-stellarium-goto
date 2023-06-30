@@ -6,17 +6,14 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
 import { ParsedStellariumData } from "@/types";
 import { startGotoHandler, stellariumErrorHandler } from "@/lib/goto_utils";
-import {
-  convertHMSToDecimalDegrees,
-  convertDMSToDecimalDegrees,
-} from "@/lib/math_utils";
+import { convertDMSToDwarfDec, convertHMSToDwarfRA } from "@/lib/math_utils";
 
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
   const [gotoErrors, setGotoErrors] = useState<string | undefined>();
-  const [RA, setRA] = useState<number | undefined>();
-  const [declination, setDeclination] = useState<number | undefined>();
+  const [RA, setRA] = useState<string | undefined>();
+  const [declination, setDeclination] = useState<string | undefined>();
   const [objectName, setObjectName] = useState<string | undefined>();
 
   function noObjectSelectedHandler() {
@@ -27,14 +24,14 @@ export default function ManualGoto() {
   }
 
   function validDataHandler(objectData: ParsedStellariumData) {
-    let parsedRA = convertHMSToDecimalDegrees(objectData.RA);
+    let parsedRA = convertHMSToDwarfRA(objectData.RA);
     if (parsedRA) {
       setRA(parsedRA);
     } else {
       setErrors("Invalid RA: " + objectData.RA);
     }
 
-    let parsedDeclination = convertDMSToDecimalDegrees(objectData.declination);
+    let parsedDeclination = convertDMSToDwarfDec(objectData.declination);
     if (parsedDeclination) {
       setDeclination(parsedDeclination);
     } else {

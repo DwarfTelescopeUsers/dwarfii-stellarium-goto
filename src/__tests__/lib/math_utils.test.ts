@@ -5,6 +5,8 @@ import {
   convertDecimalDegreesToHMS,
   extractDMSValues,
   extractHMSValues,
+  convertHMSToDwarfRA,
+  convertDMSToDwarfDec,
 } from "@/lib/math_utils";
 
 describe("convertHMSToDecimalDegrees", () => {
@@ -49,7 +51,7 @@ describe("convertHMSToDecimalDegrees", () => {
 describe("convertDecimalDegreesToHMS", () => {
   it("converts decimal degrees to hour, minute, seconds", () => {
     let decimal = 57.54333;
-    let expected = { hour: 3, min: 50, sec: 10.39 };
+    let expected = { hour: 3, minute: 50, second: 10.39 };
 
     let res = convertDecimalDegreesToHMS(decimal);
 
@@ -160,6 +162,64 @@ describe("extractDMSValues", () => {
     let expected = { degree: 30, minute: 50, second: 10.4, negative: true };
 
     let res = extractDMSValues(text);
+
+    expect(res).toEqual(expected);
+  });
+});
+
+describe("convertHMSToDwarfRA", () => {
+  it("returns string in 'xh xm xs' format from HMS string with hms", () => {
+    let text = "18h36m58.24s";
+    let expected = "18h 36m 58.24s";
+
+    let res = convertHMSToDwarfRA(text);
+
+    expect(res).toEqual(expected);
+  });
+
+  it("returns string in 'xh xm xs' format from HMS string with :", () => {
+    let text = "18:36:58.24";
+    let expected = "18h 36m 58.24s";
+
+    let res = convertHMSToDwarfRA(text);
+
+    expect(res).toEqual(expected);
+  });
+
+  it("returns string in 'xh xm xs' format from HMS decimal string", () => {
+    let text = "279.24268";
+    let expected = "18h 36m 58.24s";
+
+    let res = convertHMSToDwarfRA(text);
+
+    expect(res).toEqual(expected);
+  });
+});
+
+describe("convertDMSToDwarfDec", () => {
+  it("returns string in 'x° x' x\"' format from DMS string with °'\"", () => {
+    let text = "+38°47'09.9\"";
+    let expected = "+38° 47' 09.9\"";
+
+    let res = convertDMSToDwarfDec(text);
+
+    expect(res).toEqual(expected);
+  });
+
+  it("returns string in 'xh xm xs' format from HMS string with :", () => {
+    let text = "+38:47:09.9";
+    let expected = "+38° 47' 09.9\"";
+
+    let res = convertDMSToDwarfDec(text);
+
+    expect(res).toEqual(expected);
+  });
+
+  it("returns string in 'xh xm xs' format from HMS decimal string", () => {
+    let text = "+38.7861";
+    let expected = "+38° 47' 09.96\"";
+
+    let res = convertDMSToDwarfDec(text);
 
     expect(res).toEqual(expected);
   });

@@ -7,6 +7,7 @@ import {
 import { formatObjectNameStellarium, catalogs } from "@/lib/stellarium_utils";
 import { typesTypesCategories } from "../../data/objectTypes";
 import { abbrevNameConstellations } from "../../data/constellations";
+import { convertDMSToDwarfDec, convertHMSToDwarfRA } from "@/lib/math_utils";
 
 function formatObservationStellarium(
   observation: StellariumObservationObject
@@ -67,12 +68,12 @@ export function processObservationListOpenNGC(
   return observations
     .map((observation) => {
       return {
-        dec: observation.Declination,
+        dec: foramtOpenNGCDec(observation.Declination),
         designation: observation["Catalogue Entry"],
         magnitude: observation.Magnitude,
         type: observation.Type,
         typeCategory: observation["Type Category"],
-        ra: observation["Right Ascension"],
+        ra: foramtOpenNGCRA(observation["Right Ascension"]),
         displayName: formatObjectNameOpenNGC(observation),
         alternateNames: observation["Alternative Entries"],
         catalogue: observation["Name catalog"],
@@ -87,6 +88,28 @@ export function processObservationListOpenNGC(
         a.objectNumber - b.objectNumber
       );
     });
+}
+
+function foramtOpenNGCRA(ra: string | null): string | null {
+  if (ra === null) {
+    return ra;
+  }
+  let data = convertHMSToDwarfRA(ra);
+  if (data) {
+    return data;
+  }
+  return ra;
+}
+
+function foramtOpenNGCDec(dec: string | null): string | null {
+  if (dec === null) {
+    return dec;
+  }
+  let data = convertDMSToDwarfDec(dec);
+  if (data) {
+    return data;
+  }
+  return dec;
 }
 
 function formatObjectSizeOpenNGC(observation: ObservationObjectOpenNGC) {
@@ -125,7 +148,7 @@ export function processObservationListTelescopius(
     .filter((observation) => observation["Catalogue Entry"])
     .map((observation, index) => {
       let data = {
-        dec: observation.Declination,
+        dec: foramtTelescopiusDec(observation.Declination),
         designation: observation["Catalogue Entry"],
         magnitude: observation.Magnitude,
         type: observation.Type,
@@ -133,7 +156,7 @@ export function processObservationListTelescopius(
           typesTypesCategories[
             observation.Type as keyof typeof typesTypesCategories
           ],
-        ra: observation["Right Ascension"],
+        ra: foramtTelescopiusRA(observation["Right Ascension"]),
         displayName: formatObjectNameTelescopius(observation),
         alternateNames: observation["Alternative Entries"],
         constellation: observation.Constellation,
@@ -156,6 +179,30 @@ export function processObservationListTelescopius(
         a.objectNumber - b.objectNumber
       );
     });
+}
+
+function foramtTelescopiusRA(ra: string | null): string | null {
+  if (ra === null) {
+    return ra;
+  }
+  ra = ra.replace('""', '"');
+  let data = convertHMSToDwarfRA(ra);
+  if (data) {
+    return data;
+  }
+  return ra;
+}
+
+function foramtTelescopiusDec(dec: string | null): string | null {
+  if (dec === null) {
+    return dec;
+  }
+  dec = dec.replace('""', '"');
+  let data = convertDMSToDwarfDec(dec);
+  if (data) {
+    return data;
+  }
+  return dec;
 }
 
 function formatObjectNameTelescopius(

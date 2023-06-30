@@ -44,7 +44,7 @@ export function convertHMSToDecimalDegrees(
     return formatFloatToDecimalPlaces(decimal, decimalPlaces);
   }
 
-  let decimalMatches = text.match(/([0-9.]+)/);
+  let decimalMatches = text.match(/([-0-9.]+)/);
   if (decimalMatches) {
     return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
   }
@@ -52,12 +52,17 @@ export function convertHMSToDecimalDegrees(
   return Number(text);
 }
 
-export function extractHMSValues(text: string) {
+export function extractHMSValues(text: string):
+  | {
+      hour: number;
+      minute: number;
+      second: number;
+    }
+  | undefined {
   let hmsMatches = text.match(/(\d{1,2})[hH] *(\d{1,2})[mM'] *([0-9.]+)[sS"]+/);
   if (hmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let [_, hour, minute, second] = hmsMatches;
-
     return {
       hour: Number(hour),
       minute: Number(minute),
@@ -77,13 +82,30 @@ export function extractHMSValues(text: string) {
   }
 }
 
+export function convertHMSToDwarfRA(text: string): string | undefined {
+  let hmsMatches = extractHMSValues(text);
+  if (hmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let { hour, minute, second } = hmsMatches;
+    return `${hour}h ${minute}m ${second}s`;
+  }
+
+  let decimalMatches = text.match(/([-0-9.]+)/);
+  if (decimalMatches) {
+    let { hour, minute, second } = convertDecimalDegreesToHMS(
+      Number(decimalMatches[1])
+    );
+    return `${hour}h ${minute}m ${second}s`;
+  }
+}
+
 // https://stackoverflow.com/a/5786281
 export function convertDecimalDegreesToHMS(decimal: number) {
   let degree = decimal / 15;
   return {
     hour: 0 | (degree < 0 ? (degree = -degree) : degree),
-    min: 0 | (((degree += 1e-9) % 1) * 60),
-    sec: (0 | (((degree * 60) % 1) * 6000)) / 100,
+    minute: 0 | (((degree += 1e-9) % 1) * 60),
+    second: (0 | (((degree * 60) % 1) * 6000)) / 100,
   };
 }
 
@@ -102,17 +124,40 @@ export function convertDMSToDecimalDegrees(
     );
   }
 
-  let decimalMatches = text.match(/([0-9.]+)/);
+  let decimalMatches = text.match(/([-0-9.]+)/);
   if (decimalMatches) {
-    let decimal = formatFloatToDecimalPlaces(
-      Number(decimalMatches[1]),
-      decimalPlaces
-    );
-    let isNegative = text[0] === "-";
-    return isNegative ? -1 * decimal : decimal;
+    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
   }
 
   return Number(text);
+}
+
+export function convertDMSToDwarfDec(text: string): string | undefined {
+  let data = extractDMSValues(text);
+  if (data) {
+    let { negative, degree, minute, second } = data;
+    let secondParts = second.toString().split(".");
+    let secondStr = zeroPad(Number(secondParts[0]));
+    if (secondParts[1]) {
+      secondStr = secondStr + "." + secondParts[1];
+    }
+    let newDec = `${zeroPad(degree)}° ${zeroPad(minute)}' ${secondStr}"`;
+    return negative ? "-" + newDec : "+" + newDec;
+  }
+
+  let decimalMatches = text.match(/([-0-9.]+)/);
+  if (decimalMatches) {
+    let { negative, degree, minute, second } = convertDecimalDegreesToDMS(
+      Number(decimalMatches[1])
+    );
+    let secondParts = second.toString().split(".");
+    let secondStr = zeroPad(Number(secondParts[0]));
+    if (secondParts[1]) {
+      secondStr = secondStr + "." + secondParts[1];
+    }
+    let newDec = `${zeroPad(degree)}° ${zeroPad(minute)}' ${secondStr}"`;
+    return negative ? "-" + newDec : "+" + newDec;
+  }
 }
 
 export function extractDMSValues(text: string) {
@@ -152,6 +197,10 @@ export function convertDecimalDegreesToDMS(decimal: number) {
     minute: data[2],
     second: data[3],
   };
+}
+
+function zeroPad(num: number, places = 2) {
+  return num.toString().padStart(places, "0");
 }
 
 // https://stackoverflow.com/a/32178833
