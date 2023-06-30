@@ -51,12 +51,12 @@ export default function AstroPhoto() {
       </Head>
       <StatusBar mode="astro" />
       <div className="container">
-        <div className="row">
-          <main className="col-11">
+        <div className="row px-0">
+          <main className="col">
             <DwarfCameras showWideangle={showWideangle} />
           </main>
 
-          <div className="sidebar border border-right col-1">
+          <div style={{ width: "60px" }} className="px-0">
             <ImagingMenu setShowWideangle={setShowWideangle} />
           </div>
         </div>

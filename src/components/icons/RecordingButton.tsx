@@ -24,17 +24,17 @@ export default function RecordingButton(props: PropType) {
           stroke="currentColor"
           strokeLinecap="butt"
           strokeLinejoin="round"
-          strokeWidth="2"
+          strokeWidth="4"
         />
         <path
-          d="M32 8.99178L28.5405 3L35.4595 3L32 8.99178Z"
+          d="M32 2L32 32"
           fill="currentColor"
           fillRule="nonzero"
           opacity="1"
           stroke="currentColor"
           strokeLinecap="butt"
           strokeLinejoin="round"
-          strokeWidth="2"
+          strokeWidth="4"
         />
       </g>
 

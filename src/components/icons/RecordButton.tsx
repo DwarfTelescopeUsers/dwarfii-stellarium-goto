@@ -1,14 +1,32 @@
 import styles from "@/components/icons/RecordButton.module.css";
 
 type PropType = {
-  onClick: () => void;
+  onClick?: () => void;
+  className?: string;
 };
 export default function RecordingButton(props: PropType) {
-  const { onClick } = props;
+  const { onClick, className } = props;
+
+  function setStyles(
+    properties: (string | undefined)[],
+    styles: { [k: string]: string }
+  ) {
+    let styleNames: string[] = [];
+    properties
+      .filter((p) => p !== undefined)
+      .forEach((p) => {
+        if (styles[p as any]) {
+          styleNames.push(styles[p as any]);
+        }
+      });
+
+    return styleNames.join(", ");
+  }
+
   return (
     <svg
       onClick={onClick}
-      className={styles.icon}
+      className={setStyles(["icon", className], styles)}
       height="100%"
       version="1.1"
       viewBox="0 0 64 64"
@@ -22,7 +40,7 @@ export default function RecordingButton(props: PropType) {
         stroke="currentColor"
         strokeLinecap="butt"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="4"
       />
       <path
         d="M21 32C21 25.9249 25.9249 21 32 21C38.0751 21 43 25.9249 43 32C43 38.0751 38.0751 43 32 43C25.9249 43 21 38.0751 21 32Z"
