@@ -271,7 +271,7 @@ export function renderLocalRiseSetTime(
     } else if (err.message === "always below horizon") {
       times.error = err.message;
     } else {
-      console.log("err", err);
+      // console.log("err", err);
     }
   }
 
