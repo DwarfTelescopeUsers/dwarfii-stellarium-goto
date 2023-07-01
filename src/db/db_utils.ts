@@ -212,3 +212,7 @@ export function saveDebugMessagesDb(value: { [k: string]: any }): void {
     localStorage.setItem("debugMessages", JSON.stringify([value]));
   }
 }
+
+export function deleteDebugMessagesDb(): void {
+  localStorage.removeItem("debugMessages");
+}
