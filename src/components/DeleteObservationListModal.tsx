@@ -2,26 +2,24 @@ import type { FormEvent, Dispatch, SetStateAction } from "react";
 import Modal from "react-bootstrap/Modal";
 import { useContext } from "react";
 
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import {
-  saveObservationListsNamesDb,
-  saveObservationListsDb,
-  saveUserCurrentObservationListNameDb,
+  saveObjectListsNamesDb,
+  saveObjectListsDb,
+  saveUserCurrentObjectListNameDb,
 } from "@/db/db_utils";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 
 type PropTypes = {
   objectListsNames: string[];
   setObjectListsNames: Dispatch<SetStateAction<string[]>>;
-  objectLists: { [k: string]: ObservationObject[] };
-  setObjectLists: Dispatch<
-    SetStateAction<{ [k: string]: ObservationObject[] }>
-  >;
+  objectLists: { [k: string]: AstroObject[] };
+  setObjectLists: Dispatch<SetStateAction<{ [k: string]: AstroObject[] }>>;
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
 };
 
-export default function DeleteObservationListModal(props: PropTypes) {
+export default function DeleteObjectListModal(props: PropTypes) {
   const {
     objectListsNames,
     setObjectListsNames,
@@ -41,19 +39,17 @@ export default function DeleteObservationListModal(props: PropTypes) {
     e.preventDefault();
 
     let updatedListsNames = objectListsNames.filter(
-      (name) => name != connectionCtx.currentUserObservationListName
+      (name) => name != connectionCtx.currentUserObjectListName
     );
     setObjectListsNames(updatedListsNames);
-    saveObservationListsNamesDb(updatedListsNames.join("|"));
+    saveObjectListsNamesDb(updatedListsNames.join("|"));
 
     const cloneObjectLists = structuredClone(objectLists);
-    delete cloneObjectLists[
-      connectionCtx.currentUserObservationListName as string
-    ];
+    delete cloneObjectLists[connectionCtx.currentUserObjectListName as string];
     setObjectLists(cloneObjectLists);
-    saveObservationListsDb(JSON.stringify(cloneObjectLists));
-    connectionCtx.setUserCurrentObservationListName(undefined);
-    saveUserCurrentObservationListNameDb("default");
+    saveObjectListsDb(JSON.stringify(cloneObjectLists));
+    connectionCtx.setUserCurrentObjectListName(undefined);
+    saveUserCurrentObjectListNameDb("default");
 
     // close modal
     setShowModal(false);
@@ -62,7 +58,7 @@ export default function DeleteObservationListModal(props: PropTypes) {
   return (
     <Modal show={showModal} onHide={handleCloseModal}>
       <Modal.Header closeButton>
-        <Modal.Title>Delete Observation List</Modal.Title>
+        <Modal.Title>Delete Object List</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>

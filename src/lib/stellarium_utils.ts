@@ -1,7 +1,7 @@
 import {
   ParsedStellariumData,
-  StellariumObjectInfo,
-  StellariumObservationObject,
+  ObjectStellariumInfo,
+  ObjectStellarium,
 } from "@/types";
 
 export let statusPath = "/api/main/status";
@@ -42,16 +42,14 @@ function parseObjectName(text: string) {
   }
 }
 
-export function formatObjectName(objectData: StellariumObjectInfo) {
+export function formatObjectName(objectData: ObjectStellariumInfo) {
   let name1 = objectData.designations;
   let name2 = objectData.name;
   let name3 = objectData["localized-name"];
   return formatName(name1, name2, name3);
 }
 
-export function formatObjectNameStellarium(
-  objectData: StellariumObservationObject
-) {
+export function formatObjectNameStellarium(objectData: ObjectStellarium) {
   let name1 = objectData.designation;
   let name2 = objectData.name;
   let name3 = objectData.nameI18n;

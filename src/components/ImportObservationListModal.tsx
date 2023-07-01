@@ -5,25 +5,23 @@ import type { ChangeEvent } from "react";
 import Modal from "react-bootstrap/Modal";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { processObservationListTelescopius } from "@/lib/observation_lists_utils";
-import { ObservationObject, ObservationObjectTelescopius } from "@/types";
+import { processObjectListTelescopius } from "@/lib/observation_lists_utils";
+import { AstroObject, ObjectTelescopius } from "@/types";
 import {
-  saveObservationListsDb,
-  saveObservationListsNamesDb,
-  saveUserCurrentObservationListNameDb,
+  saveObjectListsDb,
+  saveObjectListsNamesDb,
+  saveUserCurrentObjectListNameDb,
 } from "@/db/db_utils";
 
 type PropTypes = {
   objectListsNames: string[];
   setObjectListsNames: Dispatch<SetStateAction<string[]>>;
-  objectLists: { [k: string]: ObservationObject[] };
-  setObjectLists: Dispatch<
-    SetStateAction<{ [k: string]: ObservationObject[] }>
-  >;
+  objectLists: { [k: string]: AstroObject[] };
+  setObjectLists: Dispatch<SetStateAction<{ [k: string]: AstroObject[] }>>;
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
 };
-export default function ImportObservationListModal(props: PropTypes) {
+export default function ImportObjectListModal(props: PropTypes) {
   const {
     objectListsNames,
     setObjectListsNames,
@@ -58,18 +56,18 @@ export default function ImportObservationListModal(props: PropTypes) {
     formFile.text().then((data) => {
       const csvData = Papa.parse(data, { header: true });
       const cloneObjectLists = structuredClone(objectLists);
-      cloneObjectLists[name] = processObservationListTelescopius(
-        csvData.data as ObservationObjectTelescopius[]
+      cloneObjectLists[name] = processObjectListTelescopius(
+        csvData.data as ObjectTelescopius[]
       );
-      saveObservationListsDb(JSON.stringify(cloneObjectLists));
+      saveObjectListsDb(JSON.stringify(cloneObjectLists));
       setObjectLists(cloneObjectLists);
 
       // handle list name
       let updatedListsNames = objectListsNames.concat(name).join("|");
-      saveObservationListsNamesDb(updatedListsNames);
+      saveObjectListsNamesDb(updatedListsNames);
       setObjectListsNames(objectListsNames.concat(name));
-      connectionCtx.setUserCurrentObservationListName(name);
-      saveUserCurrentObservationListNameDb(name);
+      connectionCtx.setUserCurrentObjectListName(name);
+      saveUserCurrentObjectListNameDb(name);
 
       // close modal
       setShowModal(false);
@@ -86,11 +84,11 @@ export default function ImportObservationListModal(props: PropTypes) {
   return (
     <Modal show={showModal} onHide={handleCloseModal}>
       <Modal.Header closeButton>
-        <Modal.Title>Add Observation List</Modal.Title>
+        <Modal.Title>Add Object List</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
-        <p>Import observation list from Telescopius.</p>
+        <p>Import objects list from Telescopius.</p>
 
         <form onSubmit={fileUploadHandler}>
           <div className="mb-3">

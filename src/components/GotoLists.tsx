@@ -4,17 +4,17 @@ import type { ChangeEvent } from "react";
 import DSOList from "@/components/astroObjects/DSOList";
 import PlanetsList from "@/components/astroObjects/PlanetsList";
 import dsoCatalog from "../../data/catalogs/dso_catalog.json";
-import { processObservationListOpenNGC } from "@/lib/observation_lists_utils";
+import { processObjectListOpenNGC } from "@/lib/observation_lists_utils";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveCurrentObservationListNameDb } from "@/db/db_utils";
+import { saveCurrentObjectListNameDb } from "@/db/db_utils";
 
 export default function AutoGoto() {
   let connectionCtx = useContext(ConnectionContext);
-  let dsoObject = processObservationListOpenNGC(dsoCatalog);
+  let dsoObject = processObjectListOpenNGC(dsoCatalog);
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
-    connectionCtx.setCurrentObservationListName(e.target.value);
-    saveCurrentObservationListNameDb(e.target.value);
+    connectionCtx.setCurrentObjectListName(e.target.value);
+    saveCurrentObjectListNameDb(e.target.value);
   }
 
   return (
@@ -32,7 +32,7 @@ export default function AutoGoto() {
 
       <select
         className="form-select"
-        value={connectionCtx.currentObservationListName || "default"}
+        value={connectionCtx.currentObjectListName || "default"}
         onChange={selectListHandler}
       >
         <option value="default">Select object lists</option>
@@ -66,10 +66,10 @@ export default function AutoGoto() {
           </p>
         </>
       )}
-      {connectionCtx.currentObservationListName === "dso" && (
+      {connectionCtx.currentObjectListName === "dso" && (
         <DSOList objects={dsoObject}></DSOList>
       )}
-      {connectionCtx.currentObservationListName === "planets" && (
+      {connectionCtx.currentObjectListName === "planets" && (
         <PlanetsList></PlanetsList>
       )}
     </div>

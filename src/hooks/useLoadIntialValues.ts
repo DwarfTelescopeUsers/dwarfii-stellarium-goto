@@ -9,8 +9,8 @@ import {
   fetchUrlStellariumDB,
   fetchConnectionStatusStellariumDB,
   fetchIPDwarfDB,
-  fetchUserCurrentObservationListNameDb,
-  fetchCurrentObservationListNameDb,
+  fetchUserCurrentObjectListNameDb,
+  fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
   fetchAstroSettingsAllDb,
   fetchDebugDb,
@@ -61,17 +61,17 @@ export function useLoadIntialValues() {
       if (data !== undefined) connectionCtx.setUrlStellarium(data);
     }
 
-    if (connectionCtx.currentObservationListName === undefined) {
-      let data = fetchCurrentObservationListNameDb();
+    if (connectionCtx.currentObjectListName === undefined) {
+      let data = fetchCurrentObjectListNameDb();
       if (data !== undefined) {
-        connectionCtx.setCurrentObservationListName(data);
+        connectionCtx.setCurrentObjectListName(data);
       }
     }
 
-    if (connectionCtx.currentUserObservationListName === undefined) {
-      let data = fetchUserCurrentObservationListNameDb();
+    if (connectionCtx.currentUserObjectListName === undefined) {
+      let data = fetchUserCurrentObjectListNameDb();
       if (data !== undefined) {
-        connectionCtx.setUserCurrentObservationListName(data);
+        connectionCtx.setUserCurrentObjectListName(data);
       }
     }
 

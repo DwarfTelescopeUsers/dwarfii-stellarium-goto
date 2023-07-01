@@ -4,10 +4,10 @@ import {
   getRiseSetTimePlanet,
   computeRaDecToAltAz,
 } from "@/lib/astro_utils";
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import { julian } from "astronomia";
 
-let Vega: ObservationObject = {
+let Vega: AstroObject = {
   dec: "+38°47'01.0\"",
   designation: "Vega",
   displayName: "",
@@ -29,7 +29,7 @@ let lon_HK = 114.1095;
 describe("getRiseSetTime", () => {
   // https://github.com/commenthol/astronomia/blob/master/test/rise.test.js
   it("works for example posted in astronomia", () => {
-    let object: ObservationObject = {
+    let object: AstroObject = {
       dec: "+18°26'27.3\"",
       designation: "",
       displayName: "",
@@ -216,7 +216,7 @@ describe("getRiseSetTimePlanet", () => {
     date.setUTCFullYear(1988);
     date.setUTCMonth(3 - 1);
     date.setUTCDate(20);
-    let object: ObservationObject = {
+    let object: AstroObject = {
       designation: "Venus",
       dec: "",
       displayName: "",

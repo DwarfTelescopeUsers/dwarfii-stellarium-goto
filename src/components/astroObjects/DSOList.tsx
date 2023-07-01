@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import DSOObject from "@/components/astroObjects/DSOObject";
 import { pluralize } from "@/lib/text_utils";
 
@@ -13,11 +13,11 @@ let objectTypesMenu = [
 ];
 
 type PropType = {
-  objects: ObservationObject[];
+  objects: AstroObject[];
 };
 
 export default function DSOList(props: PropType) {
-  let dsoObjects: ObservationObject[] = props.objects;
+  let dsoObjects: AstroObject[] = props.objects;
 
   const [objects, setObjects] = useState(dsoObjects);
   const [selectedCategories, setSelectedCategories] = useState(["all"]);

@@ -3,13 +3,13 @@ import type { ChangeEvent } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import DSOList from "@/components/astroObjects/DSOList";
-import ImportObservationListModal from "@/components/ImportObservationListModal";
-import DeleteObservationListModal from "./DeleteObservationListModal";
-import { ObservationObject } from "@/types";
+import ImportObjectListModal from "@/components/ImportObservationListModal";
+import DeleteObjectListModal from "./DeleteObservationListModal";
+import { AstroObject } from "@/types";
 import {
-  fetchObservationListsDb,
-  fetchObservationListsNamesDb,
-  saveUserCurrentObservationListNameDb,
+  fetchObjectListsDb,
+  fetchObjectListsNamesDb,
+  saveUserCurrentObjectListNameDb,
 } from "@/db/db_utils";
 
 export default function GotoUserLists() {
@@ -17,18 +17,18 @@ export default function GotoUserLists() {
 
   let [objectListsNames, setObjectListsNames] = useState<string[]>([]);
   let [objectLists, setObjectLists] = useState<{
-    [k: string]: ObservationObject[];
+    [k: string]: AstroObject[];
   }>({});
   const [showImportModal, setShowImportModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    // get observations lists from local storage on page load
-    let names = fetchObservationListsNamesDb();
+    // get objects lists from local storage on page load
+    let names = fetchObjectListsNamesDb();
     if (names) {
       setObjectListsNames(names);
     }
-    let lists = fetchObservationListsDb();
+    let lists = fetchObjectListsDb();
     if (lists) {
       setObjectLists(lists);
     }
@@ -36,13 +36,13 @@ export default function GotoUserLists() {
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
     let listName = e.target.value;
-    connectionCtx.setUserCurrentObservationListName(listName);
-    saveUserCurrentObservationListNameDb(listName);
+    connectionCtx.setUserCurrentObjectListName(listName);
+    saveUserCurrentObjectListNameDb(listName);
   }
 
   let showInstructions =
     objectListsNames.length === 0 ||
-    connectionCtx.currentUserObservationListName === "default";
+    connectionCtx.currentUserObjectListName === "default";
 
   function importListModalHandle() {
     setShowImportModal(true);
@@ -69,7 +69,7 @@ export default function GotoUserLists() {
         <div className="col-md-8">
           <select
             className="form-select mb-2"
-            value={connectionCtx.currentUserObservationListName || "default"}
+            value={connectionCtx.currentUserObjectListName || "default"}
             onChange={selectListHandler}
           >
             <option value="default">Select object lists</option>
@@ -97,10 +97,10 @@ export default function GotoUserLists() {
         </div>
       </div>
 
-      {connectionCtx.currentUserObservationListName &&
-        objectLists[connectionCtx.currentUserObservationListName] && (
+      {connectionCtx.currentUserObjectListName &&
+        objectLists[connectionCtx.currentUserObjectListName] && (
           <DSOList
-            objects={objectLists[connectionCtx.currentUserObservationListName]}
+            objects={objectLists[connectionCtx.currentUserObjectListName]}
           ></DSOList>
         )}
 
@@ -122,7 +122,7 @@ export default function GotoUserLists() {
           </p>
         </>
       )}
-      <ImportObservationListModal
+      <ImportObjectListModal
         showModal={showImportModal}
         setShowModal={setShowImportModal}
         objectListsNames={objectListsNames}
@@ -130,7 +130,7 @@ export default function GotoUserLists() {
         objectLists={objectLists}
         setObjectLists={setObjectLists}
       />
-      <DeleteObservationListModal
+      <DeleteObjectListModal
         showModal={showDeleteModal}
         setShowModal={setShowDeleteModal}
         objectListsNames={objectListsNames}

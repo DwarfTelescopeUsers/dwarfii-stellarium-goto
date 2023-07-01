@@ -16,7 +16,7 @@ import {
   planetposition,
 } from "astronomia";
 
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
 import { isDstObserved } from "@/lib/date_utils";
 
@@ -38,12 +38,12 @@ type TimeParts = {
   seconds: number;
 };
 
-function notLocalPlanet(object: ObservationObject) {
+function notLocalPlanet(object: AstroObject) {
   return object.typeCategory !== "moon_planets";
 }
 
 export function getRiseSetTime(
-  object: ObservationObject,
+  object: AstroObject,
   lat: number,
   lon: number,
   jd: number
@@ -93,7 +93,7 @@ function formatTimeParts(date: any): TimeParts {
 }
 
 export function getRiseSetTimePlanet(
-  object: ObservationObject,
+  object: AstroObject,
   lat: number,
   lon: number,
   date: Date
@@ -148,7 +148,7 @@ function formatTimePartsPlanet(date: Date): TimeParts {
 }
 
 export function getRiseSetTimeLocal(
-  object: ObservationObject,
+  object: AstroObject,
   lat: number,
   lon: number,
   jd: number,
@@ -235,7 +235,7 @@ export function convertTimePartsToString(
 }
 
 export function renderLocalRiseSetTime(
-  object: ObservationObject,
+  object: AstroObject,
   latitude: number,
   longitude: number
 ) {

@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import {
   renderLocalRiseSetTime,
   computeRaDecToAltAz,
@@ -15,7 +15,7 @@ import {
 } from "@/lib/math_utils";
 
 type AstronomyObjectPropType = {
-  object: ObservationObject;
+  object: AstroObject;
 };
 
 export default function DSOObject(props: AstronomyObjectPropType) {
@@ -39,7 +39,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     decDecimal = convertDMSToDecimalDegrees(object.dec);
   }
 
-  function renderRiseSetTime(object: ObservationObject) {
+  function renderRiseSetTime(object: AstroObject) {
     if (connectionCtx.latitude && connectionCtx.longitude) {
       let times = renderLocalRiseSetTime(
         object,

@@ -100,12 +100,12 @@ export function fetchUrlStellariumDB(): string | undefined {
   }
 }
 
-export function saveObservationListsNamesDb(names: string) {
-  localStorage.setItem("observationListsNames", names);
+export function saveObjectListsNamesDb(names: string) {
+  localStorage.setItem("objectListsNames", names);
 }
 
-export function fetchObservationListsNamesDb(): string[] | undefined {
-  let data = localStorage.getItem("observationListsNames");
+export function fetchObjectListsNamesDb(): string[] | undefined {
+  let data = localStorage.getItem("objectListsNames");
   if (data) {
     let names = data.split("|");
     names.sort();
@@ -113,34 +113,34 @@ export function fetchObservationListsNamesDb(): string[] | undefined {
   }
 }
 
-export function saveObservationListsDb(names: string) {
-  localStorage.setItem("observationLists", names);
+export function saveObjectListsDb(names: string) {
+  localStorage.setItem("objectLists", names);
 }
 
-export function fetchObservationListsDb() {
-  let data = localStorage.getItem("observationLists");
+export function fetchObjectListsDb() {
+  let data = localStorage.getItem("objectLists");
   if (data) {
     return JSON.parse(data);
   }
 }
 
-export function saveCurrentObservationListNameDb(name: string) {
-  localStorage.setItem("currentObservationListName", name);
+export function saveCurrentObjectListNameDb(name: string) {
+  localStorage.setItem("currentObjectListName", name);
 }
 
-export function fetchCurrentObservationListNameDb() {
-  let data = localStorage.getItem("currentObservationListName");
+export function fetchCurrentObjectListNameDb() {
+  let data = localStorage.getItem("currentObjectListName");
   if (data) {
     return data;
   }
 }
 
-export function saveUserCurrentObservationListNameDb(name: string) {
-  localStorage.setItem("currentUserObservationListName", name);
+export function saveUserCurrentObjectListNameDb(name: string) {
+  localStorage.setItem("currentUserObjectListName", name);
 }
 
-export function fetchUserCurrentObservationListNameDb() {
-  let data = localStorage.getItem("currentUserObservationListName");
+export function fetchUserCurrentObjectListNameDb() {
+  let data = localStorage.getItem("currentUserObjectListName");
   if (data) {
     return data;
   }

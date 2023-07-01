@@ -2,7 +2,7 @@ import {
   parseStellariumData,
   formatObjectNameStellarium,
 } from "@/lib/stellarium_utils";
-import { StellariumObservationObject } from "@/types";
+import { ObjectStellarium } from "@/types";
 
 describe("parseStellariumData", () => {
   it("parses object name, RA and declination in hh:mm:ss format", () => {
@@ -61,7 +61,7 @@ describe("formatObjectNameStellarium", () => {
   };
 
   it("uses designation, name, and nameI18n to create name if they are different", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "M 1",
       name: "name",
       nameI18n: "nameI18n",
@@ -74,7 +74,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("uses designation and name if name and nameI18n are the same", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "M 1",
       name: "name",
       nameI18n: "name",
@@ -87,7 +87,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("uses designation and nameI18n to create name if designation and name are the same", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "M 1",
       name: "M 1",
       nameI18n: "nameI18n",
@@ -100,7 +100,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("uses designation to create name if designation, name, nameI18n are the same", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "M 1",
       name: "M 1",
       nameI18n: "M 1",
@@ -113,7 +113,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("ignores names that are empty strings", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "M 1",
       name: "",
       nameI18n: "",
@@ -126,7 +126,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("name and nameI18n to create name if they are different", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "",
       name: "name",
       nameI18n: "nameI18n",
@@ -139,7 +139,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("name to create name if they are different", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "",
       name: "name",
       nameI18n: "",
@@ -152,7 +152,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("nameI18n to create name if they are different", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "",
       name: "",
       nameI18n: "nameI18n",
@@ -165,7 +165,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("handles missing designation", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       name: "name",
       nameI18n: "nameI18n",
       ...properties,
@@ -177,7 +177,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("handles missing nameI18n", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "designation",
       name: "name",
       ...properties,
@@ -189,7 +189,7 @@ describe("formatObjectNameStellarium", () => {
   });
 
   it("handles missing name", () => {
-    let object: StellariumObservationObject = {
+    let object: ObjectStellarium = {
       designation: "designation",
       nameI18n: "nameI18n",
       ...properties,

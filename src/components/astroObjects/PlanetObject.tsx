@@ -1,13 +1,13 @@
 import { useState, useContext, useEffect } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import { renderLocalRiseSetTime } from "@/lib/astro_utils";
 import { centerHandler, centerGotoHandler } from "@/lib/goto_utils";
 import eventBus from "@/lib/event_bus";
 
 type AstronomyObjectPropType = {
-  object: ObservationObject;
+  object: AstroObject;
 };
 
 export default function PlanetObject(props: AstronomyObjectPropType) {
@@ -22,7 +22,7 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
     });
   }, []);
 
-  function renderRiseSetTime(object: ObservationObject) {
+  function renderRiseSetTime(object: AstroObject) {
     if (connectionCtx.latitude && connectionCtx.longitude) {
       let times = renderLocalRiseSetTime(
         object,

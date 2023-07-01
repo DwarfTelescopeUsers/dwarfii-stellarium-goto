@@ -1,11 +1,10 @@
-import { ObservationObject } from "@/types";
+import { AstroObject } from "@/types";
 import PlanetObject from "@/components/astroObjects/PlanetObject";
 import planetsCatalog from "../../../data/catalogs/moon_planets.json";
 import { pluralize } from "@/lib/text_utils";
-import { processObservationListOpenNGC } from "@/lib/observation_lists_utils";
+import { processObjectListOpenNGC } from "@/lib/observation_lists_utils";
 
-let objects: ObservationObject[] =
-  processObservationListOpenNGC(planetsCatalog);
+let objects: AstroObject[] = processObjectListOpenNGC(planetsCatalog);
 
 export default function PlanetsList() {
   return (

@@ -25,12 +25,10 @@ export type ConnectionContextType = {
   longitude: number | undefined;
   setLongitude: Dispatch<SetStateAction<number | undefined>>;
 
-  currentObservationListName: string | undefined;
-  setCurrentObservationListName: Dispatch<SetStateAction<string | undefined>>;
-  currentUserObservationListName: string | undefined;
-  setUserCurrentObservationListName: Dispatch<
-    SetStateAction<string | undefined>
-  >;
+  currentObjectListName: string | undefined;
+  setCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;
+  currentUserObjectListName: string | undefined;
+  setUserCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;
 
   astroSettings: AstroSettings;
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
@@ -59,7 +57,7 @@ export type ParsedStellariumData = {
   declination: string;
 };
 
-export type StellariumObservationObject = {
+export type ObjectStellarium = {
   constellation: string;
   dec: string;
   designation?: string;
@@ -76,7 +74,7 @@ export type StellariumObservationObject = {
   type: string;
 };
 
-export type ObservationObject = {
+export type AstroObject = {
   dec: string | null;
   designation: string;
   magnitude: string | null | number;
@@ -91,7 +89,7 @@ export type ObservationObject = {
   constellation: string | null | undefined;
 };
 
-export type StellariumObjectInfo = {
+export type ObjectStellariumInfo = {
   "above-horizon": boolean;
   airmass: number;
   altitude: number;
@@ -142,7 +140,7 @@ export type StellariumObjectInfo = {
   vmage: number;
 };
 
-export type ObservationObjectOpenNGC = {
+export type ObjectOpenNGC = {
   "Catalogue Entry": string;
   "Alternative Entries": string | null;
   "Familiar Name": string | null;
@@ -161,7 +159,7 @@ export type ObservationObjectOpenNGC = {
   Notes: string | null;
 };
 
-export type ObservationObjectTelescopius = {
+export type ObjectTelescopius = {
   "Alternative Entries": string;
   "Apparent Magnitude": string;
   "Catalogue Entry": string;

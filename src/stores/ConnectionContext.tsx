@@ -30,11 +30,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
 
-  const [currentObservationListName, setCurrentObservationListName] = useState<
+  const [currentObjectListName, setCurrentObjectListName] = useState<
     string | undefined
   >();
-  const [currentUserObservationListName, setUserCurrentObservationListName] =
-    useState<string | undefined>();
+  const [currentUserObjectListName, setUserCurrentObjectListName] = useState<
+    string | undefined
+  >();
   const [astroSettings, setAstroSettings] = useState<AstroSettings>(
     {} as AstroSettings
   );
@@ -71,10 +72,10 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     longitude,
     setLongitude,
 
-    currentObservationListName,
-    setCurrentObservationListName,
-    currentUserObservationListName,
-    setUserCurrentObservationListName,
+    currentObjectListName,
+    setCurrentObjectListName,
+    currentUserObjectListName,
+    setUserCurrentObjectListName,
 
     astroSettings,
     setAstroSettings,

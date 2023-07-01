@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import { ObservationObject, ConnectionContextType } from "@/types";
+import { AstroObject, ConnectionContextType } from "@/types";
 import { focusPath, objectInfoPath } from "@/lib/stellarium_utils";
 import {
   wsURL,
@@ -111,7 +111,7 @@ export function stellariumErrorHandler(
 }
 
 export function centerHandler(
-  object: ObservationObject,
+  object: AstroObject,
   connectionCtx: ConnectionContextType,
   setErrors: Dispatch<SetStateAction<string | undefined>>
 ) {
@@ -137,7 +137,7 @@ export function centerHandler(
 }
 
 export function centerGotoHandler(
-  object: ObservationObject,
+  object: AstroObject,
   connectionCtx: ConnectionContextType,
   setErrors: Dispatch<SetStateAction<string | undefined>>
 ) {

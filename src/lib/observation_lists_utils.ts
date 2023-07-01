@@ -1,52 +1,48 @@
 import {
-  StellariumObservationObject,
-  ObservationObject,
-  ObservationObjectOpenNGC,
-  ObservationObjectTelescopius,
+  ObjectStellarium,
+  AstroObject,
+  ObjectOpenNGC,
+  ObjectTelescopius,
 } from "@/types";
 import { formatObjectNameStellarium, catalogs } from "@/lib/stellarium_utils";
 import { typesTypesCategories } from "../../data/objectTypes";
 import { abbrevNameConstellations } from "../../data/constellations";
 import { convertDMSToDwarfDec, convertHMSToDwarfRA } from "@/lib/math_utils";
 
-function formatObservationStellarium(
-  observation: StellariumObservationObject
-): ObservationObject {
+function formatObjectStellarium(object: ObjectStellarium): AstroObject {
   let data = {
-    dec: observation.dec,
-    designation: observation.designation,
-    magnitude: observation.magnitude,
-    type: observation.objtype,
+    dec: object.dec,
+    designation: object.designation,
+    magnitude: object.magnitude,
+    type: object.objtype,
     typeCategory:
-      typesTypesCategories[
-        observation.objtype as keyof typeof typesTypesCategories
-      ],
-    ra: observation.ra,
-    displayName: formatObjectNameStellarium(observation),
+      typesTypesCategories[object.objtype as keyof typeof typesTypesCategories],
+    ra: object.ra,
+    displayName: formatObjectNameStellarium(object),
     alternateNames: "",
     constellation:
       abbrevNameConstellations[
-        observation.constellation as keyof typeof abbrevNameConstellations
+        object.constellation as keyof typeof abbrevNameConstellations
       ],
-  } as ObservationObject;
+  } as AstroObject;
 
-  if (observation.designation) {
-    let parts = observation.designation.split(" ");
+  if (object.designation) {
+    let parts = object.designation.split(" ");
     if (catalogs.includes(parts[0]) && parts.length === 2) {
       data.catalogue = parts[0];
       data.objectNumber = Number(parts[1]);
     } else {
-      data.catalogue = observation.designation;
+      data.catalogue = object.designation;
       data.objectNumber = -1;
     }
   }
   return data;
 }
 
-export function processObservationListStellarium(
-  observations: StellariumObservationObject[]
-): ObservationObject[] {
-  let formattedObjects = observations.map(formatObservationStellarium);
+export function processObjectListStellarium(
+  objects: ObjectStellarium[]
+): AstroObject[] {
+  let formattedObjects = objects.map(formatObjectStellarium);
   let noCatalogObjects = formattedObjects
     .filter((obj) => obj.objectNumber == -1)
     .sort((a, b) => a.catalogue.localeCompare(b.catalogue));
@@ -62,24 +58,22 @@ export function processObservationListStellarium(
   return noCatalogObjects.concat(catalogObjects);
 }
 
-export function processObservationListOpenNGC(
-  observations: ObservationObjectOpenNGC[]
-) {
-  return observations
-    .map((observation) => {
+export function processObjectListOpenNGC(objects: ObjectOpenNGC[]) {
+  return objects
+    .map((object) => {
       return {
-        dec: foramtOpenNGCDec(observation.Declination),
-        designation: observation["Catalogue Entry"],
-        magnitude: observation.Magnitude,
-        type: observation.Type,
-        typeCategory: observation["Type Category"],
-        ra: foramtOpenNGCRA(observation["Right Ascension"]),
-        displayName: formatObjectNameOpenNGC(observation),
-        alternateNames: observation["Alternative Entries"],
-        catalogue: observation["Name catalog"],
-        objectNumber: observation["Name number"],
-        constellation: observation.Constellation,
-        size: formatObjectSizeOpenNGC(observation),
+        dec: foramtOpenNGCDec(object.Declination),
+        designation: object["Catalogue Entry"],
+        magnitude: object.Magnitude,
+        type: object.Type,
+        typeCategory: object["Type Category"],
+        ra: foramtOpenNGCRA(object["Right Ascension"]),
+        displayName: formatObjectNameOpenNGC(object),
+        alternateNames: object["Alternative Entries"],
+        catalogue: object["Name catalog"],
+        objectNumber: object["Name number"],
+        constellation: object.Constellation,
+        size: formatObjectSizeOpenNGC(object),
       };
     })
     .sort((a, b) => {
@@ -112,63 +106,61 @@ function foramtOpenNGCDec(dec: string | null): string | null {
   return dec;
 }
 
-function formatObjectSizeOpenNGC(observation: ObservationObjectOpenNGC) {
+function formatObjectSizeOpenNGC(object: ObjectOpenNGC) {
   let sizes = [];
-  if (observation["Height (')"] || observation["Width (')"]) {
-    if (observation["Height (')"]) {
-      sizes.push(observation["Height (')"] + "'");
+  if (object["Height (')"] || object["Width (')"]) {
+    if (object["Height (')"]) {
+      sizes.push(object["Height (')"] + "'");
     }
-    if (observation["Width (')"]) {
-      sizes.push(observation["Width (')"] + "'");
+    if (object["Width (')"]) {
+      sizes.push(object["Width (')"] + "'");
     }
   } else {
-    if (observation["Major Axis"]) {
-      sizes.push(observation["Major Axis"] + "'");
+    if (object["Major Axis"]) {
+      sizes.push(object["Major Axis"] + "'");
     }
-    if (observation["Minor Axis"]) {
-      sizes.push(observation["Minor Axis"] + "'");
+    if (object["Minor Axis"]) {
+      sizes.push(object["Minor Axis"] + "'");
     }
   }
 
   return sizes.join("x");
 }
 
-function formatObjectNameOpenNGC(observation: ObservationObjectOpenNGC) {
-  let name = observation["Catalogue Entry"];
-  if (observation["Familiar Name"]) {
-    name += ` - ${observation["Familiar Name"]}`;
+function formatObjectNameOpenNGC(object: ObjectOpenNGC) {
+  let name = object["Catalogue Entry"];
+  if (object["Familiar Name"]) {
+    name += ` - ${object["Familiar Name"]}`;
   }
   return name;
 }
 
-export function processObservationListTelescopius(
-  observations: ObservationObjectTelescopius[]
-) {
-  return observations
-    .filter((observation) => observation["Catalogue Entry"])
-    .map((observation, index) => {
+export function processObjectListTelescopius(objects: ObjectTelescopius[]) {
+  return objects
+    .filter((object) => object["Catalogue Entry"])
+    .map((object, index) => {
       let data = {
-        dec: foramtTelescopiusDec(observation.Declination),
-        designation: observation["Catalogue Entry"],
-        magnitude: observation.Magnitude,
-        type: observation.Type,
+        dec: foramtTelescopiusDec(object.Declination),
+        designation: object["Catalogue Entry"],
+        magnitude: object.Magnitude,
+        type: object.Type,
         typeCategory:
           typesTypesCategories[
-            observation.Type as keyof typeof typesTypesCategories
+            object.Type as keyof typeof typesTypesCategories
           ],
-        ra: foramtTelescopiusRA(observation["Right Ascension"]),
-        displayName: formatObjectNameTelescopius(observation),
-        alternateNames: observation["Alternative Entries"],
-        constellation: observation.Constellation,
-        size: observation.Size,
-      } as ObservationObject;
+        ra: foramtTelescopiusRA(object["Right Ascension"]),
+        displayName: formatObjectNameTelescopius(object),
+        alternateNames: object["Alternative Entries"],
+        constellation: object.Constellation,
+        size: object.Size,
+      } as AstroObject;
 
-      let parts = observation["Catalogue Entry"].split(" ");
+      let parts = object["Catalogue Entry"].split(" ");
       if (parts.length > 1) {
         data.catalogue = parts[0];
         data.objectNumber = Number(parts[1]);
       } else {
-        data.catalogue = observation["Catalogue Entry"];
+        data.catalogue = object["Catalogue Entry"];
         data.objectNumber = index;
       }
       return data;
@@ -205,12 +197,10 @@ function foramtTelescopiusDec(dec: string | null): string | null {
   return dec;
 }
 
-function formatObjectNameTelescopius(
-  observation: ObservationObjectTelescopius
-) {
-  let name = observation["Catalogue Entry"];
-  if (observation["Familiar Name"]) {
-    name += ` - ${observation["Familiar Name"]}`;
+function formatObjectNameTelescopius(object: ObjectTelescopius) {
+  let name = object["Catalogue Entry"];
+  if (object["Familiar Name"]) {
+    name += ` - ${object["Familiar Name"]}`;
   }
   return name;
 }

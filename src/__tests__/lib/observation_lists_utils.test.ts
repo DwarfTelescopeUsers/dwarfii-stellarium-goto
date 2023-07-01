@@ -1,9 +1,9 @@
-import { processObservationListStellarium } from "@/lib/observation_lists_utils";
-import { StellariumObservationObject, ObservationObject } from "@/types";
+import { processObjectListStellarium } from "@/lib/observation_lists_utils";
+import { ObjectStellarium, AstroObject } from "@/types";
 
-describe("processObservationListStellarium", () => {
-  it("formats and sorts a list of observation objects", () => {
-    let observations: StellariumObservationObject[] = [
+describe("processObjectListStellarium", () => {
+  it("formats and sorts a list of objects", () => {
+    let objects: ObjectStellarium[] = [
       {
         constellation: "CMa",
         dec: "-20°45'32\"",
@@ -166,7 +166,7 @@ describe("processObservationListStellarium", () => {
         type: "Planet",
       },
     ];
-    let expected: ObservationObject[] = [
+    let expected: AstroObject[] = [
       {
         dec: "+11°16'08\"",
         designation: "Jupiter",
@@ -299,7 +299,7 @@ describe("processObservationListStellarium", () => {
       },
     ];
 
-    let res = processObservationListStellarium(observations);
+    let res = processObjectListStellarium(objects);
     expect(res).toEqual(expected);
   });
 });
