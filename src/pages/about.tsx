@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function about() {
   return (
     <div>
@@ -6,19 +8,19 @@ export default function about() {
         This website is a side project to combine my interest in coding,
         astronomy and the Dwarf II API. To report bugs or view the code, vist
         the{" "}
-        <a href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto">
+        <Link href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto">
           Github repo.
-        </a>
+        </Link>
       </p>
 
       <h2>Data Credits</h2>
-      <p>The data for the observation lists comes from several sources.</p>
+      <p>The data for the objects lists comes from several sources.</p>
       <ul>
         <li>
           The data about the DSO comes from{" "}
-          <a href="https://github.com/mattiaverga/OpenNGC">
+          <Link href="https://github.com/mattiaverga/OpenNGC">
             OpenNGC objects database
-          </a>
+          </Link>
           .
         </li>
         <li>
@@ -28,39 +30,40 @@ export default function about() {
         </li>
         <li>
           The data about the stars comes from{" "}
-          <a href="https://github.com/astronexus/HYG-Database">
+          <Link href="https://github.com/astronexus/HYG-Database">
             HYG Stellar database
-          </a>
+          </Link>
           .
         </li>
         <li>
           The data about the visual magnitude of planets and Moon comes from{" "}
-          <a href="https://en.wikipedia.org/wiki/Apparent_magnitude">
+          <Link href="https://en.wikipedia.org/wiki/Apparent_magnitude">
             Wikipedia.
-          </a>
+          </Link>
         </li>
         <li>
           The constellation data comes from{" "}
-          <a href="https://en.wikipedia.org/wiki/IAU_designated_constellations">
+          <Link href="https://en.wikipedia.org/wiki/IAU_designated_constellations">
             Wikipedia.
-          </a>
+          </Link>
         </li>
       </ul>
       <p>
         The{" "}
-        <a href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto/tree/main/notebooks">
+        <Link href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto/tree/main/notebooks">
           Jupyter notebooks
-        </a>{" "}
+        </Link>{" "}
         in the Github repo shows the steps I took transform the raw data into
-        the observation lists.
+        the objects lists.
       </p>
 
       <p>
         This site use code from{" "}
-        <a href="https://github.com/commenthol/astronomia">Astronomia</a> and{" "}
-        <a href="https://www.celestialprogramming.com">
+        <Link href="https://github.com/commenthol/astronomia">Astronomia</Link>{" "}
+        and{" "}
+        <Link href="https://www.celestialprogramming.com">
           celestialprogramming.com
-        </a>{" "}
+        </Link>{" "}
         to do the astronomical calculations.
       </p>
 

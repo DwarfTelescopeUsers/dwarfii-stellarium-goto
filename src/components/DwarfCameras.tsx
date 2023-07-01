@@ -1,6 +1,8 @@
 /*  eslint-disable @next/next/no-img-element */
 
 import { useState, useContext, useEffect } from "react";
+import Link from "next/link";
+
 import {
   wsURL,
   telephotoCamera,
@@ -119,7 +121,7 @@ export default function DwarfCameras(props: PropType) {
             Turn on telephoto camera
           </button>
           <br></br>
-          <a href={telephotoURL(IPDwarf)}>{telephotoURL(IPDwarf)}</a>
+          <Link href={telephotoURL(IPDwarf)}>{telephotoURL(IPDwarf)}</Link>
         </div>
       )}
       {telephotoCameraStatus === "on" && (
@@ -140,7 +142,7 @@ export default function DwarfCameras(props: PropType) {
             Turn on wideangle camera
           </button>
           <br></br>
-          <a href={wideangleURL(IPDwarf)}>{wideangleURL(IPDwarf)}</a>
+          <Link href={wideangleURL(IPDwarf)}>{wideangleURL(IPDwarf)}</Link>
         </div>
       )}
       {showWideangle && wideangleCameraStatus === "on" && (

@@ -27,7 +27,6 @@ export default function ConnectStellarium() {
     if (formIP && formPort) {
       setConnecting(true);
       let url = `http://${formIP}:${formPort}`;
-      console.log(url);
 
       connectionCtx.setIPStellarium(formIP.toString());
       connectionCtx.setPortStellarium(Number(formPort));

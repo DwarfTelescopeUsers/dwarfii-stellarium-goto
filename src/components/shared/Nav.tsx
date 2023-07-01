@@ -29,16 +29,16 @@ export default function Nav() {
                 aria-current="page"
                 href="/setup-scope"
               >
-                Setup Scope
+                Setup
               </Link>
             </li>
             <li className="nav-item">
               <Link
                 className="nav-link active"
                 aria-current="page"
-                href="/goto"
+                href="/objects"
               >
-                Goto
+                Objects
               </Link>
             </li>
             <li className="nav-item">
@@ -47,7 +47,7 @@ export default function Nav() {
                 aria-current="page"
                 href="/astro-photos"
               >
-                Astro
+                Cameras
               </Link>
             </li>
             <li className="nav-item">

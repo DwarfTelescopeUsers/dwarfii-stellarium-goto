@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import type { ChangeEvent } from "react";
+import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import DSOList from "@/components/astroObjects/DSOList";
@@ -107,9 +108,9 @@ export default function GotoUserLists() {
       {showInstructions && (
         <>
           <p className="mt-4">
-            To add custom observation lists, create an observation list at{" "}
-            <a href="https://telescopius.com">Telescopius</a>, download the CSV,
-            and click &quot;Add new list&quot;.
+            To add custom objects lists, create an objects list at{" "}
+            <Link href="https://telescopius.com">Telescopius</Link>, download
+            the CSV, and click &quot;Add new list&quot;.
           </p>
           <p>
             The lists are stored in the browser&apos;s database (localStorage).

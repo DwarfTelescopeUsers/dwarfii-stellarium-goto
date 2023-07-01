@@ -8,8 +8,8 @@ export default function Home() {
       </p>
       Features:
       <ul>
-        <li>Observation list with over 250 objects.</li>
-        <li>Import observation lists from Telescopius.</li>
+        <li>Object list with over 250 objects.</li>
+        <li>Import objects lists from Telescopius.</li>
         <li>Connect to Stellarium planeterium app to help select targets.</li>
         <li>Take Astro photos.</li>
       </ul>

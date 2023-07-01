@@ -17,6 +17,10 @@ export default function AutoGoto() {
     saveCurrentObjectListNameDb(e.target.value);
   }
 
+  let showInstructions =
+    connectionCtx.currentObjectListName === "default" ||
+    connectionCtx.currentObjectListName === undefined;
+
   return (
     <div>
       {!connectionCtx.connectionStatusStellarium && (
@@ -39,31 +43,32 @@ export default function AutoGoto() {
         <option value="dso">DSO</option>
         <option value="planets">Planets and Moon</option>
       </select>
-      {connectionCtx.currentObservationListName === "default" && (
+      {showInstructions && (
         <>
-          <p className="mt-4">Please select an observation list.</p>
-          <p>
-            The &quot;Center&quot; button will connect to Stellarium, and show
-            the selected object in Stellarium. The &quot;Goto&quot; button will
-            connect to the Dwarf II, and move the scope to the selected object.
-          </p>
-          <p>The DSO list has objects that are:</p>
-          <ul>
+          <p className="mt-4">Please select an objects list.</p>
+
+          <ol>
             <li>
-              Large (&gt; 15 arcminutes) and relatively bright (under 10
-              magnitude).
+              The DSO list has objects that are:
+              <ul>
+                <li>
+                  Large (&gt; 15 arcminutes) and relatively bright (under 10
+                  magnitude).
+                </li>
+                <li>Large (&gt; 15 arcminutes) and unknown brightness.</li>
+                <li>
+                  Small (&lt; 15 arcminutes), relatively bright (under 10
+                  magnitude), with common names.
+                </li>
+                <li>50 of the brightest stars with common names.</li>
+              </ul>
             </li>
-            <li>Large (&gt; 15 arcminutes) and unknown brightness.</li>
             <li>
-              Small (&lt; 15 arcminutes), relatively bright (under 10
-              magnitude), with common names.
+              The Planets and Moon list has the planets in our solar system and
+              the Moon. Be aware, Dwarf II is not good for taking images of the
+              planets.
             </li>
-            <li>50 of the brightest stars with common names.</li>
-          </ul>
-          <p>
-            The Planets and Moon list has the planets in our solar system and
-            the Moon.
-          </p>
+          </ol>
         </>
       )}
       {connectionCtx.currentObjectListName === "dso" && (

@@ -3,6 +3,7 @@ import { useContext, useState } from "react";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import Tooltip from "react-bootstrap/Tooltip";
+import Link from "next/link";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
@@ -130,7 +131,7 @@ export default function ImagingMenu(props: PropType) {
   return (
     <ul className="nav nav-pills  flex-column mb-auto  border">
       <li className="nav-item ">
-        <a href="#" className="nav-link py-2 link-body-emphasis">
+        <Link href="#" className="nav-link py-2 link-body-emphasis">
           <OverlayTrigger
             trigger="click"
             placement={"left"}
@@ -146,12 +147,12 @@ export default function ImagingMenu(props: PropType) {
           >
             <i className="bi bi-sliders" style={{ fontSize: "1.75rem" }}></i>
           </OverlayTrigger>
-        </a>
+        </Link>
       </li>
       <li className="nav-item">
-        <a href="#" className="nav-link py-2 link-body-emphasis">
+        <Link href="#" className="nav-link py-2 link-body-emphasis">
           {renderRecordButton()}
-        </a>
+        </Link>
       </li>
       <li>
         <a
