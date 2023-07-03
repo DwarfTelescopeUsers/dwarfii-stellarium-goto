@@ -15,6 +15,7 @@ import {
   socketSend,
   cameraWorkingState,
   statusWorkingStateTelephotoCmd,
+  DwarfIP,
 } from "dwarfii_api";
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
@@ -28,16 +29,21 @@ export default function DwarfCameras(props: PropType) {
   const { showWideangle } = props;
   let connectionCtx = useContext(ConnectionContext);
 
+  useEffect(() => {
+    // NOTE: checkCameraStatus only works with telephotoCamera
+    checkCameraStatus(telephotoCamera);
+  }, []);
+
   const [telephotoCameraStatus, setTelephotoCameraStatus] = useState<
     string | undefined
-  >("on");
+  >("off");
   const [wideangleCameraStatus, setWideangleCameraStatus] = useState<
     string | undefined
-  >("on");
+  >("off");
 
-  let IPDwarf = connectionCtx.IPDwarf || "192.168.88.1";
+  let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
 
-  function turnOnCameraHandler(cameraId: number) {
+  function updateTelescope(cameraId: number) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
@@ -63,12 +69,12 @@ export default function DwarfCameras(props: PropType) {
     });
   }
 
-  function cameraToggleHandler(cameraId: number) {
+  function turnOnCameraHandler(cameraId: number) {
     if (cameraId === telephotoCamera) {
-      turnOnCameraHandler(telephotoCamera);
+      updateTelescope(telephotoCamera);
       setTelephotoCameraStatus("on");
     } else {
-      turnOnCameraHandler(wideangleCamera);
+      updateTelescope(wideangleCamera);
       setWideangleCameraStatus("on");
     }
   }
@@ -105,55 +111,65 @@ export default function DwarfCameras(props: PropType) {
     });
   }
 
-  useEffect(() => {
-    // NOTE: checkCameraStatus only works with telephotoCamera
-    checkCameraStatus(telephotoCamera);
-  }, []);
+  function renderWideAngle() {
+    return (
+      <div className={`${showWideangle ? "" : "d-none"}`}>
+        <img
+          onLoad={() => setWideangleCameraStatus("on")}
+          src={wideangleURL(IPDwarf)}
+          alt="livestream for wideangle camera"
+          className={styles.wideangle}
+        ></img>
+      </div>
+    );
+  }
+
+  function renderMainCamera() {
+    // TODO: use rawPreviewURL
+    return (
+      <div>
+        <img
+          onLoad={() => setTelephotoCameraStatus("on")}
+          src={telephotoURL(IPDwarf)}
+          alt="livestream for telephoto camera"
+          className={styles.telephoto}
+        ></img>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.section}>
+      {wideangleCameraStatus === "off" && (
+        <div className="py-2 clearfix">
+          <div className="float-end">
+            <button
+              className="btn btn-primary"
+              onClick={() => turnOnCameraHandler(wideangleCamera)}
+            >
+              Turn on wideangle camera
+            </button>
+            <br />
+            <Link href={wideangleURL(IPDwarf)}>{wideangleURL(IPDwarf)}</Link>
+          </div>
+        </div>
+      )}
       {telephotoCameraStatus === "off" && (
-        <div>
-          <button
-            className="btn btn-primary"
-            onClick={() => cameraToggleHandler(telephotoCamera)}
-          >
-            Turn on telephoto camera
-          </button>
-          <br></br>
-          <Link href={telephotoURL(IPDwarf)}>{telephotoURL(IPDwarf)}</Link>
+        <div className="py-2">
+          <div className="float-end">
+            <button
+              className="btn btn-primary"
+              onClick={() => turnOnCameraHandler(telephotoCamera)}
+            >
+              Turn on telephoto camera
+            </button>
+            <br />
+            <Link href={telephotoURL(IPDwarf)}>{telephotoURL(IPDwarf)}</Link>
+          </div>
         </div>
       )}
-      {telephotoCameraStatus === "on" && (
-        <div>
-          <img
-            src={telephotoURL(IPDwarf)}
-            alt="livestream for Dwarf 2 telephoto camera"
-            className={styles.telephoto}
-          ></img>
-        </div>
-      )}
-      {showWideangle && wideangleCameraStatus === "off" && (
-        <div>
-          <button
-            className="btn btn-primary"
-            onClick={() => cameraToggleHandler(telephotoCamera)}
-          >
-            Turn on wideangle camera
-          </button>
-          <br></br>
-          <Link href={wideangleURL(IPDwarf)}>{wideangleURL(IPDwarf)}</Link>
-        </div>
-      )}
-      {showWideangle && wideangleCameraStatus === "on" && (
-        <div>
-          <img
-            src={wideangleURL(IPDwarf)}
-            alt="livestream for Dwarf 2 wideangle camera"
-            className={styles.wideangle}
-          ></img>
-        </div>
-      )}
+      {renderWideAngle()}
+      {renderMainCamera()}
     </div>
   );
 }
