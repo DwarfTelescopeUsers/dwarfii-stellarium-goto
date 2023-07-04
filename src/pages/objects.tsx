@@ -14,7 +14,7 @@ export default function Goto() {
 
   return (
     <div>
-      <StatusBar mode="goto" />
+      <StatusBar />
       <ul className="nav nav-tabs mb-2">
         <li
           className={`nav-item nav-link ${

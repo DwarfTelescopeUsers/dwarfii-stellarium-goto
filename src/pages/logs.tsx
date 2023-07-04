@@ -4,7 +4,7 @@ import StatusBar from "@/components/shared/StatusBar";
 export default function LogMessagesPage() {
   return (
     <>
-      <StatusBar mode="goto" />
+      <StatusBar />
       <LogMessages />
     </>
   );

@@ -11,7 +11,7 @@ export default function SetupScope() {
 
   return (
     <div>
-      <StatusBar mode="setup" />
+      <StatusBar />
       <SetLocation />
       <hr />
       <ConnectDwarf />

@@ -29,7 +29,7 @@ export default function AstroPhoto() {
         <Head>
           <title>Astro Photos</title>
         </Head>
-        <StatusBar mode="astro" />
+        <StatusBar />
 
         <h1>Astro Photos</h1>
 
@@ -49,7 +49,7 @@ export default function AstroPhoto() {
       <Head>
         <title>Astro Photos</title>
       </Head>
-      <StatusBar mode="astro" />
+      <StatusBar />
       <div className="container">
         <div className="row px-0">
           <main className="col">
