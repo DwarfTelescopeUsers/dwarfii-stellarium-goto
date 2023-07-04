@@ -1,4 +1,4 @@
-import { CoordinatesData } from "@/types";
+import { AstroSettings, CoordinatesData } from "@/types";
 
 export function saveCoordinatesDB(latitude: number, longitude: number) {
   localStorage.setItem("latitude", latitude.toString());
@@ -157,7 +157,23 @@ export function fetchAstroSettingsDb(key: string) {
 export function fetchAstroSettingsAllDb() {
   let data = localStorage.getItem("astroSettings");
   if (data) {
-    return JSON.parse(data);
+    let obj = JSON.parse(data);
+    [
+      "IR",
+      "binning",
+      "count",
+      "exposure",
+      "exposureMode",
+      "fileFormat",
+      "gain",
+      "gainMode",
+    ].forEach((field) => {
+      if (obj[field] !== undefined) {
+        obj[field] = Number(obj[field]);
+      }
+    });
+
+    return obj;
   }
 }
 
