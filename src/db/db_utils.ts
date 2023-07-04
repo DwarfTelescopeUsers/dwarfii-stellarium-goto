@@ -185,34 +185,34 @@ export function deleteConnectionDB(): void {
   ].forEach((item) => localStorage.removeItem(item));
 }
 
-export function fetchDebugDb(): boolean | undefined {
-  let data = localStorage.getItem("debug");
+export function fetchLoggerStatusDb(): boolean | undefined {
+  let data = localStorage.getItem("loggerStatus");
   if (data) {
     return data === "true" ? true : false;
   }
 }
 
-export function saveDebugDb(value: string): void {
-  localStorage.setItem("debug", value);
+export function saveLoggerStatusDb(value: string): void {
+  localStorage.setItem("loggerStatus", value);
 }
 
-export function fetchDebugMessagesDb() {
-  let data = localStorage.getItem("debugMessages");
+export function fetchLogMessagesDb() {
+  let data = localStorage.getItem("logMessages");
   if (data) {
     return JSON.parse(data);
   }
 }
 
-export function saveDebugMessagesDb(value: { [k: string]: any }): void {
-  let data = fetchDebugMessagesDb();
+export function saveLogMessagesDb(value: { [k: string]: any }): void {
+  let data = fetchLogMessagesDb();
   if (data) {
     data.push(value);
-    localStorage.setItem("debugMessages", JSON.stringify(data));
+    localStorage.setItem("logMessages", JSON.stringify(data));
   } else {
-    localStorage.setItem("debugMessages", JSON.stringify([value]));
+    localStorage.setItem("logMessages", JSON.stringify([value]));
   }
 }
 
-export function deleteDebugMessagesDb(): void {
-  localStorage.removeItem("debugMessages");
+export function deleteLogMessagesDb(): void {
+  localStorage.removeItem("logMessages");
 }

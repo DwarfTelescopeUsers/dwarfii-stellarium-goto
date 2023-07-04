@@ -13,8 +13,8 @@ import {
   fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
   fetchAstroSettingsAllDb,
-  fetchDebugDb,
-  fetchDebugMessagesDb,
+  fetchLoggerStatusDb,
+  fetchLogMessagesDb,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -82,15 +82,15 @@ export function useLoadIntialValues() {
       }
     }
 
-    if (connectionCtx.debug === undefined) {
-      let data = fetchDebugDb();
+    if (connectionCtx.loggerStatus === undefined) {
+      let data = fetchLoggerStatusDb();
       if (data !== undefined) {
-        connectionCtx.setDebug(data);
+        connectionCtx.setLoggerStatus(data);
       }
     }
 
     if (connectionCtx.logger === undefined) {
-      let data = fetchDebugMessagesDb();
+      let data = fetchLogMessagesDb();
       if (data !== undefined) {
         connectionCtx.setLogger(data);
       }

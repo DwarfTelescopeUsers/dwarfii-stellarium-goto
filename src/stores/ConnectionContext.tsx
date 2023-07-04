@@ -41,7 +41,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   );
 
   const [logger, setLogger] = useState<{ [k: string]: any }[] | undefined>();
-  const [debug, setDebug] = useState<boolean | undefined>();
+  const [loggerStatus, setLoggerStatus] = useState<boolean | undefined>();
 
   function deleteConnection() {
     setConnectionStatus(undefined);
@@ -83,8 +83,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
     logger,
     setLogger,
-    debug,
-    setDebug,
+    loggerStatus,
+    setLoggerStatus,
   };
   return (
     <ConnectionContext.Provider value={context}>
