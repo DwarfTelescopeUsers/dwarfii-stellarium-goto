@@ -45,7 +45,7 @@ export default function Nav() {
               <Link
                 className="nav-link active"
                 aria-current="page"
-                href="/astro-photos"
+                href="/cameras"
               >
                 Cameras
               </Link>
