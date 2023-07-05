@@ -1,4 +1,4 @@
-import { AstroSettings, CoordinatesData } from "@/types";
+import { CoordinatesData } from "@/types";
 
 export function saveCoordinatesDB(latitude: number, longitude: number) {
   localStorage.setItem("latitude", latitude.toString());
@@ -161,7 +161,9 @@ export function fetchAstroSettingsDb() {
       "gainMode",
     ].forEach((field) => {
       if (obj[field] !== undefined) {
-        obj[field] = Number(obj[field]);
+        if (/^\d+$/.test(obj[field])) {
+          obj[field] = Number(obj[field]);
+        }
       }
     });
 

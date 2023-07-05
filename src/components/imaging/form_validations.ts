@@ -1,8 +1,8 @@
 type FieldValues = number | "default" | undefined;
 
 type Fields = {
-  gain: FieldValues;
-  exposure: FieldValues;
+  gain: FieldValues | string;
+  exposure: FieldValues | string;
   IR: FieldValues;
   binning: FieldValues;
   fileFormat: FieldValues;

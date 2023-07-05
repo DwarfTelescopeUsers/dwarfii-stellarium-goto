@@ -187,9 +187,9 @@ export type ObjectTelescopius = {
 export type AstroSettings = {
   rightAcension?: string;
   declination?: string;
-  gain?: number;
+  gain?: number | string;
   gainMode?: number;
-  exposure?: number;
+  exposure?: number | string;
   exposureMode?: number;
   IR?: number;
   binning?: number;

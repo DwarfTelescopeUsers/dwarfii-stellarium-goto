@@ -136,7 +136,11 @@ export default function TakeAstroPhoto(props: PropTypes) {
 
     setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
-        prev["gain"] = value;
+        if (targetValue === "auto") {
+          prev["gain"] = targetValue;
+        } else {
+          prev["gain"] = value;
+        }
         return { ...prev };
       });
       saveAstroSettingsDb("gain", targetValue);
@@ -171,7 +175,11 @@ export default function TakeAstroPhoto(props: PropTypes) {
 
     setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
-        prev["exposure"] = value;
+        if (targetValue === "auto") {
+          prev["exposure"] = targetValue;
+        } else {
+          prev["exposure"] = value;
+        }
         return { ...prev };
       });
       saveAstroSettingsDb("exposure", targetValue);
@@ -240,8 +248,12 @@ export default function TakeAstroPhoto(props: PropTypes) {
 
   function setImagingTime(
     count: number | undefined,
-    exposure: number | undefined
+    exposure: number | string | undefined
   ) {
+    if (typeof exposure === "string") {
+      return;
+    }
+
     let data = calculateImagingTime(count, exposure);
     if (data) {
       if (data["hours"]) {
