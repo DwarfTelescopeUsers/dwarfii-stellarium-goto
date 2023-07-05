@@ -12,9 +12,10 @@ import {
   fetchUserCurrentObjectListNameDb,
   fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
-  fetchAstroSettingsAllDb,
+  fetchAstroSettingsDb,
   fetchLoggerStatusDb,
   fetchLogMessagesDb,
+  fetchAstroSessionDb,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -76,9 +77,16 @@ export function useLoadIntialValues() {
     }
 
     if (connectionCtx.astroSettings.gain === undefined) {
-      let data = fetchAstroSettingsAllDb();
+      let data = fetchAstroSettingsDb();
       if (data !== undefined) {
         connectionCtx.setAstroSettings(data);
+      }
+    }
+
+    if (connectionCtx.astroSession.startTime === undefined) {
+      let data = fetchAstroSessionDb();
+      if (data !== undefined) {
+        connectionCtx.setAstroSession(data);
       }
     }
 

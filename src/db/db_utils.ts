@@ -146,15 +146,7 @@ export function fetchUserCurrentObjectListNameDb() {
   }
 }
 
-export function fetchAstroSettingsDb(key: string) {
-  let data = localStorage.getItem("astroSettings");
-  if (data) {
-    let obj = JSON.parse(data);
-    return obj[key];
-  }
-}
-
-export function fetchAstroSettingsAllDb() {
+export function fetchAstroSettingsDb() {
   let data = localStorage.getItem("astroSettings");
   if (data) {
     let obj = JSON.parse(data);
@@ -191,6 +183,40 @@ export function saveAstroSettingsDb(key: string, value: string | undefined) {
     let obj = { [key]: value };
     localStorage.setItem("astroSettings", JSON.stringify(obj));
   }
+}
+
+export function fetchAstroSessionDb() {
+  let data = localStorage.getItem("astroSession");
+  if (data) {
+    let obj = JSON.parse(data);
+    ["startTime", "imagesTaken"].forEach((field) => {
+      if (obj[field] !== undefined) {
+        obj[field] = Number(obj[field]);
+      }
+    });
+
+    return obj;
+  }
+}
+
+export function saveAstroSessionDb(key: string, value: string | undefined) {
+  let data = localStorage.getItem("astroSession");
+  if (data) {
+    let obj = JSON.parse(data);
+    if (value === undefined) {
+      delete obj[key];
+    } else {
+      obj[key] = value;
+    }
+    localStorage.setItem("astroSession", JSON.stringify(obj));
+  } else {
+    let obj = { [key]: value };
+    localStorage.setItem("astroSession", JSON.stringify(obj));
+  }
+}
+
+export function removeAstroSessionDb() {
+  localStorage.removeItem("astroSession");
 }
 
 export function deleteConnectionDB(): void {
