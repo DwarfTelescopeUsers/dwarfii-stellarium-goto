@@ -103,6 +103,7 @@ export const apiCodes = {
   10216: "status ir telephoto",
   10022: "status working state telephoto",
   10217: "status wideangle",
+  11003: "power aquistion",
   11205: "calibrate goto",
   11203: "start goto",
   10011: "take astro photo",
