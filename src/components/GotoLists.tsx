@@ -53,12 +53,14 @@ export default function AutoGoto() {
               <ul>
                 <li>
                   Large (&gt; 15 arcminutes) and relatively bright (under 10
-                  magnitude).
+                  magnitude). 116 objects.
                 </li>
-                <li>Large (&gt; 15 arcminutes) and unknown brightness.</li>
+                <li>
+                  Large (&gt; 15 arcminutes) and unknown brightness. 83 objects.
+                </li>
                 <li>
                   Small (&lt; 15 arcminutes), relatively bright (under 10
-                  magnitude), with common names.
+                  magnitude), with common names. 29 objects.
                 </li>
                 <li>50 of the brightest stars with common names.</li>
               </ul>
