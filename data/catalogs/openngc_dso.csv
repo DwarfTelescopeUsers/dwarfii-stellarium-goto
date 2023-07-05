@@ -26,7 +26,6 @@ IC 1283,,,18:17:16.85,-19:45:44.0,15.0,15.0,,IC,1283,HII Ionized region,nebulae,
 IC 1284,,,18:17:39.63,-19:40:19.3,16.98,15.14,,IC,1284,Nebula,nebulae,Sagittarius,,,large_dso
 IC 1287,,,18:31:25.69,-10:47:44.9,20.0,10.0,,IC,1287,Reflection Nebula,nebulae,Scutum,44.0,44.0,large_dso
 IC 1310,,,20:10:00.98,+34:58:08.0,15.0,3.0,,IC,1310,Star cluster + Nebula,nebulae,Cygnus,,,large_dso
-IC 1318,,"gam Cyg, gamma Cyg nebula",20:22:13.69,+40:15:24.1,,,2.23,IC,1318,Star,stars,Cygnus,240.0,240.0,large_dso
 IC 1340,,,20:56:08.25,+31:02:52.3,25.12,19.95,,IC,1340,Supernova remnant,nebulae,Cygnus,25.0,25.0,large_dso
 IC 1396,,,21:38:57.62,+57:29:20.6,14.0,4.0,,IC,1396,Star cluster + Nebula,nebulae,Cepheus,170.0,170.0,large_dso
 IC 1613,,,01:04:47.79,+02:07:04.0,18.32,17.14,9.54,IC,1613,Galaxy,galaxies,Cetus,,,large_dso
@@ -139,7 +138,6 @@ NGC 1909,,"Witch Head nebula, the Witch Head Nebula",05:04:55.44,-07:15:56.3,180
 NGC 1977,,"Running Man, the Running Man Nebula",05:35:15.80,-04:50:39.6,10.2,,,NGC,1977,Star cluster + Nebula,nebulae,Orion,20.0,20.0,large_dso
 NGC 1980,,Lower Sword,05:35:25.99,-05:54:35.6,9.3,,2.5,NGC,1980,Star cluster + Nebula,nebulae,Orion,,,small_dso
 NGC 1981,,Upper Sword,05:35:09.59,-04:25:30.2,9.0,,4.2,NGC,1981,Star cluster + Nebula,nebulae,Orion,25.0,25.0,large_dso
-NGC 1990,,Alnilam,05:36:12.82,-01:12:06.9,,,1.69,NGC,1990,Star,stars,Orion,50.0,50.0,large_dso
 NGC 2024,,Flame Nebula,05:41:42.57,-01:51:22.6,30.0,30.0,,NGC,2024,Nebula,nebulae,Orion,30.0,30.0,large_dso
 NGC 2052,,,05:37:11.05,-69:46:27.1,18.0,12.0,,NGC,2052,Nebula,nebulae,Dorado,,,large_dso
 NGC 2070,C 103,"30 Dor Cluster,Tarantula Nebula, Tarantula Nebula",05:38:42.36,-69:06:03.2,16.0,16.0,7.25,NGC,2070,HII Ionized region,nebulae,Dorado,40.0,25.0,large_dso
