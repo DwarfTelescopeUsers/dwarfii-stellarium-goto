@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { Formik } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
@@ -27,13 +27,16 @@ import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
 import { logger } from "@/lib/logger";
+import { calculateImagingTime } from "@/lib/date_utils";
 
 type PropTypes = {
   setValidSettings: any;
+  validSettings: boolean;
+  setShowSettingsMenu: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function TakeAstroPhoto(props: PropTypes) {
-  const { setValidSettings } = props;
+  const { setValidSettings, validSettings, setShowSettingsMenu } = props;
   let connectionCtx = useContext(ConnectionContext);
   const [showSettingsInfo, setShowSettingsInfo] = useState(false);
 
@@ -235,21 +238,19 @@ export default function TakeAstroPhoto(props: PropTypes) {
     saveAstroSettingsDb("count", e.target.value);
   }
 
-  function setFormattedImagingTime(
+  function setImagingTime(
     count: number | undefined,
     exposure: number | undefined
   ) {
-    if (count === undefined || exposure === undefined) {
-      return;
-    }
-
-    let minutes = Math.round((count * exposure) / 60);
-    if (minutes < 60) {
-      return <span>{minutes + " min"}</span>;
-    } else {
-      let hours = Math.trunc(minutes / 60);
-      minutes = minutes % 60;
-      return <span>{hours + " h " + minutes + " min"}</span>;
+    let data = calculateImagingTime(count, exposure);
+    if (data) {
+      if (data["hours"]) {
+        return `${data["hours"]}h ${data["minutes"]}m ${data["seconds"]}s`;
+      } else if (data["minutes"]) {
+        return `${data["minutes"]}m ${data["seconds"]}s`;
+      } else {
+        return `${data["seconds"]}s`;
+      }
     }
   }
 
@@ -446,12 +447,18 @@ export default function TakeAstroPhoto(props: PropTypes) {
             <div className="row mb-md-2 mb-sm-1">
               <div className="col-4">Total time</div>
               <div className="col-8">
-                {setFormattedImagingTime(
+                {setImagingTime(
                   connectionCtx.astroSettings.count,
                   connectionCtx.astroSettings.exposure
                 )}
               </div>
             </div>
+            <button
+              onClick={() => setShowSettingsMenu(false)}
+              className="btn btn-outline-primary"
+            >
+              Close
+            </button>
             {/* {JSON.stringify(values)} */}
           </form>
         )}

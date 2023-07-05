@@ -137,11 +137,11 @@ export function convertDMSToDwarfDec(text: string): string | undefined {
   if (data) {
     let { negative, degree, minute, second } = data;
     let secondParts = second.toString().split(".");
-    let secondStr = zeroPad(Number(secondParts[0]));
+    let secondStr = padNumber(Number(secondParts[0]));
     if (secondParts[1]) {
       secondStr = secondStr + "." + secondParts[1];
     }
-    let newDec = `${zeroPad(degree)}° ${zeroPad(minute)}' ${secondStr}"`;
+    let newDec = `${padNumber(degree)}° ${padNumber(minute)}' ${secondStr}"`;
     return negative ? "-" + newDec : "+" + newDec;
   }
 
@@ -151,11 +151,11 @@ export function convertDMSToDwarfDec(text: string): string | undefined {
       Number(decimalMatches[1])
     );
     let secondParts = second.toString().split(".");
-    let secondStr = zeroPad(Number(secondParts[0]));
+    let secondStr = padNumber(Number(secondParts[0]));
     if (secondParts[1]) {
       secondStr = secondStr + "." + secondParts[1];
     }
-    let newDec = `${zeroPad(degree)}° ${zeroPad(minute)}' ${secondStr}"`;
+    let newDec = `${padNumber(degree)}° ${padNumber(minute)}' ${secondStr}"`;
     return negative ? "-" + newDec : "+" + newDec;
   }
 }
@@ -199,7 +199,7 @@ export function convertDecimalDegreesToDMS(decimal: number) {
   };
 }
 
-function zeroPad(num: number, places = 2) {
+export function padNumber(num: number, places = 2) {
   return num.toString().padStart(places, "0");
 }
 

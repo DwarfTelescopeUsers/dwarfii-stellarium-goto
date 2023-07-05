@@ -19,6 +19,7 @@ import {
 import { AstroObject } from "@/types";
 import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
 import { isDstObserved } from "@/lib/date_utils";
+import { padNumber } from "@/lib/math_utils";
 
 type RiseSetTransit = {
   rise: TimeParts | null;
@@ -207,16 +208,14 @@ export function convertTimePartsToString(
   useDaylightSavings: boolean,
   use24Hour: boolean
 ): string {
-  let pad = (num: number) => num.toString().padStart(2, "0");
-
   if (useDaylightSavings) {
     timeParts.hours += 1;
   }
-  let hour = pad(timeParts.hours);
-  let minute = pad(timeParts.minutes);
+  let hour = padNumber(timeParts.hours);
+  let minute = padNumber(timeParts.minutes);
   // HACK: 60 seconds will cause invalid date error. Set 60 seconds to 59
   // to avoid invalid date and avoid incrementing minute and hour.
-  let second = pad(timeParts.seconds === 60 ? 59 : timeParts.seconds);
+  let second = padNumber(timeParts.seconds === 60 ? 59 : timeParts.seconds);
 
   // convert utc time to local time for a given timezone
   let options: any = {

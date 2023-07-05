@@ -11,11 +11,17 @@ import {
   takeAstroPhoto,
   takeAstroPhotoCmd,
   socketSend,
+  stopAstroPhoto,
+  stopAstroPhotoCmd,
+  numberRawImagesCmd,
 } from "dwarfii_api";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
 import RecordButton from "@/components/icons/RecordButton";
 import { logger } from "@/lib/logger";
+import { validateAstroSettings } from "@/components/imaging/form_validations";
+import { AstroSession } from "@/types";
+import { saveAstroSessionDb, removeAstroSessionDb } from "@/db/db_utils";
 
 type PropType = {
   setShowWideangle: Dispatch<SetStateAction<boolean>>;
@@ -25,8 +31,16 @@ export default function ImagingMenu(props: PropType) {
   const { setShowWideangle } = props;
   let connectionCtx = useContext(ConnectionContext);
 
-  const [showPopover, setShowPopover] = useState(false);
-  const [validSettings, setValidSettings] = useState(false);
+  function isValid() {
+    let errors = validateAstroSettings(connectionCtx.astroSettings as any);
+    return (
+      Object.keys(errors).length === 0 &&
+      Object.keys(connectionCtx.astroSettings).length > 0
+    );
+  }
+
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [validSettings, setValidSettings] = useState(isValid());
   const [isRecording, setIsRecording] = useState(false);
 
   function takeAstroPhotoHandler() {
@@ -37,7 +51,14 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
+    let now = Date.now();
+    connectionCtx.setAstroSession((prev) => {
+      prev.startTime = now;
+      return { ...prev };
+    });
     setIsRecording(true);
+    saveAstroSessionDb("startTime", now.toString());
+
     const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
     socket.addEventListener("open", () => {
@@ -59,6 +80,13 @@ export default function ImagingMenu(props: PropType) {
       let message = JSON.parse(event.data);
       if (message.interface === takeAstroPhotoCmd) {
         logger("takeAstroPhoto:", message, connectionCtx);
+      } else if (message.interface === numberRawImagesCmd) {
+        logger("takeAstroPhoto count", message, connectionCtx);
+        connectionCtx.setAstroSession((prev) => {
+          prev["imagesTaken"] = message.currentCount;
+          return { ...prev };
+        });
+        saveAstroSessionDb("imagesTaken", message.currentCount.toString());
       } else {
         logger("", message, connectionCtx);
       }
@@ -70,24 +98,55 @@ export default function ImagingMenu(props: PropType) {
   }
 
   function stopAstroPhotoHandler() {
+    if (connectionCtx.IPDwarf === undefined) {
+      return;
+    }
+
+    connectionCtx.setAstroSession({} as AstroSession);
+    removeAstroSessionDb();
     setIsRecording(false);
+
+    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    socket.addEventListener("open", () => {
+      let payload = stopAstroPhoto();
+      logger("begin stopAstroPhoto...", payload, connectionCtx);
+      socketSend(socket, payload);
+    });
+
+    socket.addEventListener("message", (event) => {
+      let message = JSON.parse(event.data);
+      if (message.interface === stopAstroPhotoCmd) {
+        logger("stopAstroPhoto", message, connectionCtx);
+      } else {
+        logger("", message, connectionCtx);
+      }
+    });
+
+    socket.addEventListener("error", (error) => {
+      logger("stopAstroPhoto error:", error, connectionCtx);
+    });
   }
 
   function renderRecordButton() {
-    if (validSettings) {
+    // don't have clickable record button if the setting menu is shown
+    if (showSettingsMenu) {
+      return <RecordButton />;
+      // display clickable record button if all fields are completed
+    } else if (validSettings) {
       if (isRecording) {
         return <RecordingButton onClick={stopAstroPhotoHandler} />;
       } else {
         return <RecordButton onClick={takeAstroPhotoHandler} />;
       }
+      // if fields are not filled in, display warning
     } else {
       return (
         <>
           <OverlayTrigger
-            trigger="click"
+            trigger="hover"
             placement="left"
-            delay={{ show: 250, hide: 400 }}
-            overlay={renderTooltip}
+            delay={{ show: 100, hide: 200 }}
+            overlay={renderRecordButtonWarning}
           >
             <svg
               height="100%"
@@ -122,25 +181,40 @@ export default function ImagingMenu(props: PropType) {
     }
   }
 
-  const renderTooltip = (props: any) => (
-    <Tooltip id="button-tooltip" {...props}>
-      You must set the camera settings.
-    </Tooltip>
-  );
+  const renderRecordButtonWarning = (props: any) => {
+    if (showSettingsMenu) {
+      return <></>;
+    }
+
+    return (
+      <Tooltip id="button-tooltip" {...props}>
+        You must set the camera settings.
+      </Tooltip>
+    );
+  };
 
   return (
     <ul className="nav nav-pills  flex-column mb-auto  border">
       <li className="nav-item ">
-        <Link href="#" className="nav-link py-2 link-body-emphasis">
+        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
+          Live
+        </Link>
+      </li>
+      <li className="nav-item ">
+        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
           <OverlayTrigger
             trigger="click"
             placement={"left"}
-            show={showPopover}
-            onToggle={() => setShowPopover((p) => !p)}
+            show={showSettingsMenu}
+            onToggle={() => setShowSettingsMenu((p) => !p)}
             overlay={
               <Popover id="popover-positioned-left">
                 <Popover.Body>
-                  <ImagingAstroSettings setValidSettings={setValidSettings} />
+                  <ImagingAstroSettings
+                    setValidSettings={setValidSettings}
+                    validSettings={validSettings}
+                    setShowSettingsMenu={setShowSettingsMenu}
+                  />
                 </Popover.Body>
               </Popover>
             }
@@ -150,7 +224,7 @@ export default function ImagingMenu(props: PropType) {
         </Link>
       </li>
       <li className="nav-item">
-        <Link href="#" className="nav-link py-2 link-body-emphasis">
+        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
           {renderRecordButton()}
         </Link>
       </li>
