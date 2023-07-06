@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "export",
-  distDir: "DwarfStellariumGoto",
+  distDir: "dist",
 };
 
 module.exports = nextConfig;
