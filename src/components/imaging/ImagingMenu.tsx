@@ -135,6 +135,8 @@ export default function ImagingMenu(props: PropType) {
 
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
     socket.addEventListener("open", () => {
+      // BUG: 10015 stop RAW images does not work. Camera continues taking
+      // photos.
       let payload = stopAstroPhoto();
       logger("begin stopAstroPhoto...", payload, connectionCtx);
       socketSend(socket, payload);
