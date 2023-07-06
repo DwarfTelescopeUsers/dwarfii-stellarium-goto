@@ -187,8 +187,8 @@ export function saveAstroSettingsDb(key: string, value: string | undefined) {
   }
 }
 
-export function fetchAstroSessionDb() {
-  let data = localStorage.getItem("astroSession");
+export function fetchImagingSessionDb() {
+  let data = localStorage.getItem("imagingSession");
   if (data) {
     let obj = JSON.parse(data);
     ["startTime", "imagesTaken"].forEach((field) => {
@@ -201,8 +201,8 @@ export function fetchAstroSessionDb() {
   }
 }
 
-export function saveAstroSessionDb(key: string, value: string | undefined) {
-  let data = localStorage.getItem("astroSession");
+export function saveImagingSessionDb(key: string, value: string | undefined) {
+  let data = localStorage.getItem("imagingSession");
   if (data) {
     let obj = JSON.parse(data);
     if (value === undefined) {
@@ -210,15 +210,15 @@ export function saveAstroSessionDb(key: string, value: string | undefined) {
     } else {
       obj[key] = value;
     }
-    localStorage.setItem("astroSession", JSON.stringify(obj));
+    localStorage.setItem("imagingSession", JSON.stringify(obj));
   } else {
     let obj = { [key]: value };
-    localStorage.setItem("astroSession", JSON.stringify(obj));
+    localStorage.setItem("imagingSession", JSON.stringify(obj));
   }
 }
 
-export function removeAstroSessionDb() {
-  localStorage.removeItem("astroSession");
+export function removeImagingSessionDb() {
+  localStorage.removeItem("imagingSession");
 }
 
 export function deleteConnectionDB(): void {

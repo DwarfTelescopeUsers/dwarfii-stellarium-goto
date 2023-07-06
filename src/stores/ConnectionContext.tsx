@@ -1,7 +1,7 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
-import { ConnectionContextType, AstroSettings, AstroSession } from "@/types";
+import { ConnectionContextType, AstroSettings, ImagingSession } from "@/types";
 
 type ProviderProps = {
   children: ReactNode;
@@ -39,8 +39,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [astroSettings, setAstroSettings] = useState<AstroSettings>(
     {} as AstroSettings
   );
-  const [astroSession, setAstroSession] = useState<AstroSession>(
-    {} as AstroSession
+  const [imagingSession, setImagingSession] = useState<ImagingSession>(
+    {} as ImagingSession
   );
 
   const [logger, setLogger] = useState<{ [k: string]: any }[] | undefined>();
@@ -82,8 +82,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
     astroSettings,
     setAstroSettings,
-    astroSession,
-    setAstroSession,
+    imagingSession,
+    setImagingSession,
 
     deleteConnection,
 

@@ -15,7 +15,7 @@ import {
   fetchAstroSettingsDb,
   fetchLoggerStatusDb,
   fetchLogMessagesDb,
-  fetchAstroSessionDb,
+  fetchImagingSessionDb,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -83,10 +83,10 @@ export function useLoadIntialValues() {
       }
     }
 
-    if (connectionCtx.astroSession.startTime === undefined) {
-      let data = fetchAstroSessionDb();
+    if (connectionCtx.imagingSession.startTime === undefined) {
+      let data = fetchImagingSessionDb();
       if (data !== undefined) {
-        connectionCtx.setAstroSession(data);
+        connectionCtx.setImagingSession(data);
       }
     }
 

@@ -32,8 +32,8 @@ export type ConnectionContextType = {
 
   astroSettings: AstroSettings;
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
-  astroSession: AstroSession;
-  setAstroSession: Dispatch<SetStateAction<AstroSession>>;
+  imagingSession: ImagingSession;
+  setImagingSession: Dispatch<SetStateAction<ImagingSession>>;
 
   logger: { [k: string]: any }[] | undefined;
   setLogger: Dispatch<SetStateAction<{ [k: string]: any }[] | undefined>>;
@@ -197,4 +197,9 @@ export type AstroSettings = {
   count?: number;
 };
 
-type AstroSession = { startTime: number; endTime: number; imagesTaken: number };
+type ImagingSession = {
+  startTime: number;
+  endTime: number;
+  imagesTaken: number;
+};
+
