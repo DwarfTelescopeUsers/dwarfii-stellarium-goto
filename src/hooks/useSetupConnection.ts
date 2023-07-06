@@ -17,20 +17,20 @@ export function useSetupConnection() {
     let timerStellarium: any;
 
     if (connectionCtx.connectionStatus) {
-      checkDwarfConnection(connectionCtx, timerDwarf);
+      checkDwarfConnection(connectionCtx, timerDwarf, false);
 
       // continously check connection status
       timerDwarf = setInterval(() => {
-        checkDwarfConnection(connectionCtx, timerDwarf);
+        checkDwarfConnection(connectionCtx, timerDwarf, true);
       }, 90 * 1000);
     }
 
     if (connectionCtx.connectionStatusStellarium) {
-      checkStellariumConnection(connectionCtx, timerStellarium);
+      checkStellariumConnection(connectionCtx, timerStellarium, false);
 
       // continously check connection status
       timerStellarium = setInterval(() => {
-        checkStellariumConnection(connectionCtx, timerStellarium);
+        checkStellariumConnection(connectionCtx, timerStellarium, true);
       }, 90 * 1000);
     }
 
@@ -49,7 +49,8 @@ export function useSetupConnection() {
 
 function checkDwarfConnection(
   connectionCtx: ConnectionContextType,
-  timer: any
+  timer: any,
+  loop: boolean
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -60,7 +61,7 @@ function checkDwarfConnection(
     mode: "no-cors",
   })
     .then(() => {
-      console.log("Dwarf connection ok");
+      console.log("Dwarf connection ok.", loop ? " (loop)" : "");
       if (!connectionCtx.connectionStatus) {
         connectionCtx.setConnectionStatus(true);
         saveConnectionStatusDB(true);
@@ -82,7 +83,8 @@ function checkDwarfConnection(
 
 function checkStellariumConnection(
   connectionCtx: ConnectionContextType,
-  timer: any
+  timer: any,
+  loop: boolean
 ) {
   if (connectionCtx.IPStellarium === undefined) {
     return;
@@ -90,12 +92,11 @@ function checkStellariumConnection(
 
   // if we can't connect to camera in 2 seconds, reset connection data
   let url = `http://${connectionCtx.IPStellarium}:${connectionCtx.portStellarium}`;
-  console.log("checkStellariumConnection...");
   fetch(url, {
     signal: AbortSignal.timeout(2000),
   })
     .then(() => {
-      console.log("Stellarium connection ok");
+      console.log("Stellarium connection ok.", loop ? " (loop)" : "");
       if (!connectionCtx.connectionStatusStellarium) {
         connectionCtx.setConnectionStatusStellarium(true);
         saveConnectionStatusStellariumDB(true);
