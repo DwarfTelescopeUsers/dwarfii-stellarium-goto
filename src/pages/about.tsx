@@ -1,8 +1,15 @@
 import Link from "next/link";
+import StatusBar from "@/components/shared/StatusBar";
+import { useSetupConnection } from "@/hooks/useSetupConnection";
+import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
-export default function about() {
+export default function About() {
+  useSetupConnection();
+  useLoadIntialValues();
+
   return (
     <div>
+      <StatusBar />
       <h1>About</h1>
       <p>
         This website is a side project to combine my interest in coding,
