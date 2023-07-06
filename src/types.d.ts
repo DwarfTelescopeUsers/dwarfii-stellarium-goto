@@ -199,7 +199,6 @@ export type AstroSettings = {
 
 type ImagingSession = {
   startTime: number;
-  endTime: number;
+  sessionElaspsedTime: string;
   imagesTaken: number;
 };
-

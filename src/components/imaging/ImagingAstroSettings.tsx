@@ -3,31 +3,14 @@ import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { Formik } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import {
-  wsURL,
-  telephotoCamera,
-  setExposure,
-  setExposureValueCmd,
-  setExposureMode,
-  setExposureModeCmd,
-  setGain,
-  setGainValueCmd,
-  setGainMode,
-  setGainModeCmd,
-  setIR,
-  setIRCmd,
-  modeManual,
-  modeAuto,
-  exposureTelephotoModeAuto,
-  socketSend,
-} from "dwarfii_api";
+import { modeManual, modeAuto, exposureTelephotoModeAuto } from "dwarfii_api";
 import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
-import { logger } from "@/lib/logger";
 import { calculateImagingTime } from "@/lib/date_utils";
+import { updateTelescopeISPSetting } from "@/lib/dwarf_utils";
 
 type PropTypes = {
   setValidSettings: any;
@@ -36,58 +19,9 @@ type PropTypes = {
 };
 
 export default function TakeAstroPhoto(props: PropTypes) {
-  const { setValidSettings, validSettings, setShowSettingsMenu } = props;
+  const { setValidSettings, setShowSettingsMenu } = props;
   let connectionCtx = useContext(ConnectionContext);
   const [showSettingsInfo, setShowSettingsInfo] = useState(false);
-
-  function updateTelescope(type: string, value: number) {
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
-    const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    let camera = telephotoCamera;
-    let commands = [
-      setExposureModeCmd,
-      setExposureValueCmd,
-      setGainValueCmd,
-      setGainModeCmd,
-      setIRCmd,
-    ];
-
-    socket.addEventListener("open", () => {
-      let payload = {};
-      if (type === "exposure") {
-        payload = setExposure(camera, value);
-        socketSend(socket, payload);
-      } else if (type === "exposureMode") {
-        payload = setExposureMode(camera, value);
-        socketSend(socket, payload);
-      } else if (type === "gain") {
-        payload = setGain(camera, value);
-        socketSend(socket, payload);
-      } else if (type === "gainMode") {
-        payload = setGainMode(camera, value);
-        socketSend(socket, payload);
-      } else if (type === "IR") {
-        payload = setIR(value);
-        socketSend(socket, payload);
-      }
-      logger(`start set ${type}...`, payload, connectionCtx);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (commands.includes(message.interface)) {
-        logger(`set ${type}:`, message, connectionCtx);
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
-
-    socket.addEventListener("error", (message) => {
-      logger(`set ${type} error:`, message, connectionCtx);
-    });
-  }
 
   function defaultValueHandler(settingName: keyof AstroSettings) {
     connectionCtx.setAstroSettings((prev) => {
@@ -132,7 +66,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("gainMode", modeValue.toString());
-    updateTelescope("gainMode", modeValue);
+    updateTelescopeISPSetting("gainMode", modeValue, connectionCtx);
 
     setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
@@ -144,7 +78,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
         return { ...prev };
       });
       saveAstroSettingsDb("gain", targetValue);
-      updateTelescope("gain", value);
+      updateTelescopeISPSetting("gain", value, connectionCtx);
     }, 1000);
   }
 
@@ -171,7 +105,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("exposureMode", modeValue.toString());
-    updateTelescope("exposureMode", modeValue);
+    updateTelescopeISPSetting("exposureMode", modeValue, connectionCtx);
 
     setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
@@ -183,7 +117,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
         return { ...prev };
       });
       saveAstroSettingsDb("exposure", targetValue);
-      updateTelescope("exposure", value);
+      updateTelescopeISPSetting("exposure", value, connectionCtx);
     }, 500);
   }
 
@@ -199,7 +133,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("IR", e.target.value);
-    updateTelescope("IR", value);
+    updateTelescopeISPSetting("IR", value, connectionCtx);
   }
 
   function changeBinningHandler(e: ChangeEvent<HTMLSelectElement>) {

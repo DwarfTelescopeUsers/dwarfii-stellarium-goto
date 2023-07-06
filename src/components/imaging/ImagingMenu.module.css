@@ -1,0 +1,18 @@
+.box {
+  height: 60px;
+  width: 60px;
+  position: relative;
+}
+
+.box a {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-decoration: none;
+  color: #fff;
+}
+
+.box a:hover {
+  color: #aaa;
+}

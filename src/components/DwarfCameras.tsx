@@ -9,9 +9,6 @@ import {
   telephotoURL,
   wideangleCamera,
   wideangleURL,
-  turnOnCameraCmd,
-  binning2x2,
-  turnOnCamera,
   socketSend,
   cameraWorkingState,
   statusWorkingStateTelephotoCmd,
@@ -20,6 +17,7 @@ import {
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { logger } from "@/lib/logger";
+import { turnOnCameraFn } from "@/lib/dwarf_utils";
 
 type PropType = {
   showWideangle: boolean;
@@ -43,38 +41,12 @@ export default function DwarfCameras(props: PropType) {
 
   let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
 
-  function updateTelescope(cameraId: number) {
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-
-    socket.addEventListener("open", () => {
-      let payload = turnOnCamera(binning2x2, cameraId);
-      logger("start turnOnCamera...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === turnOnCameraCmd) {
-        logger("turnOnCamera:", message, connectionCtx);
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
-
-    socket.addEventListener("error", (error) => {
-      logger("turnOnCamera error:", error, connectionCtx);
-    });
-  }
-
   function turnOnCameraHandler(cameraId: number) {
     if (cameraId === telephotoCamera) {
-      updateTelescope(telephotoCamera);
+      turnOnCameraFn(telephotoCamera, connectionCtx);
       setTelephotoCameraStatus("on");
     } else {
-      updateTelescope(wideangleCamera);
+      turnOnCameraFn(wideangleCamera, connectionCtx);
       setWideangleCameraStatus("on");
     }
   }

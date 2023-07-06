@@ -1,12 +1,9 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { IRCut } from "dwarfii_api";
-import { calculateElapsedTime } from "@/lib/date_utils";
-import { padNumber } from "@/lib/math_utils";
 
 export default function StatusBar() {
   let connectionCtx = useContext(ConnectionContext);
-  const [sessionTime, setSessionTime] = useState("");
 
   let connection = connectionCtx.connectionStatus ? (
     <i className="bi bi-check-circle" style={{ color: "green" }}></i>
@@ -20,25 +17,12 @@ export default function StatusBar() {
     <i className="bi bi-x-circle" style={{ color: "red" }}></i>
   );
 
-  function calculateSessionTime() {
-    let data = calculateElapsedTime(
-      connectionCtx.astroSession.startTime,
-      Date.now()
-    );
-    if (data) {
-      let time = `${padNumber(data.hours)}:${padNumber(
-        data.minutes
-      )}:${padNumber(data.seconds)}`;
-      setSessionTime(time);
-    }
-  }
-
-  setInterval(() => {
-    calculateSessionTime();
-  }, 2000);
-
   return (
     <div className="mb-2">
+      {/* {JSON.stringify(connectionCtx.astroSettings, null, 2)}
+      <br />
+      {JSON.stringify(connectionCtx.imagingSession, null, 2)}
+      <br /> */}
       <span className="me-3">Dwarf II: {connection}</span>
       <span className="me-3">Stellarium: {connectionStellarium}</span>
       {connectionCtx.astroSettings.gain !== undefined && (
@@ -54,11 +38,18 @@ export default function StatusBar() {
           IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
         </span>
       )}
-      {Object.keys(connectionCtx.astroSession).length > 0 && (
-        <span className="me-3">
-          Total: {connectionCtx.astroSettings.count}, Taken:{" "}
-          {connectionCtx.astroSession.imagesTaken}, Time: {sessionTime}
-        </span>
+      {connectionCtx.astroSettings.count !== undefined && (
+        <span className="me-3">Count: {connectionCtx.astroSettings.count}</span>
+      )}
+      {Object.keys(connectionCtx.imagingSession).length > 0 && (
+        <>
+          <span className="me-3">
+            Taken: {connectionCtx.imagingSession.imagesTaken}
+          </span>
+          <span className="me-3">
+            Time: {connectionCtx.imagingSession.sessionElaspsedTime}
+          </span>
+        </>
       )}
     </div>
   );

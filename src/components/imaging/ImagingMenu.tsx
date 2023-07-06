@@ -14,14 +14,21 @@ import {
   stopAstroPhoto,
   stopAstroPhotoCmd,
   numberRawImagesCmd,
+  telephotoCamera,
 } from "dwarfii_api";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
 import RecordButton from "@/components/icons/RecordButton";
 import { logger } from "@/lib/logger";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
-import { AstroSession } from "@/types";
-import { saveAstroSessionDb, removeAstroSessionDb } from "@/db/db_utils";
+import { ImagingSession } from "@/types";
+import { saveImagingSessionDb, removeImagingSessionDb } from "@/db/db_utils";
+import {
+  turnOnCameraFn,
+  calculateSessionTime,
+  updateTelescopeISPSetting,
+} from "@/lib/dwarf_utils";
+import styles from "@/components/imaging/ImagingMenu.module.css";
 
 type PropType = {
   setShowWideangle: Dispatch<SetStateAction<boolean>>;
@@ -42,6 +49,7 @@ export default function ImagingMenu(props: PropType) {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [validSettings, setValidSettings] = useState(isValid());
   const [isRecording, setIsRecording] = useState(false);
+  const [sessionTimer, setSessionTimer] = useState<any>();
 
   function takeAstroPhotoHandler() {
     if (connectionCtx.IPDwarf == undefined) {
@@ -51,13 +59,26 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
+    if (!sessionTimer) {
+      let timer = setInterval(() => {
+        let time = calculateSessionTime(connectionCtx);
+        if (time) {
+          connectionCtx.setImagingSession((prev) => {
+            prev["sessionElaspsedTime"] = time as string;
+            return { ...prev };
+          });
+        }
+      }, 2000);
+      setSessionTimer(timer);
+    }
+
     let now = Date.now();
-    connectionCtx.setAstroSession((prev) => {
+    connectionCtx.setImagingSession((prev) => {
       prev.startTime = now;
       return { ...prev };
     });
     setIsRecording(true);
-    saveAstroSessionDb("startTime", now.toString());
+    saveImagingSessionDb("startTime", now.toString());
 
     const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
@@ -80,13 +101,21 @@ export default function ImagingMenu(props: PropType) {
       let message = JSON.parse(event.data);
       if (message.interface === takeAstroPhotoCmd) {
         logger("takeAstroPhoto:", message, connectionCtx);
+
+        // update image count
       } else if (message.interface === numberRawImagesCmd) {
-        logger("takeAstroPhoto count", message, connectionCtx);
-        connectionCtx.setAstroSession((prev) => {
+        // BUG: dwarf does not return message for every image taken
+        logger("takeAstroPhoto count:", message, connectionCtx);
+        connectionCtx.setImagingSession((prev) => {
           prev["imagesTaken"] = message.currentCount;
           return { ...prev };
         });
-        saveAstroSessionDb("imagesTaken", message.currentCount.toString());
+        saveImagingSessionDb("imagesTaken", message.currentCount.toString());
+
+        // update UI once imaging session is done imaging
+        if (message.currentCount === connectionCtx.astroSettings.count) {
+          endImagingSession();
+        }
       } else {
         logger("", message, connectionCtx);
       }
@@ -102,9 +131,7 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
-    connectionCtx.setAstroSession({} as AstroSession);
-    removeAstroSessionDb();
-    setIsRecording(false);
+    endImagingSession();
 
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
     socket.addEventListener("open", () => {
@@ -114,6 +141,7 @@ export default function ImagingMenu(props: PropType) {
     });
 
     socket.addEventListener("message", (event) => {
+      // BUG: dwarf does not return message for stopAstroPhoto
       let message = JSON.parse(event.data);
       if (message.interface === stopAstroPhotoCmd) {
         logger("stopAstroPhoto", message, connectionCtx);
@@ -125,6 +153,56 @@ export default function ImagingMenu(props: PropType) {
     socket.addEventListener("error", (error) => {
       logger("stopAstroPhoto error:", error, connectionCtx);
     });
+  }
+
+  function endPreview() {
+    connectionCtx.setImagingSession({} as ImagingSession);
+    removeImagingSessionDb();
+
+    setTimeout(() => {
+      turnOnCameraFn(telephotoCamera, connectionCtx);
+    }, 1000);
+    setTimeout(() => {
+      updateTelescopeISPSetting(
+        "gainMode",
+        connectionCtx.astroSettings.gainMode as number,
+        connectionCtx
+      );
+    }, 1500);
+    setTimeout(() => {
+      updateTelescopeISPSetting(
+        "exposureMode",
+        connectionCtx.astroSettings.exposureMode as number,
+        connectionCtx
+      );
+    }, 2000);
+    setTimeout(() => {
+      updateTelescopeISPSetting(
+        "gain",
+        connectionCtx.astroSettings.gain as number,
+        connectionCtx
+      );
+    }, 2500);
+    setTimeout(() => {
+      updateTelescopeISPSetting(
+        "exposure",
+        connectionCtx.astroSettings.exposure as number,
+        connectionCtx
+      );
+    }, 3000);
+    setTimeout(() => {
+      updateTelescopeISPSetting(
+        "IR",
+        connectionCtx.astroSettings.IR as number,
+        connectionCtx
+      );
+    }, 3500);
+  }
+
+  function endImagingSession() {
+    clearInterval(sessionTimer);
+    setSessionTimer(undefined);
+    setIsRecording(false);
   }
 
   function renderRecordButton() {
@@ -143,7 +221,6 @@ export default function ImagingMenu(props: PropType) {
       return (
         <>
           <OverlayTrigger
-            trigger="hover"
             placement="left"
             delay={{ show: 100, hide: 200 }}
             overlay={renderRecordButtonWarning}
@@ -194,14 +271,14 @@ export default function ImagingMenu(props: PropType) {
   };
 
   return (
-    <ul className="nav nav-pills  flex-column mb-auto  border">
-      <li className="nav-item ">
-        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
-          Live
+    <ul className="nav nav-pills flex-column mb-auto border">
+      <li className={`nav-item ${styles.box}`}>
+        <Link href="#" className="">
+          Astro
         </Link>
       </li>
-      <li className="nav-item ">
-        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
+      <li className={`nav-item ${styles.box}`}>
+        <Link href="#" className="">
           <OverlayTrigger
             trigger="click"
             placement={"left"}
@@ -223,23 +300,34 @@ export default function ImagingMenu(props: PropType) {
           </OverlayTrigger>
         </Link>
       </li>
-      <li className="nav-item">
-        <Link href="#" className="nav-link my-3 py-2 link-body-emphasis">
+      <li className={`nav-item ${styles.box}`}>
+        <Link href="#" className="">
           {renderRecordButton()}
         </Link>
       </li>
-      <li>
-        <a
+      <li className={`nav-item ${styles.box}`}>
+        <Link
           href="#"
-          className="nav-link py-2 link-body-emphasis"
+          className=""
           onClick={() => setShowWideangle((prev) => !prev)}
         >
           <i
             className="bi bi-pip"
-            style={{ fontSize: "1.75rem", transform: "rotate(180deg)" }}
+            style={{
+              fontSize: "1.75rem",
+              transform: "rotate(180deg)",
+              display: "inline-block",
+            }}
           ></i>
-        </a>
+        </Link>
       </li>
+      {!isRecording && connectionCtx.imagingSession.startTime && (
+        <li className={`nav-item ${styles.box}`}>
+          <Link href="#" className="" onClick={endPreview}>
+            Live
+          </Link>
+        </li>
+      )}
     </ul>
   );
 }
