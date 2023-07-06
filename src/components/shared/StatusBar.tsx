@@ -38,6 +38,11 @@ export default function StatusBar() {
           IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
         </span>
       )}
+      {connectionCtx.astroSettings.binning !== undefined && (
+        <span className="me-3">
+          Bin: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
+        </span>
+      )}
       {connectionCtx.astroSettings.count !== undefined && (
         <span className="me-3">Count: {connectionCtx.astroSettings.count}</span>
       )}
