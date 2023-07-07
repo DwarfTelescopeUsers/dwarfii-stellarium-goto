@@ -49,6 +49,7 @@ export default function ManualGoto() {
 
   function resetData() {
     setErrors(undefined);
+    setGotoErrors(undefined);
     setDeclination(undefined);
     setRA(undefined);
   }
@@ -85,7 +86,7 @@ export default function ManualGoto() {
             }
           }
         })
-        .catch((err) => stellariumErrorHandler(err, setErrors));
+        .catch((err) => stellariumErrorHandler(err, setGotoErrors));
     } else {
       setErrors("App is not connect to Stellarium.");
     }
@@ -95,7 +96,7 @@ export default function ManualGoto() {
     setShowModal(true);
     startGotoHandler(
       connectionCtx,
-      setErrors,
+      setGotoErrors,
       undefined,
       RA,
       declination,

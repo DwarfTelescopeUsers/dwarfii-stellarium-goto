@@ -44,7 +44,7 @@ export function useSetupConnection() {
         clearInterval(timerStellarium);
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 function checkDwarfConnection(

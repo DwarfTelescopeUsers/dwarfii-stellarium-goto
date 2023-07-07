@@ -103,5 +103,5 @@ export function useLoadIntialValues() {
         connectionCtx.setLogger(data);
       }
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }

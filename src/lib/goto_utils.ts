@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { AstroObject, ConnectionContextType } from "@/types";
-import { focusPath, objectInfoPath } from "@/lib/stellarium_utils";
+import { focusPath } from "@/lib/stellarium_utils";
 import { wsURL, startGoto, startGotoCmd, formatUtcUrl } from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
 import { logger } from "@/lib/logger";

@@ -30,7 +30,7 @@ export default function DwarfCameras(props: PropType) {
   useEffect(() => {
     // NOTE: checkCameraStatus only works with telephotoCamera
     checkCameraStatus(telephotoCamera);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [telephotoCameraStatus, setTelephotoCameraStatus] = useState<
     string | undefined
