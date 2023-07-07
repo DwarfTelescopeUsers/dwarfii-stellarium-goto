@@ -12,6 +12,12 @@ export default function SetupScope() {
   return (
     <div>
       <StatusBar />
+      <h2>First Steps</h2>
+      <p>
+        Use the Dwarf II mobile app from Dwarf Labs to take dark frames, focus
+        the scope, and calibrate goto.
+      </p>
+      <hr></hr>
       <SetLocation />
       <hr />
       <ConnectDwarf />

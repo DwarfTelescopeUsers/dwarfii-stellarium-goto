@@ -146,10 +146,6 @@ export default function ConnectDwarf() {
           </button>{" "}
           {renderConnectionStatus()}
         </form>
-        <li className="mb-2">
-          Use the Dwarf II mobile app from Dwarf Labs to focus the scope,
-          calibrate the goto, and set gain, exposure, and IR.
-        </li>
       </ol>
     </div>
   );

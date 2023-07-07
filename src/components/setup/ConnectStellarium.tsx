@@ -69,12 +69,12 @@ export default function ConnectStellarium() {
     <div>
       <h2>Connect to Stellarium</h2>
       <p>
-        In order to get right acension and declination from Stellarium, we need
-        to setup up the Remote Control plugin.
+        In order to use Stellarium, we need to setup up the Remote Control
+        plugin.
       </p>
 
       <ol>
-        <li className="mb-2">Start Stellarium.</li>
+        <li className="mb-2">Start Stellarium desktop app.</li>
         <li className="mb-2">
           The beginning of this{" "}
           <Link href="https://www.youtube.com/watch?v=v2gROUlPRhw">

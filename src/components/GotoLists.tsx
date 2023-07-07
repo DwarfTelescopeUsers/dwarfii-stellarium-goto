@@ -71,6 +71,10 @@ export default function AutoGoto() {
               planets.
             </li>
           </ol>
+          <p>
+            &quot;Center&quot; will show the selected object in Stellarium.
+            &quot;Goto&quot; will move Dwarf II to the selected object.
+          </p>
         </>
       )}
       {connectionCtx.currentObjectListName === "dso" && (
