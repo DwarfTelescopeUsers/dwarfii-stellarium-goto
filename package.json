@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "ghpages": "GH_PAGES=${GH_PAGES:=true} next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",

@@ -1,9 +1,9 @@
-const isGithub = process.env.GITHUB_REPOSITORY ? true : false;
+const isGHP = process.env.GH_PAGES || false;
 let assetPrefix = "";
 let basePath = "";
 
-if (isGithub) {
-  const repo = process.env.GITHUB_REPOSITORY?.replace(/.*?\//, "");
+if (isGHP) {
+  const repo = "dwarfii-stellarium-goto";
   assetPrefix = `/${repo}/`;
   basePath = `/${repo}`;
 }
