@@ -33,6 +33,7 @@ export async function setUTCTime(connectionCtx: ConnectionContextType) {
 export async function startGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  planet: number | undefined | null,
   RA: string | undefined | null,
   declination: string | undefined | null,
   callback?: (options: any) => void // eslint-disable-line no-unused-vars
@@ -46,16 +47,11 @@ export async function startGotoHandler(
   await setUTCTime(connectionCtx);
   let lat = connectionCtx.latitude;
   let lon = connectionCtx.longitude;
-  if (RA === undefined) return;
-  if (RA === null) return;
-  if (declination === undefined) return;
-  if (declination === null) return;
   if (lat === undefined) return;
   if (lon === undefined) return;
 
   const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
   socket.addEventListener("open", () => {
-    let planet = null;
     let options = startGoto(
       planet,
       RA,
@@ -161,51 +157,6 @@ export function centerHandler(
         if (!data) {
           setErrors(`Could not find object: ${object.designation}`);
         }
-      })
-      .catch((err) => stellariumErrorHandler(err, setErrors));
-  } else {
-    setErrors("App is not connect to Stellarium.");
-  }
-}
-
-export function centerGotoHandler(
-  object: AstroObject,
-  connectionCtx: ConnectionContextType,
-  setErrors: Dispatch<SetStateAction<string | undefined>>
-) {
-  eventBus.dispatch("clearErrors", { message: "clear errors" });
-
-  let url = connectionCtx.urlStellarium;
-  if (url) {
-    console.log("select object in stellarium...");
-
-    let focusUrl = `${url}${focusPath}${object.designation}`;
-    fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data) {
-          throw Error(`StellariumError`, {
-            cause: `Cound not find object: ${object.designation}`,
-          });
-        }
-      })
-      .then(() => {
-        console.log("get RA & declination...");
-        return fetch(`${url}${objectInfoPath}`, {
-          signal: AbortSignal.timeout(2000),
-        });
-      })
-      .then((response) => {
-        if (!response.ok) {
-          throw Error(`StellariumError`, {
-            cause: "Error when connecting to Stellarium",
-          });
-        }
-
-        return response.json();
-      })
-      .then((data) => {
-        startGotoHandler(connectionCtx, setErrors, data.ra, data.dec);
       })
       .catch((err) => stellariumErrorHandler(err, setErrors));
   } else {

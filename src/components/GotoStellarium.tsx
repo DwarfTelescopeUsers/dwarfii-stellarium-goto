@@ -91,6 +91,20 @@ export default function ManualGoto() {
     }
   }
 
+  function gotoFn() {
+    setShowModal(true);
+    startGotoHandler(
+      connectionCtx,
+      setErrors,
+      undefined,
+      RA,
+      declination,
+      (options) => {
+        setGotoMessages((prev) => prev.concat(options));
+      }
+    );
+  }
+
   return (
     <div>
       {!connectionCtx.connectionStatusStellarium && (
@@ -147,18 +161,7 @@ export default function ManualGoto() {
       </div>
       <button
         className={`btn ${RA !== undefined ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => {
-          setShowModal(true);
-          startGotoHandler(
-            connectionCtx,
-            setGotoErrors,
-            RA,
-            declination,
-            (options) => {
-              setGotoMessages((prev) => prev.concat(options));
-            }
-          );
-        }}
+        onClick={gotoFn}
         disabled={RA === undefined}
       >
         Goto

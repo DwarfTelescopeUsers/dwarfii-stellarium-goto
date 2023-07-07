@@ -107,6 +107,20 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     }
   }
 
+  function gotoFn() {
+    setShowModal(true);
+    startGotoHandler(
+      connectionCtx,
+      setErrors,
+      undefined,
+      object.ra,
+      object.dec,
+      (options) => {
+        setGotoMessages((prev) => prev.concat(options));
+      }
+    );
+  }
+
   return (
     <div className="border-bottom p-2">
       <h3 className="fs-5 mb-0">{object.displayName}</h3>
@@ -142,18 +156,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
             } mb-2`}
-            onClick={() => {
-              setShowModal(true);
-              startGotoHandler(
-                connectionCtx,
-                setErrors,
-                object.ra,
-                object.dec,
-                (options) => {
-                  setGotoMessages((prev) => prev.concat(options));
-                }
-              );
-            }}
+            onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
           >
             Goto

@@ -3,18 +3,23 @@ import { useState, useContext, useEffect } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { AstroObject } from "@/types";
 import { renderLocalRiseSetTime } from "@/lib/astro_utils";
-import { centerHandler, centerGotoHandler } from "@/lib/goto_utils";
+import { centerHandler, startGotoHandler } from "@/lib/goto_utils";
 import eventBus from "@/lib/event_bus";
+import GotoModal from "./GotoModal";
 
 type AstronomyObjectPropType = {
   object: AstroObject;
 };
-
+type Message = {
+  [k: string]: string;
+};
 export default function PlanetObject(props: AstronomyObjectPropType) {
   const { object } = props;
 
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [showModal, setShowModal] = useState(false);
+  const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
@@ -44,6 +49,38 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
     }
   }
 
+  function gotoFn() {
+    let planet = -1;
+    if (object.displayName === "Mercury") {
+      planet = 0;
+    } else if (object.displayName === "Venus") {
+      planet = 1;
+    } else if (object.displayName === "Mars") {
+      planet = 2;
+    } else if (object.displayName === "Jupiter") {
+      planet = 3;
+    } else if (object.displayName === "Saturn") {
+      planet = 4;
+    } else if (object.displayName === "Uranus") {
+      planet = 5;
+    } else if (object.displayName === "Neptune") {
+      planet = 6;
+    } else {
+      planet = 7;
+    }
+    setShowModal(true);
+    startGotoHandler(
+      connectionCtx,
+      setErrors,
+      planet,
+      undefined,
+      undefined,
+      (options) => {
+        setGotoMessages((prev) => prev.concat(options));
+      }
+    );
+  }
+
   return (
     <div className="border-bottom p-2">
       <h3 className="fs-5">{object.displayName}</h3>
@@ -70,12 +107,19 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
             } mb-2`}
-            onClick={() => centerGotoHandler(object, connectionCtx, setErrors)}
+            onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
           >
             Goto
           </button>
           <br />
+          <GotoModal
+            object={object}
+            showModal={showModal}
+            setShowModal={setShowModal}
+            messages={gotoMessages}
+            setMessages={setGotoMessages}
+          />
           {errors && <span className="text-danger">{errors}</span>}
         </div>
       </div>
