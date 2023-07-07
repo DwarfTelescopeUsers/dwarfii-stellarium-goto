@@ -12,7 +12,7 @@
     "CI": "npm run lint && npm run format && npm run typecheck && npm run test",
     "test": "jest",
     "test:watch": "jest . --watch",
-    "zipsite": "npm run build &&  tar -czvf DwarfStellariumGoto.tar.gz dist"
+    "zipsite": "npm run build &&  tar -czvf DwarfStellariumGoto.tar.gz docs"
   },
   "dependencies": {
     "@types/node": "20.2.1",
