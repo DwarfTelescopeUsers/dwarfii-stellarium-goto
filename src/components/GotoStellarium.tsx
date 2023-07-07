@@ -4,7 +4,7 @@ import { useContext, useState } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
-import { ParsedStellariumData } from "@/types";
+import { AstroObject, ParsedStellariumData } from "@/types";
 import { startGotoHandler, stellariumErrorHandler } from "@/lib/goto_utils";
 import { convertDMSToDwarfDec, convertHMSToDwarfRA } from "@/lib/math_utils";
 import GotoModal from "./astroObjects/GotoModal";
@@ -165,7 +165,13 @@ export default function ManualGoto() {
       </button>
       {gotoErrors && <p className="text-danger">{gotoErrors}</p>}
       <GotoModal
-        object={{ displayName: objectName, ra: RA, dec: declination }}
+        object={
+          {
+            displayName: objectName || "",
+            ra: RA || "",
+            dec: declination || "",
+          } as AstroObject
+        }
         showModal={showModal}
         setShowModal={setShowModal}
         messages={gotoMessages}
