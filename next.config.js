@@ -1,8 +1,8 @@
-const isGithubActions = process.env.GITHUB_ACTIONS ? true : false;
+const isGithub = process.env.GITHUB_REPOSITORY ? true : false;
 let assetPrefix = "";
 let basePath = "";
 
-if (isGithubActions) {
+if (isGithub) {
   const repo = process.env.GITHUB_REPOSITORY?.replace(/.*?\//, "");
   assetPrefix = `/${repo}/`;
   basePath = `/${repo}`;
