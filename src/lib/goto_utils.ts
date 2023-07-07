@@ -40,15 +40,16 @@ export async function startGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   RA: string | undefined | null,
-  declination: string | undefined | null
+  declination: string | undefined | null,
+  callback?: (options: any) => void // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
   setGotoErrors(undefined);
+  eventBus.dispatch("clearErrors", { message: "clear errors" });
 
   await setUTCTime(connectionCtx);
-
   let lat = connectionCtx.latitude;
   let lon = connectionCtx.longitude;
   if (RA === undefined) return;
@@ -68,19 +69,54 @@ export async function startGotoHandler(
       lat as number,
       lon as number
     );
+
+    // options.date = "2023-07-07 03:00:14";
+    if (callback) {
+      callback("Start goto");
+      callback(options);
+    }
+
     logger("start startGoto...", options, connectionCtx);
-    socketSend(socket, options);
+    console.log("...", options);
+
+    socket.send(JSON.stringify(options));
   });
 
   socket.addEventListener("message", (event) => {
     let message = JSON.parse(event.data);
     if (message.interface === startGotoCmd) {
       if (message.code === -45) {
-        setGotoErrors("GOTO target below the horizon");
+        setGotoErrors("Target below the horizon");
+        if (callback) {
+          callback("Target below the horizon");
+        }
       } else if (message.code === -18) {
         setGotoErrors("Plate Solving failed");
+        if (callback) {
+          callback("Plate Solving failed");
+        }
       } else if (message.code === -46) {
         setGotoErrors("GOTO bump its limit");
+        if (callback) {
+          callback("GOTO bump its limit");
+        }
+      } else if (message.code === 1006) {
+        setGotoErrors("GOTO failure");
+        if (callback) {
+          callback("GOTO failure");
+        }
+      } else if (message.code === 1004) {
+        if (callback) {
+          callback("Start plate solving");
+        }
+      } else if (message.code === 1005) {
+        if (callback) {
+          callback("Start tracking");
+        }
+      }
+
+      if (callback) {
+        callback(message);
       }
       logger("startGoto:", message, connectionCtx);
     } else {
@@ -89,6 +125,9 @@ export async function startGotoHandler(
   });
 
   socket.addEventListener("error", (message) => {
+    if (callback) {
+      callback(message);
+    }
     logger("startGoto error:", message, connectionCtx);
   });
 }
@@ -126,8 +165,7 @@ export function centerHandler(
       .then((res) => res.json())
       .then((data) => {
         if (!data) {
-          setErrors(`Coundpp not find object: ${object.designation}`);
-          throw Error("foo");
+          setErrors(`Could not find object: ${object.designation}`);
         }
       })
       .catch((err) => stellariumErrorHandler(err, setErrors));

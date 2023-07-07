@@ -7,7 +7,11 @@ import { statusPath, parseStellariumData } from "@/lib/stellarium_utils";
 import { ParsedStellariumData } from "@/types";
 import { startGotoHandler, stellariumErrorHandler } from "@/lib/goto_utils";
 import { convertDMSToDwarfDec, convertHMSToDwarfRA } from "@/lib/math_utils";
+import GotoModal from "./astroObjects/GotoModal";
 
+type Message = {
+  [k: string]: string;
+};
 export default function ManualGoto() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
@@ -15,6 +19,8 @@ export default function ManualGoto() {
   const [RA, setRA] = useState<string | undefined>();
   const [declination, setDeclination] = useState<string | undefined>();
   const [objectName, setObjectName] = useState<string | undefined>();
+  const [showModal, setShowModal] = useState(false);
+  const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   function noObjectSelectedHandler() {
     setErrors("You must select an object in Stellarium.");
@@ -141,14 +147,30 @@ export default function ManualGoto() {
       </div>
       <button
         className={`btn ${RA !== undefined ? "btn-primary" : "btn-secondary"}`}
-        onClick={() =>
-          startGotoHandler(connectionCtx, setGotoErrors, RA, declination)
-        }
+        onClick={() => {
+          setShowModal(true);
+          startGotoHandler(
+            connectionCtx,
+            setGotoErrors,
+            RA,
+            declination,
+            (options) => {
+              setGotoMessages((prev) => prev.concat(options));
+            }
+          );
+        }}
         disabled={RA === undefined}
       >
         Goto
       </button>
       {gotoErrors && <p className="text-danger">{gotoErrors}</p>}
+      <GotoModal
+        object={{ displayName: objectName, ra: RA, dec: declination }}
+        showModal={showModal}
+        setShowModal={setShowModal}
+        messages={gotoMessages}
+        setMessages={setGotoMessages}
+      />
     </div>
   );
 }

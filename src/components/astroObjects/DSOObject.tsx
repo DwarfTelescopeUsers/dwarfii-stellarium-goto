@@ -13,16 +13,21 @@ import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
 } from "@/lib/math_utils";
+import GotoModal from "./GotoModal";
 
 type AstronomyObjectPropType = {
   object: AstroObject;
 };
-
+type Message = {
+  [k: string]: string;
+};
 export default function DSOObject(props: AstronomyObjectPropType) {
   const { object } = props;
 
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [showModal, setShowModal] = useState(false);
+  const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
@@ -137,14 +142,30 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
             } mb-2`}
-            onClick={() =>
-              startGotoHandler(connectionCtx, setErrors, object.ra, object.dec)
-            }
+            onClick={() => {
+              setShowModal(true);
+              startGotoHandler(
+                connectionCtx,
+                setErrors,
+                object.ra,
+                object.dec,
+                (options) => {
+                  setGotoMessages((prev) => prev.concat(options));
+                }
+              );
+            }}
             disabled={!connectionCtx.connectionStatus}
           >
             Goto
           </button>
           <br />
+          <GotoModal
+            object={object}
+            showModal={showModal}
+            setShowModal={setShowModal}
+            messages={gotoMessages}
+            setMessages={setGotoMessages}
+          />
           {errors && <span className="text-danger">{errors}</span>}
         </div>
       </div>
