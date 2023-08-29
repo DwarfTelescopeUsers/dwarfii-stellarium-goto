@@ -52,6 +52,28 @@ export function convertHMSToDecimalDegrees(
   return Number(text);
 }
 
+// Dwarf uses RA in decimal hour : don't multiply by 15 !
+export function convertHMSToDecimalHours(
+  text: string,
+  decimalPlaces = 5
+): number {
+  let hmsMatches = extractHMSValues(text);
+  if (hmsMatches) {
+    // eslint-disable-next-line  no-unused-vars
+    let { hour, minute, second } = hmsMatches;
+    let decimal =
+      (Number(hour) + Number(minute) / 60 + Number(second) / 3600);
+    return formatFloatToDecimalPlaces(decimal, decimalPlaces);
+  }
+
+  let decimalMatches = text.match(/([-0-9.]+)/);
+  if (decimalMatches) {
+    return formatFloatToDecimalPlaces(Number(decimalMatches[1]), decimalPlaces);
+  }
+
+  return Number(text);
+}
+
 export function extractHMSValues(text: string):
   | {
       hour: number;
@@ -82,6 +104,7 @@ export function extractHMSValues(text: string):
   }
 }
 
+// Dwarf uses RA in decimal hour : don't multiply by 15 !
 export function convertHMSToDwarfRA(text: string): string | undefined {
   let hmsMatches = extractHMSValues(text);
   if (hmsMatches) {
@@ -92,7 +115,7 @@ export function convertHMSToDwarfRA(text: string): string | undefined {
 
   let decimalMatches = text.match(/([-0-9.]+)/);
   if (decimalMatches) {
-    let { hour, minute, second } = convertDecimalDegreesToHMS(
+    let { hour, minute, second } = convertDecimalHoursToHMS(
       Number(decimalMatches[1])
     );
     return `${hour}h ${minute}m ${second}s`;
@@ -102,6 +125,16 @@ export function convertHMSToDwarfRA(text: string): string | undefined {
 // https://stackoverflow.com/a/5786281
 export function convertDecimalDegreesToHMS(decimal: number) {
   let degree = decimal / 15;
+  return {
+    hour: 0 | (degree < 0 ? (degree = -degree) : degree),
+    minute: 0 | (((degree += 1e-9) % 1) * 60),
+    second: (0 | (((degree * 60) % 1) * 6000)) / 100,
+  };
+}
+
+// Dwarf uses RA in decimal hour : don't divide by 15 !
+export function convertDecimalHoursToHMS(decimal: number) {
+  let degree = decimal;
   return {
     hour: 0 | (degree < 0 ? (degree = -degree) : degree),
     minute: 0 | (((degree += 1e-9) % 1) * 60),
