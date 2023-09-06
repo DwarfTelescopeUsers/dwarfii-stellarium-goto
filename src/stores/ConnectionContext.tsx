@@ -29,6 +29,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
+  const [timezone, setTimezone] = useState<string | undefined>();
+
+  const [searchTxt, setSearchTxt] = useState<string | undefined>("");
 
   const [currentObjectListName, setCurrentObjectListName] = useState<
     string | undefined
@@ -74,6 +77,11 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setLatitude,
     longitude,
     setLongitude,
+    timezone,
+    setTimezone,
+
+    searchTxt,
+    setSearchTxt,
 
     currentObjectListName,
     setCurrentObjectListName,

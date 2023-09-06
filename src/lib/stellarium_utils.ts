@@ -6,6 +6,7 @@ import {
 
 export let statusPath = "/api/main/status";
 export let focusPath = "/api/main/focus?target=";
+export let focusPosPath = "/api/main/focus?position=";
 export let objectInfoPath = "/api/objects/info?format=json";
 
 export let catalogs = ["C", "Ced", "HIP", "IC", "LBN", "M", "NGC", "PGC"];

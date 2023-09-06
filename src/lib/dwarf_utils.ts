@@ -49,6 +49,10 @@ export function turnOnCameraFn(
   socket.addEventListener("error", (error) => {
     logger("turnOnCamera error:", error, connectionCtx);
   });
+
+  socket.addEventListener("close", (message) => {
+    logger("turnOnCamera close:", message, connectionCtx);
+  });
 }
 
 export function updateTelescopeISPSetting(
@@ -101,6 +105,10 @@ export function updateTelescopeISPSetting(
 
   socket.addEventListener("error", (message) => {
     logger(`set ${type} error:`, message, connectionCtx);
+  });
+
+  socket.addEventListener("close", (message) => {
+    logger(`set ${type} close:`, message, connectionCtx);
   });
 }
 

@@ -81,6 +81,10 @@ export default function DwarfCameras(props: PropType) {
     socket.addEventListener("error", (error) => {
       logger("cameraWorkingState error:", error, connectionCtx);
     });
+
+    socket.addEventListener("close", (error) => {
+      logger("cameraWorkingState close:", error, connectionCtx);
+    });
   }
 
   function renderWideAngle() {

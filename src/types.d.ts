@@ -24,6 +24,11 @@ export type ConnectionContextType = {
   setLatitude: Dispatch<SetStateAction<number | undefined>>;
   longitude: number | undefined;
   setLongitude: Dispatch<SetStateAction<number | undefined>>;
+  timezone: string | undefined;
+  setTimezone: Dispatch<SetStateAction<string | undefined>>;
+
+  searchTxt: string | undefined;
+  setSearchTxt: Dispatch<SetStateAction<string | undefined>>;
 
   currentObjectListName: string | undefined;
   setCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;

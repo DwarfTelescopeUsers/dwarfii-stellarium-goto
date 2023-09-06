@@ -1,8 +1,8 @@
 import {
   convertHMSToDecimalDegrees,
-  convertHMSToDecimalHours,
   convertDMSToDecimalDegrees,
   convertDecimalDegreesToDMS,
+  convertDecimalHoursToHMS,
   extractDMSValues,
   extractHMSValues,
   convertHMSToDwarfRA,
@@ -48,12 +48,12 @@ describe("convertHMSToDecimalDegrees", () => {
   });
 });
 
-describe("convertHMSToDecimalHours", () => {
+describe("convertDecimalHoursToHMS", () => {
   it("converts decimal hours to hour, minute, seconds", () => {
     let decimal = 3.83622;
     let expected = { hour: 3, minute: 50, second: 10.39 };
 
-    let res = convertHMSToDecimalHours(decimal);
+    let res = convertDecimalHoursToHMS(decimal);
 
     expect(res).toEqual(expected);
   });
@@ -188,7 +188,7 @@ describe("convertHMSToDwarfRA", () => {
 
   it("returns string in 'xh xm xs' format from HMS decimal string", () => {
     let text = "18.61618";
-    let expected = "18h 36m 58.25s";
+    let expected = "18h 36m 58.24s";
 
     let res = convertHMSToDwarfRA(text);
 

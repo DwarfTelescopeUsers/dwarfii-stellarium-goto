@@ -80,6 +80,14 @@ export default function ConnectDwarf() {
       connectionCtx.setConnectionStatus(false);
       saveConnectionStatusDB(false);
     });
+
+    socket.addEventListener("close", (error) => {
+      logger("cameraSettings close:", error, connectionCtx);
+      clearTimeout(closeSocketTimer);
+      setConnecting(false);
+      connectionCtx.setConnectionStatus(false);
+      saveConnectionStatusDB(false);
+    });
   }
 
   function renderConnectionStatus() {
@@ -110,6 +118,9 @@ export default function ConnectDwarf() {
           Use the Dwarf II mobile app to connect to the telescope. You can use
           the Dwarf wifi or set the Dwarf II to STA mode and use your normal
           wifi network.
+        </li>
+        <li className="mb-2">
+          You can also enable <b>Activate Wi-Fi at Startup</b> on the Dwarf II  with the mobile app. Then no need to use the app to Calibrate, make Goto and Imaging from this website.
         </li>
         <li className="mb-2">
           Visit this site on a device that is connected to the same wifi network

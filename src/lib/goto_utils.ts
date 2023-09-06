@@ -1,11 +1,26 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { AstroObject, ConnectionContextType } from "@/types";
-import { focusPath } from "@/lib/stellarium_utils";
-import { wsURL, calibrateGoto, calibrateGotoCmd, startGoto, startGotoCmd, formatUtcUrl, formatTimeZoneUrl } from "dwarfii_api";
+import { focusPath, focusPosPath } from "@/lib/stellarium_utils";
+import {
+  wsURL,
+  calibrateGoto,
+  calibrateGotoCmd,
+  startGoto,
+  startGotoCmd,
+  stopGoto,
+  stopGotoCmd,
+  formatUtcUrl,
+  formatTimeZoneUrl,
+} from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
 import { logger } from "@/lib/logger";
-import { convertHMSToDecimalHours, convertDMSToDecimalDegrees} from "@/lib/math_utils";
+import {
+  convertHMSToDecimalHours,
+  convertHMSToDecimalDegrees,
+  convertDMSToDecimalDegrees,
+  convertRaDecToVec3d,
+} from "@/lib/math_utils";
 
 export async function setUTCTime(connectionCtx: ConnectionContextType) {
   if (connectionCtx.IPDwarf === undefined) {
@@ -22,7 +37,6 @@ export async function setUTCTime(connectionCtx: ConnectionContextType) {
         logger("utc date ok", { "utc date ok": data.result }, connectionCtx);
 
         setTimeZoneUrl(connectionCtx);
-
       } else {
         logger(
           "utc date error",
@@ -35,19 +49,26 @@ export async function setUTCTime(connectionCtx: ConnectionContextType) {
 }
 
 async function setTimeZoneUrl(connectionCtx: ConnectionContextType) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
 
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
+  let timezone = "";
 
-    let timeZoneUrl = formatTimeZoneUrl(connectionCtx.IPDwarf);
-    await fetch(timeZoneUrl)
-      .then((res) => {
-        return res.json();
-      })
-      .then((data) => {
-        if (data.result == 0) {
-          logger("time zone ok", { "time zone ok": data.result }, connectionCtx);
+  if (connectionCtx.timezone) timezone = connectionCtx.timezone;
+
+  let timeZoneUrl = formatTimeZoneUrl(connectionCtx.IPDwarf, timezone);
+  await fetch(timeZoneUrl)
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      if (data.result == 0) {
+        logger(
+          "time zone ok: " + timezone,
+          { "time zone ok": data.result },
+          connectionCtx
+        );
       } else {
         logger(
           "time zone error",
@@ -72,16 +93,17 @@ export async function calibrationHandler(
 
   await setUTCTime(connectionCtx);
   let lat = connectionCtx.latitude;
-  let lon = connectionCtx.longitude;
+  /////////////////////////////////////////
+  // Reverse the Longitude for the dwarf II : positive for WEST
+  /////////////////////////////////////////
+  let lon = 0;
+  if (connectionCtx.longitude) lon = -connectionCtx.longitude;
   if (lat === undefined) return;
   if (lon === undefined) return;
-  
+
   const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
   socket.addEventListener("open", () => {
-    let options = calibrateGoto(
-      lat as number,
-      lon as number
-    );
+    let options = calibrateGoto(lat as number, lon as number);
 
     // options.date = "2023-07-07 03:00:14";
     if (callback) {
@@ -130,7 +152,6 @@ export async function calibrationHandler(
         callback(message);
       }
       logger("calibrateGoto:", message, connectionCtx);
-  
     } else {
       logger("", message, connectionCtx);
     }
@@ -141,6 +162,13 @@ export async function calibrationHandler(
       callback(message);
     }
     logger("calibrateGoto error:", message, connectionCtx);
+  });
+
+  socket.addEventListener("close", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("calibrateGoto close:", message, connectionCtx);
   });
 }
 
@@ -160,15 +188,21 @@ export async function startGotoHandler(
 
   // await setUTCTime(connectionCtx); no need ?
   let lat = connectionCtx.latitude;
-  let lon = connectionCtx.longitude;
+  /////////////////////////////////////////
+  // Reverse the Longitude for the dwarf II : positive for WEST
+  /////////////////////////////////////////
+  let lon = 0;
+  if (connectionCtx.longitude) lon = -connectionCtx.longitude;
   if (lat === undefined) return;
   if (lon === undefined) return;
 
   const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
   socket.addEventListener("open", () => {
     let RA_number = RA ? convertHMSToDecimalHours(RA!) : 0;
-    let declination_number = declination ? convertDMSToDecimalDegrees(declination!) : 0;
-  
+    let declination_number = declination
+      ? convertDMSToDecimalDegrees(declination!)
+      : 0;
+
     let options = startGoto(
       planet,
       RA_number,
@@ -240,6 +274,83 @@ export async function startGotoHandler(
     }
     logger("startGoto error:", message, connectionCtx);
   });
+
+  socket.addEventListener("close", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("startGoto close:", message, connectionCtx);
+  });
+}
+
+export async function stopGotoHandler(
+  connectionCtx: ConnectionContextType,
+  setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
+  setGotoErrors(undefined);
+  eventBus.dispatch("clearErrors", { message: "clear errors" });
+
+  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  socket.addEventListener("open", () => {
+    let options = stopGoto();
+
+    if (callback) {
+      callback("Stop goto");
+      callback(options);
+    }
+
+    logger("start stopGoto...", options, connectionCtx);
+    console.log("...", options);
+
+    socket.send(JSON.stringify(options));
+  });
+
+  socket.addEventListener("message", (event) => {
+    let message = JSON.parse(event.data);
+    if (message.interface === stopGotoCmd) {
+      if (message.code === -31) {
+        setGotoErrors("Stopping Goto");
+        if (callback) {
+          callback("Stopping Goto");
+        }
+      } else if (message.code === 1007) {
+        setGotoErrors("Stopping Astronomy function");
+        if (callback) {
+          callback("Stopping Astronomy function");
+        }
+      } else if (message.code === 1008) {
+        setGotoErrors("End of Astronomy function");
+        if (callback) {
+          callback("End of Astronomy function");
+        }
+      }
+
+      if (callback) {
+        callback(message);
+      }
+      logger("stopGoto:", message, connectionCtx);
+    } else {
+      logger("", message, connectionCtx);
+    }
+  });
+
+  socket.addEventListener("error", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("stopGoto error:", message, connectionCtx);
+  });
+
+  socket.addEventListener("close", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("stopGoto close:", message, connectionCtx);
+  });
 }
 
 export function stellariumErrorHandler(
@@ -270,15 +381,49 @@ export function centerHandler(
   if (url) {
     console.log("select object in stellarium...");
 
-    let focusUrl = `${url}${focusPath}${object.designation}`;
-    fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data) {
-          setErrors(`Could not find object: ${object.designation}`);
-        }
-      })
-      .catch((err) => stellariumErrorHandler(err, setErrors));
+    if (object.type == "Mosaic") {
+      console.log("select object by coordinates in stellarium...");
+
+      // Convert Ra and Dec to Vec3d used by Stellarium
+      let RA_number = object.ra ? convertHMSToDecimalDegrees(object.ra!) : 0;
+      let declination_number = object.dec
+        ? convertDMSToDecimalDegrees(object.dec!)
+        : 0;
+
+      let coord = convertRaDecToVec3d(declination_number, RA_number);
+      let str_coord = `[${coord.x},${coord.y},${coord.z}]`;
+      console.log(`coordinates found: ${str_coord}`);
+
+      let focusUrl = `${url}${focusPosPath}${str_coord}`;
+      console.log("focusUrl : " + focusUrl);
+      fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
+        // res.json don't work here
+        .then((res) => {
+          return res.text();
+        })
+        .then((data) => {
+          console.log(data);
+          if (data != "ok") {
+            setErrors(`Could not find object by coordinates : ${str_coord}`);
+          }
+        })
+        .catch((err) => stellariumErrorHandler(err, setErrors));
+    } else {
+      console.log("select object by name in stellarium...");
+      let focusUrl = `${url}${focusPath}${object.designation}`;
+      console.log("focusUrl : " + focusUrl);
+      fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
+        .then((res) => {
+          return res.text();
+        })
+        .then((data) => {
+          console.log(data);
+          if (data != "true") {
+            setErrors(`Could not find object: ${object.designation}`);
+          }
+        })
+        .catch((err) => stellariumErrorHandler(err, setErrors));
+    }
   } else {
     setErrors("App is not connect to Stellarium.");
   }

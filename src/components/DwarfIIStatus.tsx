@@ -47,6 +47,10 @@ export default function DwarfIIStatus() {
     socket.addEventListener("error", (message) => {
       console.log("cameraSettings error:", message);
     });
+
+    socket.addEventListener("close", (message) => {
+      console.log("cameraSettings close:", message);
+    });
   };
 
   const getShotField = () => {
@@ -76,6 +80,10 @@ export default function DwarfIIStatus() {
     socket.addEventListener("error", (message) => {
       setShotFieldData(message);
       console.log("queryShotField error:", message);
+    });
+
+    socket.addEventListener("close", (message) => {
+      console.log("queryShotField close:", message);
     });
   };
 

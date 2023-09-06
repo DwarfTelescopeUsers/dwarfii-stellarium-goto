@@ -61,8 +61,7 @@ export function convertHMSToDecimalHours(
   if (hmsMatches) {
     // eslint-disable-next-line  no-unused-vars
     let { hour, minute, second } = hmsMatches;
-    let decimal =
-      (Number(hour) + Number(minute) / 60 + Number(second) / 3600);
+    let decimal = Number(hour) + Number(minute) / 60 + Number(second) / 3600;
     return formatFloatToDecimalPlaces(decimal, decimalPlaces);
   }
 
@@ -244,4 +243,18 @@ function formatFloatToDecimalPlaces(
   return Number(
     Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
   );
+}
+
+export function convertRaDecToVec3d(dec: number, Ra: number) {
+  let toRad = Math.PI / 180;
+
+  let x = Math.cos(dec * toRad) * Math.cos(Ra * toRad);
+  let y = Math.cos(dec * toRad) * Math.sin(Ra * toRad);
+  let z = Math.sin(dec * toRad);
+
+  return {
+    x: x,
+    y: y,
+    z: z,
+  };
 }

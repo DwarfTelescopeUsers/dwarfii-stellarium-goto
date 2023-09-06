@@ -25,6 +25,8 @@ let lat_NYC = 40.7128;
 let lon_NYC = -74.006;
 let lat_HK = 22.3964;
 let lon_HK = 114.1095;
+let lat_BUK = 52.5;
+let lon_BUK = -1.9166667;
 
 describe("getRiseSetTime", () => {
   // https://github.com/commenthol/astronomia/blob/master/test/rise.test.js
@@ -242,17 +244,43 @@ describe("getRiseSetTimePlanet", () => {
 
 describe("computeRaDecToAltAz", () => {
   it("returns alt Az data for a given RA and Dec", () => {
-    let lat = lat_NYC;
-    let lon = lon_NYC;
-    let ra = 250.43;
-    let dec = 36.462;
-    let date = new Date("2023-07-02T00:00:00.000Z");
+    let lat = 48.8604;
+    let lon = -2.3416;
+    let ra = 10.382938 * 15;
+    let dec = 249.382988;
+    let date = new Date("2023-09-03T11:48:00.000Z");
     let expected = {
-      alt: 55.298005362032455,
-      az: 83.1259043187447,
+      alt: -65.21173910755353,
+      az: 23.872691425100033,
+      lst: 126.9358037863104,
+      H: -28.808266213689613,
     };
+    // Alt:-065° 12' 42.26"
+    // Az: +023° 52' 21.69"
 
-    let res = computeRaDecToAltAz(lat, lon, ra, dec, date);
+    let res = computeRaDecToAltAz(lat, lon, ra, dec, date, "Europe/Paris");
+
+    expect(res).toEqual(expected);
+  });
+});
+
+describe("computeRaDecToAltAz", () => {
+  it("returns alt Az data for a given RA and Dec", () => {
+    let lat = lat_BUK;
+    let lon = lon_BUK;
+    let ra = 16.695 * 15;
+    let dec = 36.466667;
+    let date = new Date("1998-08-10T23:10:00.000Z");
+    let expected = {
+      alt: 66.59556592349702,
+      az: 236.426219940173,
+      lst: 274.72590996099535,
+      H: 24.300909960995305,
+    };
+    // Alt:+066° 35' 44.04"
+    // Az: +236° 25' 34.39"
+
+    let res = computeRaDecToAltAz(lat, lon, ra, dec, date, "Europe/London");
 
     expect(res).toEqual(expected);
   });

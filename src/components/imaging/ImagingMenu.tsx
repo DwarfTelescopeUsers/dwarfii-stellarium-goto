@@ -1,5 +1,5 @@
+import { useContext, useState, useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { useContext, useState } from "react";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import Tooltip from "react-bootstrap/Tooltip";
@@ -37,6 +37,40 @@ type PropType = {
 export default function ImagingMenu(props: PropType) {
   const { setShowWideangle } = props;
   let connectionCtx = useContext(ConnectionContext);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [validSettings, setValidSettings] = useState(isValid());
+  const [isRecording, setIsRecording] = useState(false);
+  const [endRecording, setEndRecording] = useState(false);
+  const [timerGlobal, setTimerGlobal] =
+    useState<ReturnType<typeof setInterval>>();
+
+  let timerSession: ReturnType<typeof setInterval>;
+  let timerSessionInit: boolean = false;
+
+  useEffect(() => {
+    let testTimer: string | any = "";
+    if (timerGlobal) testTimer = timerGlobal.toString();
+    logger(" TG --- Global Timer:", testTimer, connectionCtx);
+    if (isRecording)
+      logger("TG setIsRecording True:", testTimer, connectionCtx);
+    else logger("TG setIsRecording False:", testTimer, connectionCtx);
+    if (endRecording) logger("TG endRecording True:", testTimer, connectionCtx);
+    else logger("TG endRecording False:", testTimer, connectionCtx);
+  }, [timerGlobal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let testTimer: string | any = "";
+    if (timerGlobal) testTimer = timerGlobal.toString();
+    if (isRecording) logger("setIsRecording True:", testTimer, connectionCtx);
+    else logger("setIsRecording False:", testTimer, connectionCtx);
+  }, [isRecording]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let testTimer: string | any = "";
+    if (timerGlobal) testTimer = timerGlobal.toString();
+    if (endRecording) logger("endRecording True:", testTimer, connectionCtx);
+    else logger("endRecording false:", testTimer, connectionCtx);
+  }, [endRecording]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function isValid() {
     let errors = validateAstroSettings(connectionCtx.astroSettings as any);
@@ -46,10 +80,22 @@ export default function ImagingMenu(props: PropType) {
     );
   }
 
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [validSettings, setValidSettings] = useState(isValid());
-  const [isRecording, setIsRecording] = useState(false);
-  const [sessionTimer, setSessionTimer] = useState<any>();
+  function startTimer() {
+    let timer = undefined;
+    if (!timerSessionInit) {
+      timer = setInterval(() => {
+        let time = calculateSessionTime(connectionCtx);
+        if (time) {
+          connectionCtx.setImagingSession((prev) => {
+            prev["sessionElaspsedTime"] = time as string;
+            return { ...prev };
+          });
+        }
+      }, 2000);
+    } else timer = timerSession;
+
+    return timer;
+  }
 
   function takeAstroPhotoHandler() {
     if (connectionCtx.IPDwarf == undefined) {
@@ -59,71 +105,99 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
-    if (!sessionTimer) {
-      let timer = setInterval(() => {
-        let time = calculateSessionTime(connectionCtx);
-        if (time) {
-          connectionCtx.setImagingSession((prev) => {
-            prev["sessionElaspsedTime"] = time as string;
-            return { ...prev };
-          });
-        }
-      }, 2000);
-      setSessionTimer(timer);
+    let testTimer: string | any = "";
+    if (!timerSessionInit) {
+      timerSession = startTimer();
+      if (timerSession) {
+        timerSessionInit = true;
+        testTimer = timerSession.toString();
+        logger("startTimer timer:", testTimer, connectionCtx);
+        setTimerGlobal(timerSession);
+      } else timerSessionInit = false;
     }
 
-    let now = Date.now();
-    connectionCtx.setImagingSession((prev) => {
-      prev.startTime = now;
-      return { ...prev };
-    });
-    setIsRecording(true);
-    saveImagingSessionDb("startTime", now.toString());
+    if (timerSessionInit && timerSession) {
+      testTimer = timerSession.toString();
+      logger("startImagingSession timer:", testTimer, connectionCtx);
 
-    const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+      let now = Date.now();
+      connectionCtx.setImagingSession((prev) => {
+        prev.startTime = now;
+        return { ...prev };
+      });
+      setIsRecording(true);
 
-    socket.addEventListener("open", () => {
-      let payload = takeAstroPhoto(
-        connectionCtx.astroSettings.rightAcension as string,
-        connectionCtx.astroSettings.declination as string,
-        connectionCtx.astroSettings.exposure as number,
-        connectionCtx.astroSettings.gain as number,
-        connectionCtx.astroSettings.binning as number,
-        connectionCtx.astroSettings.count as number,
-        connectionCtx.astroSettings.fileFormat as number
-      );
-      logger("start takeAstroPhoto...", payload, connectionCtx);
+      saveImagingSessionDb("startTime", now.toString());
+      setEndRecording(false);
 
-      socketSend(socket, payload);
-    });
+      //startAstroPhotoHandler
 
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === takeAstroPhotoCmd) {
-        logger("takeAstroPhoto:", message, connectionCtx);
+      logger("startAstroPhotoHandler current ST:", testTimer, connectionCtx);
 
-        // update image count
-      } else if (message.interface === numberRawImagesCmd) {
-        // BUG: dwarf does not return message for every image taken
-        logger("takeAstroPhoto count:", message, connectionCtx);
-        connectionCtx.setImagingSession((prev) => {
-          prev["imagesTaken"] = message.currentCount;
-          return { ...prev };
-        });
-        saveImagingSessionDb("imagesTaken", message.currentCount.toString());
+      const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
 
-        // update UI once imaging session is done imaging
-        if (message.currentCount === connectionCtx.astroSettings.count) {
-          endImagingSession();
+      socket.addEventListener("open", () => {
+        let payload = takeAstroPhoto(
+          connectionCtx.astroSettings.rightAcension as string,
+          connectionCtx.astroSettings.declination as string,
+          connectionCtx.astroSettings.exposure as number,
+          connectionCtx.astroSettings.gain as number,
+          connectionCtx.astroSettings.binning as number,
+          connectionCtx.astroSettings.count as number,
+          connectionCtx.astroSettings.fileFormat as number
+        );
+        logger("start takeAstroPhoto...", payload, connectionCtx);
+
+        socketSend(socket, payload);
+      });
+
+      socket.addEventListener("message", (event) => {
+        let message = JSON.parse(event.data);
+        if (message.interface === takeAstroPhotoCmd) {
+          logger("takeAstroPhoto:", message, connectionCtx);
+
+          // update image count
+        } else if (message.interface === numberRawImagesCmd) {
+          // BUG: dwarf does not return message for every image taken if Mobile App is On
+          logger("takeAstroPhoto count:", message, connectionCtx);
+          connectionCtx.setImagingSession((prev) => {
+            prev["imagesTaken"] = message.currentCount;
+            return { ...prev };
+          });
+          saveImagingSessionDb("imagesTaken", message.currentCount.toString());
+          logger(
+            "takeAstroPhoto currentCount:",
+            message.currentCount.toString(),
+            connectionCtx
+          );
+          if (timerSession) testTimer = timerSession.toString();
+          logger("takeAstroPhoto currentCount ST:", testTimer, connectionCtx);
+
+          // update UI once imaging session is done imaging
+          if (message.currentCount === connectionCtx.astroSettings.count) {
+            logger("takeAstroPhoto endImagingSession:", message, connectionCtx);
+            logger(
+              "ImagingSession befor clearInterval:",
+              testTimer,
+              connectionCtx
+            );
+
+            endImagingSession();
+          }
+        } else {
+          logger("", message, connectionCtx);
         }
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
+      });
 
-    socket.addEventListener("error", (err) => {
-      logger("takeAstroPhoto error:", err, connectionCtx);
-    });
+      socket.addEventListener("error", (err) => {
+        logger("takeAstroPhoto error:", err, connectionCtx);
+      });
+
+      socket.addEventListener("close", (err) => {
+        logger("takeAstroPhoto close:", err, connectionCtx);
+        endImagingSession();
+      });
+    }
   }
 
   function stopAstroPhotoHandler() {
@@ -131,22 +205,33 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
-    endImagingSession();
-
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
     socket.addEventListener("open", () => {
-      // BUG: 10015 stop RAW images does not work. Camera continues taking
-      // photos.
       let payload = stopAstroPhoto();
       logger("begin stopAstroPhoto...", payload, connectionCtx);
       socketSend(socket, payload);
     });
 
     socket.addEventListener("message", (event) => {
-      // BUG: dwarf does not return message for stopAstroPhoto
       let message = JSON.parse(event.data);
       if (message.interface === stopAstroPhotoCmd) {
         logger("stopAstroPhoto", message, connectionCtx);
+        endImagingSession();
+
+        // update image count
+      } else if (message.interface === numberRawImagesCmd) {
+        // BUG: dwarf does not return message for every image taken if Mobile App is On
+        logger("takeAstroPhoto count:", message, connectionCtx);
+        connectionCtx.setImagingSession((prev) => {
+          prev["imagesTaken"] = message.currentCount;
+          return { ...prev };
+        });
+        saveImagingSessionDb("imagesTaken", message.currentCount.toString());
+        logger(
+          "takeAstroPhoto currentCount:",
+          message.currentCount.toString(),
+          connectionCtx
+        );
       } else {
         logger("", message, connectionCtx);
       }
@@ -155,11 +240,36 @@ export default function ImagingMenu(props: PropType) {
     socket.addEventListener("error", (error) => {
       logger("stopAstroPhoto error:", error, connectionCtx);
     });
+
+    socket.addEventListener("close", (error) => {
+      logger("stopAstroPhoto close:", error, connectionCtx);
+      endImagingSession();
+    });
+  }
+
+  function endImagingSession() {
+    let testTimer: string | any = "";
+    if (timerSession) {
+      testTimer = timerSession.toString();
+      logger("ImagingSession tS clearInterval:", testTimer, connectionCtx);
+    }
+    if (timerGlobal) {
+      testTimer = timerGlobal.toString();
+      logger("ImagingSession tG clearInterval:", testTimer, connectionCtx);
+    }
+    // timerSession if Photos Session is completed !
+    if (timerSession) clearInterval(timerSession);
+    if (timerGlobal) clearInterval(timerGlobal);
+    timerSessionInit = false;
+    setIsRecording(false);
+    setEndRecording(true);
   }
 
   function endPreview() {
     connectionCtx.setImagingSession({} as ImagingSession);
     removeImagingSessionDb();
+
+    setEndRecording(false);
 
     setTimeout(() => {
       turnOnCameraFn(telephotoCamera, connectionCtx);
@@ -201,12 +311,6 @@ export default function ImagingMenu(props: PropType) {
     }, 3500);
   }
 
-  function endImagingSession() {
-    clearInterval(sessionTimer);
-    setSessionTimer(undefined);
-    setIsRecording(false);
-  }
-
   function renderRecordButton() {
     // don't have clickable record button if the setting menu is shown
     if (showSettingsMenu) {
@@ -215,6 +319,9 @@ export default function ImagingMenu(props: PropType) {
     } else if (validSettings) {
       if (isRecording) {
         return <RecordingButton onClick={stopAstroPhotoHandler} />;
+      } else if (endRecording) {
+        // Live Button is on
+        return <RecordButton />;
       } else {
         return <RecordButton onClick={takeAstroPhotoHandler} />;
       }

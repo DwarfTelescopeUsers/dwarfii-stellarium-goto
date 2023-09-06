@@ -12,12 +12,18 @@ export default function About() {
       <StatusBar />
       <h1>About</h1>
       <p>
-        This website is a side project to combine my interest in coding,
-        astronomy and the Dwarf II API. To report bugs or view the code, vist
-        the{" "}
+        The original project is made by Wai-Yin Kwan This website is a side
+        project to combine his interest in coding, astronomy and the Dwarf II
+        API. To report bugs or view the original code, vist the{" "}
         <Link href="https://github.com/DwarfTelescopeUsers/dwarfii-stellarium-goto">
           Github repo.
         </Link>
+        My forked project is here
+        <Link href="https://github.com/stevejcl/dwarfii-stellarium-goto">
+          Github repo.
+        </Link>
+        And also the dwarf II API api corrections is here
+        <Link href="https://github.com/stevejcl/dwarfii_api">Github repo.</Link>
       </p>
 
       <h2>Data Credits</h2>

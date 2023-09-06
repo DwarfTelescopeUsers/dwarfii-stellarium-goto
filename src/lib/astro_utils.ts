@@ -17,7 +17,12 @@ import {
 } from "astronomia";
 
 import { AstroObject } from "@/types";
-import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
+import {
+  extractHMSValues,
+  extractDMSValues,
+  convertDecimalDegreesToDMS,
+  convertDecimalDegreesToHMS,
+} from "@/lib/math_utils";
 import { isDstObserved } from "@/lib/date_utils";
 import { padNumber } from "@/lib/math_utils";
 
@@ -277,6 +282,180 @@ export function renderLocalRiseSetTime(
   return times;
 }
 
+type AltAsData = {
+  alt: number;
+  az: number;
+  lst: number;
+  H: number;
+};
+
+function earthRotationAngle(jd: number) {
+  //IERS Technical Note No. 32
+
+  const t = jd - 2451545.0;
+  const f = jd % 1.0;
+
+  let theta = 2 * Math.PI * (f + 0.779057273264 + 0.00273781191135448 * t); //eq 14
+  theta %= 2 * Math.PI;
+  if (theta < 0) theta += 2 * Math.PI;
+
+  return theta;
+}
+
+function greenwichMeanSiderealTime(jd: number): number {
+  //"Expressions for IAU 2000 precession quantities" N. Capitaine1,P.T.Wallace2, and J. Chapront
+  const t = (jd - 2451545.0) / 36525.0;
+
+  let gmst =
+    earthRotationAngle(jd) +
+    (((0.014506 +
+      4612.156534 * t +
+      1.3915817 * t * t -
+      0.00000044 * t * t * t -
+      0.000029956 * t * t * t * t -
+      0.0000000368 * t * t * t * t * t) /
+      60.0 /
+      60.0) *
+      Math.PI) /
+      180.0; //eq 42
+  gmst %= 2 * Math.PI;
+  if (gmst < 0) gmst += 2 * Math.PI;
+
+  return gmst;
+}
+
+//All input and output angles are in radians, jd is Julian Date in UTC
+function raDecToAltAz(
+  ra: number,
+  dec: number,
+  lat: number,
+  lon: number,
+  jd_ut: number
+): AltAsData {
+  //Meeus 13.5 and 13.6, modified so West longitudes are negative and 0 is North
+  const gmst = greenwichMeanSiderealTime(jd_ut);
+  let localSiderealTime = (gmst + lon) % (2 * Math.PI);
+
+  let H = localSiderealTime - ra;
+  if (H < 0) {
+    H += 2 * Math.PI;
+  }
+  if (H > Math.PI) {
+    H = H - 2 * Math.PI;
+  }
+
+  let az = Math.atan2(
+    Math.sin(H),
+    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+  );
+  let a = Math.asin(
+    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H)
+  );
+  az -= Math.PI;
+
+  if (az < 0) {
+    az += 2 * Math.PI;
+  }
+  return { alt: a, az: az, lst: localSiderealTime, H: H };
+}
+
+//Greg Miller (gmiller@gregmiller.net) 2021
+//Released as public domain
+//http://www.celestialprogramming.com/
+
+export function computeRaDecToAltAz(
+  lat: number,
+  lon: number,
+  raDecimal: number,
+  decDecimal: number,
+  date: Date,
+  timeZone: string = ""
+): AltAsData {
+  let now = new Date(date);
+  let offsetTimeZone = 0;
+
+  if (timeZone) {
+    let timeZoneLocal = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    console.log("timeZoneLocal: " + timeZoneLocal);
+
+    // Get Offset TimeZone
+    let d = new Date();
+
+    let a = d
+      .toLocaleString("en-US", {
+        timeZone: timeZoneLocal,
+        timeZoneName: "short",
+      })
+      .split(/GMT/g)[1];
+    console.log("time a :" + a);
+    let b = d
+      .toLocaleString("en-US", {
+        timeZone: timeZone,
+        timeZoneName: "short",
+      })
+      .split(/GMT/g)[1];
+    console.log("time b :" + b);
+    let offsetTimeZone = Number(b) - Number(a);
+    console.log("Offset: " + offsetTimeZone);
+  }
+
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const day = now.getUTCDate();
+  const hours = now.getUTCHours() + offsetTimeZone;
+  const minutes = now.getUTCMinutes();
+  const seconds = now.getUTCSeconds();
+  const milliseconds = now.getUTCMilliseconds();
+
+  const now_UTC = new Date(
+    year,
+    month,
+    day,
+    hours,
+    minutes,
+    seconds,
+    milliseconds
+  );
+
+  let jd_ut = julian.DateToJD(now_UTC);
+
+  console.log(jd_ut); // -> '2456617.949335'
+  console.log(julian.JDToDate(jd_ut));
+
+  // convert to RAD
+
+  let toRad = Math.PI / 180;
+
+  let ra_rad = raDecimal * toRad;
+  let dec_rad = decDecimal * toRad;
+  let lat_rad = lat * toRad;
+  let lon_rad = lon * toRad;
+
+  let data_rad = raDecToAltAz(ra_rad, dec_rad, lat_rad, lon_rad, jd_ut);
+
+  // convert to DEG
+  let toDeg = 180 / Math.PI;
+
+  let data: AltAsData = {
+    alt: data_rad.alt * toDeg,
+    az: data_rad.az * toDeg,
+    lst: data_rad.lst * toDeg,
+    H: data_rad.H * toDeg,
+  };
+  console.log(data.alt);
+  console.log(data.az);
+  console.log(data.lst);
+  console.log(data.H);
+
+  console.log(convertDecimalDegreesToDMS(data.alt));
+  console.log(convertDecimalDegreesToDMS(data.az));
+  console.log(convertDecimalDegreesToHMS(data.lst));
+  console.log(convertDecimalDegreesToHMS(data.H));
+
+  return data;
+}
+
+// Old functions
 // https://stackoverflow.com/a/14779469
 // get difference for local timezone and with day-light saving awareness.
 function diffDays(date1: Date, date2: Date): number {
@@ -302,7 +481,7 @@ function diffDays(date1: Date, date2: Date): number {
   return (utc1 - utc2) / 86400000;
 }
 
-export function computeRaDecToAltAz(
+export function computeRaDecToAltAzOld(
   lat: number,
   lon: number,
   raDecimal: number,

@@ -1,8 +1,13 @@
 import { CoordinatesData } from "@/types";
 
-export function saveCoordinatesDB(latitude: number, longitude: number) {
+export function saveCoordinatesDB(
+  latitude: number,
+  longitude: number,
+  timezone: string
+) {
   localStorage.setItem("latitude", latitude.toString());
   localStorage.setItem("longitude", longitude.toString());
+  localStorage.setItem("timezone", timezone);
 }
 
 export function saveLatitudeDB(latitude: number) {
@@ -13,6 +18,10 @@ export function saveLongitudeDB(longitude: number) {
   localStorage.setItem("longitude", longitude.toString());
 }
 
+export function saveTimezoneDB(timezone: string) {
+  localStorage.setItem("timezone", timezone);
+}
+
 export function fetchCoordinatesDB(): CoordinatesData {
   let lat = localStorage.getItem("latitude");
   let lon = localStorage.getItem("longitude");
@@ -20,6 +29,16 @@ export function fetchCoordinatesDB(): CoordinatesData {
     return { latitude: Number(lat), longitude: Number(lon) };
   } else {
     return {};
+  }
+}
+
+export function fetchTimezoneDB(): string {
+  let tzone = localStorage.getItem("timezone");
+
+  if (tzone) {
+    return tzone;
+  } else {
+    return "";
   }
 }
 
