@@ -52,6 +52,9 @@ export default function StatusBar() {
             Taken: {connectionCtx.imagingSession.imagesTaken}
           </span>
           <span className="me-3">
+            Stacked: {connectionCtx.imagingSession.imagesStacked}
+          </span>
+          <span className="me-3">
             Time: {connectionCtx.imagingSession.sessionElaspsedTime}
           </span>
         </>

@@ -59,7 +59,9 @@ export default function DSOList(props: PropType) {
       if (dataSearchTxt)
         setObjects(
           dsoObjects.filter((object) => {
-            return object.displayName.toLowerCase().includes(dataSearchTxt.toLowerCase())
+            return object.displayName
+              .toLowerCase()
+              .includes(dataSearchTxt.toLowerCase());
           })
         );
       else setObjects(dsoObjects);
@@ -69,7 +71,9 @@ export default function DSOList(props: PropType) {
           if (dataSearchTxt)
             return (
               selectedCategories.includes(object.typeCategory) &&
-              object.displayName.toLowerCase().includes(dataSearchTxt.toLowerCase())
+              object.displayName
+                .toLowerCase()
+                .includes(dataSearchTxt.toLowerCase())
             );
           else return selectedCategories.includes(object.typeCategory);
         })

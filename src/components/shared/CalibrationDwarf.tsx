@@ -1,8 +1,14 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 
-import { calibrationHandler, stopGotoHandler } from "@/lib/goto_utils";
+import {
+  calibrationHandler,
+  stopGotoHandler,
+  shutDownHandler,
+} from "@/lib/goto_utils";
+import { turnOnCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
+import { telephotoCamera } from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
 import { AstroObject } from "@/types";
 import GotoModal from "../astroObjects/GotoModal";
@@ -14,27 +20,73 @@ type Message = {
 export default function CalibrationDwarf() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [success, setSuccess] = useState<string | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
+  const prevErrors = usePrevious(errors);
+  const prevSuccess = usePrevious(success);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
       setErrors(undefined);
     });
+    eventBus.on("clearSuccess", () => {
+      setSuccess(undefined);
+    });
   }, []);
+
+  // custom hook for getting previous value
+  function usePrevious(value: any) {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+    return ref.current;
+  }
 
   function calibrateFn() {
     setShowModal(true);
-    calibrationHandler(connectionCtx, setErrors, (options) => {
-      setGotoMessages((prev) => prev.concat(options));
-    });
+    initCamera();
+    setTimeout(() => {
+      calibrationHandler(connectionCtx, setErrors, setSuccess, (options) => {
+        setGotoMessages((prev) => prev.concat(options));
+      });
+    }, 7000);
   }
 
   function stopGotoFn() {
     setShowModal(true);
-    stopGotoHandler(connectionCtx, setErrors, (options) => {
+    stopGotoHandler(connectionCtx, setErrors, setSuccess, (options) => {
       setGotoMessages((prev) => prev.concat(options));
     });
+  }
+
+  function shutDownFn() {
+    setShowModal(true);
+    shutDownHandler(connectionCtx, setErrors, (options) => {
+      setGotoMessages((prev) => prev.concat(options));
+    });
+  }
+
+  function initCamera() {
+    setTimeout(() => {
+      turnOnCameraFn(telephotoCamera, connectionCtx);
+    }, 1000);
+    setTimeout(() => {
+      updateTelescopeISPSetting("gainMode", 1, connectionCtx);
+    }, 1500);
+    setTimeout(() => {
+      updateTelescopeISPSetting("exposureMode", 1, connectionCtx);
+    }, 2000);
+    setTimeout(() => {
+      updateTelescopeISPSetting("gain", 80, connectionCtx);
+    }, 2500);
+    setTimeout(() => {
+      updateTelescopeISPSetting("exposure", 1, connectionCtx);
+    }, 3500);
+    setTimeout(() => {
+      updateTelescopeISPSetting("IR", 0, connectionCtx);
+    }, 4500);
   }
 
   return (
@@ -43,28 +95,46 @@ export default function CalibrationDwarf() {
 
       <p>
         In order to use Astro function, you must calibrate the dwarf II first.
+        <span className="text-danger">
+          <b> WARNING: </b>
+        </span>
+        don&#39;t put anything on the lens at this moment (no filters holder).
       </p>
 
-      <div className="col-md-3">
-        <button
-          className={`btn ${
-            connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-          } me-2 mb-2`}
-          onClick={calibrateFn}
-          disabled={!connectionCtx.connectionStatus}
-        >
-          Calibrate
-        </button>
-        <button
-          className={`btn ${
-            connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-          } mb-2`}
-          onClick={stopGotoFn}
-          disabled={!connectionCtx.connectionStatus}
-        >
-          Stop Goto
-        </button>
-        <br />
+      <div className="row mb-3">
+        <div className="col-sm-4">
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+            } me-2 mb-2`}
+            onClick={calibrateFn}
+            disabled={!connectionCtx.connectionStatus}
+          >
+            Calibrate
+          </button>
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+            } me-4 mb-2`}
+            onClick={stopGotoFn}
+            disabled={!connectionCtx.connectionStatus}
+          >
+            Stop Goto
+          </button>
+        </div>
+        <div className="col-sm-8 text-end">
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+            } mb-2`}
+            onClick={shutDownFn}
+            disabled={!connectionCtx.connectionStatus}
+          >
+            Shutdown!
+          </button>
+        </div>
+      </div>
+      <div>
         <GotoModal
           object={
             {
@@ -78,7 +148,14 @@ export default function CalibrationDwarf() {
           messages={gotoMessages}
           setMessages={setGotoMessages}
         />
-        {errors && <span className="text-danger">{errors}</span>}
+        {prevErrors && <span className="text-danger">{prevErrors} </span>}
+        {errors && errors != prevErrors && (
+          <span className="text-danger">{errors} </span>
+        )}
+        {prevSuccess && <span className="text-success">{prevSuccess} </span>}
+        {success && success != prevSuccess && (
+          <span className="text-success">{success}</span>
+        )}
       </div>
     </>
   );

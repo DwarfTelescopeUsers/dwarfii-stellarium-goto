@@ -23,7 +23,8 @@ export default function ConnectDwarf() {
 
     let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
 
-    const socket = new WebSocket(wsURL(IPDwarf));
+    //socket connects to Dwarf
+    let socket = new WebSocket(wsURL(IPDwarf));
 
     socket.addEventListener("open", () => {
       let options = cameraSettings();

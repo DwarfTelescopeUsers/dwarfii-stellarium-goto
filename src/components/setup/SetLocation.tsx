@@ -78,8 +78,8 @@ export default function SetLocation() {
     <>
       <h2>Set Location</h2>
       <p>
-        In order for goto to work, this site needs your latitude, longitude and time zone.
-		The longitude is negative west of Greenwich.
+        In order for goto to work, this site needs your latitude, longitude and
+        time zone. The longitude is negative west of Greenwich.
       </p>
 
       <form>

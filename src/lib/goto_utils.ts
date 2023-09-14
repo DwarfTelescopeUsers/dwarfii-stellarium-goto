@@ -10,6 +10,8 @@ import {
   startGotoCmd,
   stopGoto,
   stopGotoCmd,
+  shutDown,
+  shutDownCmd,
   formatUtcUrl,
   formatTimeZoneUrl,
 } from "dwarfii_api";
@@ -82,14 +84,17 @@ async function setTimeZoneUrl(connectionCtx: ConnectionContextType) {
 
 export async function calibrationHandler(
   connectionCtx: ConnectionContextType,
-  setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  setErrors: Dispatch<SetStateAction<string | undefined>>,
+  setSuccess: Dispatch<SetStateAction<string | undefined>>,
   callback?: (options: any) => void // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
-  setGotoErrors(undefined);
+  setErrors(undefined);
+  setSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
+  eventBus.dispatch("clearSuccess", { message: "clear success" });
 
   await setUTCTime(connectionCtx);
   let lat = connectionCtx.latitude;
@@ -101,7 +106,14 @@ export async function calibrationHandler(
   if (lat === undefined) return;
   if (lon === undefined) return;
 
-  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
+  let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
+
   socket.addEventListener("open", () => {
     let options = calibrateGoto(lat as number, lon as number);
 
@@ -121,29 +133,45 @@ export async function calibrationHandler(
     let message = JSON.parse(event.data);
     if (message.interface === calibrateGotoCmd) {
       if (message.code === -18) {
-        setGotoErrors("Plate Solving failed");
+        setSuccess("");
+        setErrors("Plate Solving failed");
         if (callback) {
           callback("Plate Solving failed");
         }
+      } else if (message.code === -46) {
+        setSuccess("");
+        setErrors("GOTO bump its limit");
+        if (callback) {
+          callback("GOTO bump its limit");
+        }
+      } else if (message.code === 1000) {
+        setErrors("");
+        setSuccess("Start Calibration");
+        if (callback) {
+          callback("Start correction");
+        }
       } else if (message.code === 1001) {
-        setGotoErrors("Correcting Plate Solving");
+        setErrors("");
+        setSuccess("Calibration phase #" + message.value.toString());
         if (callback) {
           callback("Correcting Plate Solving");
         }
       } else if (message.code === 1002) {
-        setGotoErrors("Correction failure");
+        setErrors("");
+        setSuccess("");
+        setErrors("Calibration failure");
         if (callback) {
           callback("Correction failure");
         }
-      } else if (message.code === 1000) {
-        if (callback) {
-          callback("Start coorection");
-        }
       } else if (message.code === 1004) {
+        setErrors("");
+        setSuccess("Start plate solving");
         if (callback) {
           callback("Start plate solving");
         }
       } else if (message.code === 1009) {
+        setErrors("");
+        setSuccess("Calibration Done");
         if (callback) {
           callback("Correct Successfully");
         }
@@ -175,6 +203,7 @@ export async function calibrationHandler(
 export async function startGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
   planet: number | undefined | null,
   RA: string | undefined | null,
   declination: string | undefined | null,
@@ -184,6 +213,7 @@ export async function startGotoHandler(
     return;
   }
   setGotoErrors(undefined);
+  setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
   // await setUTCTime(connectionCtx); no need ?
@@ -196,7 +226,14 @@ export async function startGotoHandler(
   if (lat === undefined) return;
   if (lon === undefined) return;
 
-  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
+  let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
+
   socket.addEventListener("open", () => {
     let RA_number = RA ? convertHMSToDecimalHours(RA!) : 0;
     let declination_number = declination
@@ -230,30 +267,44 @@ export async function startGotoHandler(
     let message = JSON.parse(event.data);
     if (message.interface === startGotoCmd) {
       if (message.code === -45) {
+        setGotoSuccess("");
         setGotoErrors("Target below the horizon");
         if (callback) {
           callback("Target below the horizon");
         }
       } else if (message.code === -18) {
+        setGotoSuccess("");
         setGotoErrors("Plate Solving failed");
         if (callback) {
           callback("Plate Solving failed");
         }
       } else if (message.code === -46) {
+        setGotoSuccess("");
         setGotoErrors("GOTO bump its limit");
         if (callback) {
           callback("GOTO bump its limit");
         }
       } else if (message.code === 1006) {
+        setGotoSuccess("");
         setGotoErrors("GOTO failure");
         if (callback) {
           callback("GOTO failure");
         }
+      } else if (message.code === 1003) {
+        setGotoErrors("");
+        setGotoSuccess("Start GoTo");
+        if (callback) {
+          callback("Start GoTo");
+        }
       } else if (message.code === 1004) {
+        setGotoErrors("");
+        setGotoSuccess("Start plate solving");
         if (callback) {
           callback("Start plate solving");
         }
       } else if (message.code === 1005) {
+        setGotoErrors("");
+        setGotoSuccess("Start Tracking");
         if (callback) {
           callback("Start tracking");
         }
@@ -286,15 +337,24 @@ export async function startGotoHandler(
 export async function stopGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
   callback?: (options: any) => void // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
   setGotoErrors(undefined);
+  setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
-  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
+  let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
+
   socket.addEventListener("open", () => {
     let options = stopGoto();
 
@@ -313,17 +373,20 @@ export async function stopGotoHandler(
     let message = JSON.parse(event.data);
     if (message.interface === stopGotoCmd) {
       if (message.code === -31) {
+        setGotoSuccess("");
         setGotoErrors("Stopping Goto");
         if (callback) {
           callback("Stopping Goto");
         }
       } else if (message.code === 1007) {
-        setGotoErrors("Stopping Astronomy function");
+        setGotoErrors("");
+        setGotoSuccess("Stopping Astronomy function");
         if (callback) {
           callback("Stopping Astronomy function");
         }
       } else if (message.code === 1008) {
-        setGotoErrors("End of Astronomy function");
+        setGotoErrors("");
+        setGotoSuccess("End of Astronomy function");
         if (callback) {
           callback("End of Astronomy function");
         }
@@ -353,6 +416,66 @@ export async function stopGotoHandler(
   });
 }
 
+export async function shutDownHandler(
+  connectionCtx: ConnectionContextType,
+  setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
+  setGotoErrors(undefined);
+  eventBus.dispatch("clearErrors", { message: "clear errors" });
+
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
+  let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
+
+  socket.addEventListener("open", () => {
+    let options = shutDown();
+
+    if (callback) {
+      callback("shutdown");
+      callback(options);
+    }
+
+    logger("start shutDown...", options, connectionCtx);
+    console.log("...", options);
+
+    socket.send(JSON.stringify(options));
+  });
+
+  socket.addEventListener("message", (event) => {
+    let message = JSON.parse(event.data);
+    if (message.interface === shutDownCmd) {
+      if (callback) {
+        callback(message);
+      }
+      logger("shutDown:", message, connectionCtx);
+    } else {
+      logger("", message, connectionCtx);
+    }
+  });
+
+  socket.addEventListener("error", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("shutDown error:", message, connectionCtx);
+  });
+
+  socket.addEventListener("close", (message) => {
+    if (callback) {
+      callback(message);
+    }
+    logger("shutDown close:", message, connectionCtx);
+  });
+}
+
 export function stellariumErrorHandler(
   err: any,
   setErrors: Dispatch<SetStateAction<string | undefined>>
@@ -367,6 +490,49 @@ export function stellariumErrorHandler(
     setErrors(err.cause);
   } else {
     setErrors(`Error processing Stellarium data>> ${err}`);
+  }
+}
+
+export function centerCoordinatesHandler(
+  RA: string | undefined,
+  declination: string | undefined,
+  connectionCtx: ConnectionContextType,
+  setErrors: Dispatch<SetStateAction<string | undefined>>
+) {
+  eventBus.dispatch("clearErrors", { message: "clear errors" });
+
+  let url = connectionCtx.urlStellarium;
+  if (url) {
+    console.log("select object in stellarium...");
+
+    console.log("select object by coordinates in stellarium...");
+
+    // Convert Ra and Dec to Vec3d used by Stellarium
+    let RA_number = RA ? convertHMSToDecimalDegrees(RA!) : 0;
+    let declination_number = declination
+      ? convertDMSToDecimalDegrees(declination!)
+      : 0;
+
+    let coord = convertRaDecToVec3d(declination_number, RA_number);
+    let str_coord = `[${coord.x},${coord.y},${coord.z}]`;
+    console.log(`coordinates found: ${str_coord}`);
+
+    let focusUrl = `${url}${focusPosPath}${str_coord}`;
+    console.log("focusUrl : " + focusUrl);
+    fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
+      // res.json don't work here
+      .then((res) => {
+        return res.text();
+      })
+      .then((data) => {
+        console.log(data);
+        if (data != "ok") {
+          setErrors(`Could not find object by coordinates : ${str_coord}`);
+        }
+      })
+      .catch((err) => stellariumErrorHandler(err, setErrors));
+  } else {
+    setErrors("App is not connect to Stellarium.");
   }
 }
 

@@ -7,7 +7,7 @@ export const statusCodes = {
   "-5": "Motor in motion",
   "-6": "Motor stopped",
   "-7": "Motor instruction failed to be sent",
-  "-8": "anorama scanning is enabled",
+  "-8": "Panorama scanning is enabled",
   "-9": "The motor stops first and then moves, which will cause the motor to stop",
   "-10": "The beat is suspended",
   "-11": "Autofocus",

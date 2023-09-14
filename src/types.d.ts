@@ -10,6 +10,8 @@ export type ConnectionContextType = {
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPDwarf: string | undefined;
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
+  socketIPDwarf: WebSocket | undefined;
+  setSocketIPDwarf: Dispatch<SetStateAction<WebSocket | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
@@ -206,4 +208,5 @@ type ImagingSession = {
   startTime: number;
   sessionElaspsedTime: string;
   imagesTaken: number;
+  imagesStacked: number;
 };

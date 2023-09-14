@@ -1,6 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/globals.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import "@/fontello/css/custom-focus.css";
 
 import type { AppProps } from "next/app";
 import { useEffect } from "react";

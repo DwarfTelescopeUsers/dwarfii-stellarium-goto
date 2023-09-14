@@ -19,6 +19,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     number | undefined
   >();
   const [IPDwarf, setIPDwarf] = useState<string | undefined>();
+  const [socketIPDwarf, setSocketIPDwarf] = useState<WebSocket | undefined>();
 
   const [connectionStatusStellarium, setConnectionStatusStellarium] = useState<
     boolean | undefined
@@ -63,6 +64,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setInitialConnectionTime,
     IPDwarf,
     setIPDwarf,
+    socketIPDwarf,
+    setSocketIPDwarf,
 
     connectionStatusStellarium,
     setConnectionStatusStellarium,

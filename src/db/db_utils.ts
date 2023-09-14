@@ -210,7 +210,7 @@ export function fetchImagingSessionDb() {
   let data = localStorage.getItem("imagingSession");
   if (data) {
     let obj = JSON.parse(data);
-    ["startTime", "imagesTaken"].forEach((field) => {
+    ["startTime", "imagesTaken", "imagesStacked"].forEach((field) => {
       if (obj[field] !== undefined) {
         obj[field] = Number(obj[field]);
       }

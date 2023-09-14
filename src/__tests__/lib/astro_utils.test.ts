@@ -285,3 +285,23 @@ describe("computeRaDecToAltAz", () => {
     expect(res).toEqual(expected);
   });
 });
+
+describe("computeRaDecToAltAz", () => {
+  it("returns alt Az data for a given RA and Dec", () => {
+    let lat = lat_NYC;
+    let lon = lon_NYC;
+    let ra = 250.43;
+    let dec = 36.462;
+    let date = new Date("2023-07-02T00:00:00.000Z");
+    let expected = {
+      alt: 33.2365033470588,
+      az: 68.06958033581921,
+      lst: 175.69100956021043,
+      H: -74.73899043978955,
+    };
+
+    let res = computeRaDecToAltAz(lat, lon, ra, dec, date, "America/New_York");
+
+    expect(res).toEqual(expected);
+  });
+});

@@ -26,7 +26,14 @@ export function turnOnCameraFn(
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
+
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
   let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
 
   socket.addEventListener("open", () => {
     let binning = connectionCtx.astroSettings.binning
@@ -63,7 +70,16 @@ export function updateTelescopeISPSetting(
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
-  const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+
+  //socket connects to Dwarf
+  if (connectionCtx.socketIPDwarf) {
+    if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+      connectionCtx.socketIPDwarf.close();
+  }
+
+  let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+  connectionCtx.setSocketIPDwarf(socket);
+
   let camera = telephotoCamera;
   let commands = [
     setExposureModeCmd,

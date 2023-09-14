@@ -26,12 +26,16 @@ export default function DSOObject(props: AstronomyObjectPropType) {
 
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [success, setSuccess] = useState<string | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
       setErrors(undefined);
+    });
+    eventBus.on("clearSuccess", () => {
+      setSuccess(undefined);
     });
   }, []);
 
@@ -112,6 +116,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     startGotoHandler(
       connectionCtx,
       setErrors,
+      setSuccess,
       undefined,
       object.ra,
       object.dec,
@@ -155,7 +160,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           <button
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-            } mb-2`}
+            } me-2 mb-2`}
             onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
           >
@@ -170,6 +175,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             setMessages={setGotoMessages}
           />
           {errors && <span className="text-danger">{errors}</span>}
+          {success && <span className="text-success">{success}</span>}
         </div>
       </div>
     </div>

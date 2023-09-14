@@ -1,0 +1,17 @@
+[class^="icon-"], [class*=" icon-"] {
+  font-family: 'custom-focus';
+  font-style: normal;
+  font-weight: normal;
+
+  /* fix buttons height */
+  line-height: 1em;
+
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+}
+
+.icon-plus-squared { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#xf0fe;&nbsp;'); }
+.icon-bullseye { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#xf140;&nbsp;'); }
+.icon-minus-squared { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#xf146;&nbsp;'); }
+.icon-minus-squared-alt { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#xf147;&nbsp;'); }
+.icon-plus-squared-alt { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#xf196;&nbsp;'); }

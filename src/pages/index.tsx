@@ -33,7 +33,8 @@ export default function Home() {
           on Chrome
         </li>
         <li>
-          Restriction : as this website use only http mode  to communicate with  the dwarf, it can not detect your location.
+          Restriction : as this website use only http mode to communicate with
+          the dwarf, it can not detect your location.
         </li>
       </ul>
     </div>

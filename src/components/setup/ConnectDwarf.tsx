@@ -38,7 +38,8 @@ export default function ConnectDwarf() {
     connectionCtx.setIPDwarf(IPDwarf);
     saveIPDwarfDB(IPDwarf);
 
-    const socket = new WebSocket(wsURL(IPDwarf));
+    //socket connects to Dwarf
+    let socket = new WebSocket(wsURL(IPDwarf));
 
     socket.addEventListener("open", () => {
       let options = cameraSettings();
@@ -120,7 +121,9 @@ export default function ConnectDwarf() {
           wifi network.
         </li>
         <li className="mb-2">
-          You can also enable <b>Activate Wi-Fi at Startup</b> on the Dwarf II  with the mobile app. Then no need to use the app to Calibrate, make Goto and Imaging from this website.
+          You can also enable <b>Activate Wi-Fi at Startup</b> on the Dwarf II
+          with the mobile app. Then no need to use the app to Calibrate, make
+          Goto and Imaging from this website.
         </li>
         <li className="mb-2">
           Visit this site on a device that is connected to the same wifi network

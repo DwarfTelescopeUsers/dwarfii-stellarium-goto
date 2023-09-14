@@ -18,12 +18,16 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
 
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [success, setSuccess] = useState<string | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
       setErrors(undefined);
+    });
+    eventBus.on("clearSuccess", () => {
+      setSuccess(undefined);
     });
   }, []);
 
@@ -65,6 +69,8 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
       planet = 5;
     } else if (object.displayName === "Neptune") {
       planet = 6;
+    } else if (object.displayName === "Moon") {
+      planet = 7;
     } else {
       planet = 7;
     }
@@ -72,6 +78,7 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
     startGotoHandler(
       connectionCtx,
       setErrors,
+      setSuccess,
       planet,
       undefined,
       undefined,
@@ -121,6 +128,7 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
             setMessages={setGotoMessages}
           />
           {errors && <span className="text-danger">{errors}</span>}
+          {success && <span className="text-success">{success}</span>}
         </div>
       </div>
     </div>
