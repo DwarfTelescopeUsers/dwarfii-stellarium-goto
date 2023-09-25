@@ -22,7 +22,12 @@ import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
   convertRaDecToVec3d,
+  ConvertStrDeg,
+  ConvertStrHours,
+  formatFloatToDecimalPlaces,
 } from "@/lib/math_utils";
+import { computeRaDecToAltAz, computealtAzToHADec } from "@/lib/astro_utils";
+import { toIsoStringInLocalTime } from "@/lib/date_utils";
 
 export async function setUTCTime(connectionCtx: ConnectionContextType) {
   if (connectionCtx.IPDwarf === undefined) {
@@ -207,7 +212,8 @@ export async function startGotoHandler(
   planet: number | undefined | null,
   RA: string | undefined | null,
   declination: string | undefined | null,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
+  stopGoto: boolean = false
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -235,7 +241,7 @@ export async function startGotoHandler(
   connectionCtx.setSocketIPDwarf(socket);
 
   socket.addEventListener("open", () => {
-    let RA_number = RA ? convertHMSToDecimalHours(RA!) : 0;
+    let RA_number = RA ? convertHMSToDecimalHours(RA!, 7) : 0;
     let declination_number = declination
       ? convertDMSToDecimalDegrees(declination!)
       : 0;
@@ -250,6 +256,15 @@ export async function startGotoHandler(
 
     connectionCtx.astroSettings.rightAcension = RA!;
     connectionCtx.astroSettings.declination = declination!;
+
+    if (!connectionCtx.isSavedPosition && RA_number && declination_number) {
+      let today = new Date();
+      connectionCtx.astroSavePosition.rightAcension = RA_number;
+      connectionCtx.astroSavePosition.declination = declination_number;
+      (connectionCtx.astroSavePosition.strLocalTime =
+        toIsoStringInLocalTime(today)),
+        connectionCtx.setSavePositionStatus(true);
+    }
 
     // options.date = "2023-07-07 03:00:14";
     if (callback) {
@@ -308,6 +323,15 @@ export async function startGotoHandler(
         if (callback) {
           callback("Start tracking");
         }
+        // Stop Goto for Reset Position
+        if (stopGoto) {
+          stopGotoHandler(
+            connectionCtx,
+            setGotoErrors,
+            setGotoSuccess,
+            callback
+          );
+        }
       }
 
       if (callback) {
@@ -332,6 +356,101 @@ export async function startGotoHandler(
     }
     logger("startGoto close:", message, connectionCtx);
   });
+}
+
+export function savePositionHandler(
+  connectionCtx: ConnectionContextType,
+  setPosition: Dispatch<SetStateAction<string | undefined>>
+) {
+  //Save Position
+
+  if (
+    connectionCtx.astroSavePosition.rightAcension &&
+    connectionCtx.astroSavePosition.declination &&
+    connectionCtx.astroSavePosition.strLocalTime
+  ) {
+    //Convert to RA to Degrees
+    let results = computeRaDecToAltAz(
+      connectionCtx.latitude!,
+      connectionCtx.longitude!,
+      connectionCtx.astroSavePosition.rightAcension! * 15,
+      connectionCtx.astroSavePosition.declination!,
+      connectionCtx.astroSavePosition.strLocalTime,
+      connectionCtx.timezone
+    );
+
+    if (results) {
+      connectionCtx.astroSavePosition.altitude = results.alt!;
+      connectionCtx.astroSavePosition.azimuth = results.az!;
+      connectionCtx.astroSavePosition.lst = results.lst!;
+
+      connectionCtx.setIsSavedPosition(true);
+      setPosition(
+        "alt: " +
+          ConvertStrDeg(formatFloatToDecimalPlaces(results.alt, 4)) +
+          ",az: " +
+          ConvertStrDeg(formatFloatToDecimalPlaces(results.az, 4))
+      );
+    }
+  } else setPosition("No position has been recorded");
+}
+
+export function gotoPositionHandler(
+  connectionCtx: ConnectionContextType,
+  setPosition: Dispatch<SetStateAction<string | undefined>>,
+  setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
+  setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
+  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+) {
+  //get Save Position
+  let today = new Date();
+
+  if (
+    connectionCtx.astroSavePosition.altitude &&
+    connectionCtx.astroSavePosition.azimuth
+  ) {
+    let results = computealtAzToHADec(
+      connectionCtx.latitude!,
+      connectionCtx.longitude!,
+      connectionCtx.astroSavePosition.altitude!,
+      connectionCtx.astroSavePosition.azimuth!,
+      toIsoStringInLocalTime(today),
+      connectionCtx.timezone
+    );
+
+    if (results) {
+      setPosition(
+        "alt: " +
+          ConvertStrDeg(
+            formatFloatToDecimalPlaces(
+              connectionCtx.astroSavePosition.altitude,
+              4
+            )
+          ) +
+          ",az: " +
+          ConvertStrDeg(
+            formatFloatToDecimalPlaces(
+              connectionCtx.astroSavePosition.azimuth,
+              4
+            )
+          ) +
+          " => RA: " +
+          ConvertStrHours(results.ra / 15) +
+          ", Declination: " +
+          ConvertStrDeg(results.dec)
+      );
+      startGotoHandler(
+        connectionCtx,
+        setGotoErrors,
+        setGotoSuccess,
+        undefined,
+        ConvertStrHours(results.ra / 15),
+        ConvertStrDeg(results.dec),
+        callback,
+        true
+      );
+    }
+  } else setPosition("No position has been recorded");
 }
 
 export async function stopGotoHandler(

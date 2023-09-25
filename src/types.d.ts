@@ -32,6 +32,11 @@ export type ConnectionContextType = {
   searchTxt: string | undefined;
   setSearchTxt: Dispatch<SetStateAction<string | undefined>>;
 
+  savePositionStatus: boolean | undefined;
+  setSavePositionStatus: Dispatch<SetStateAction<boolean | undefined>>;
+  isSavedPosition: boolean | undefined;
+  setIsSavedPosition: Dispatch<SetStateAction<boolean | undefined>>;
+
   currentObjectListName: string | undefined;
   setCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;
   currentUserObjectListName: string | undefined;
@@ -41,6 +46,9 @@ export type ConnectionContextType = {
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
   imagingSession: ImagingSession;
   setImagingSession: Dispatch<SetStateAction<ImagingSession>>;
+
+  astroSavePosition: AstroSavePosition;
+  setAstroSavePosition: Dispatch<SetStateAction<AstroSavePosition>>;
 
   logger: { [k: string]: any }[] | undefined;
   setLogger: Dispatch<SetStateAction<{ [k: string]: any }[] | undefined>>;
@@ -204,9 +212,19 @@ export type AstroSettings = {
   count?: number;
 };
 
-type ImagingSession = {
+export type ImagingSession = {
   startTime: number;
   sessionElaspsedTime: string;
   imagesTaken: number;
   imagesStacked: number;
+};
+
+export type AstroSavePosition = {
+  displayName: string;
+  rightAcension: number;
+  declination: number;
+  altitude: number;
+  azimuth: number;
+  lst: number;
+  strLocalTime: string;
 };

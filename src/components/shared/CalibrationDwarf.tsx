@@ -6,6 +6,8 @@ import {
   calibrationHandler,
   stopGotoHandler,
   shutDownHandler,
+  savePositionHandler,
+  gotoPositionHandler,
 } from "@/lib/goto_utils";
 import { turnOnCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
 import { telephotoCamera } from "dwarfii_api";
@@ -21,6 +23,7 @@ export default function CalibrationDwarf() {
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
+  const [position, setPosition] = useState<string | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
   const prevErrors = usePrevious(errors);
@@ -59,6 +62,27 @@ export default function CalibrationDwarf() {
     stopGotoHandler(connectionCtx, setErrors, setSuccess, (options) => {
       setGotoMessages((prev) => prev.concat(options));
     });
+  }
+
+  function savePositionFn() {
+    savePositionHandler(connectionCtx, setPosition);
+  }
+
+  function resetPositionFn() {
+    connectionCtx.setIsSavedPosition(false);
+    setPosition("No position has been recorded");
+  }
+
+  function gotoPositionFn() {
+    gotoPositionHandler(
+      connectionCtx,
+      setPosition,
+      setErrors,
+      setSuccess,
+      (options) => {
+        setGotoMessages((prev) => prev.concat(options));
+      }
+    );
   }
 
   function shutDownFn() {
@@ -106,7 +130,7 @@ export default function CalibrationDwarf() {
           <button
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-            } me-2 mb-2`}
+            } me-4 mb-2`}
             onClick={calibrateFn}
             disabled={!connectionCtx.connectionStatus}
           >
@@ -122,7 +146,49 @@ export default function CalibrationDwarf() {
             Stop Goto
           </button>
         </div>
-        <div className="col-sm-8 text-end">
+        <div className="col-sm-4">
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus && connectionCtx.savePositionStatus
+                ? "btn-primary"
+                : "btn-secondary"
+            } me-4 mb-2`}
+            onClick={savePositionFn}
+            disabled={
+              !connectionCtx.connectionStatus &&
+              !connectionCtx.savePositionStatus
+            }
+          >
+            Save Position
+          </button>
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus && connectionCtx.isSavedPosition
+                ? "btn-primary"
+                : "btn-secondary"
+            }  me-4 mb-2`}
+            onClick={resetPositionFn}
+            disabled={
+              !connectionCtx.connectionStatus && !connectionCtx.isSavedPosition
+            }
+          >
+            Reset Position
+          </button>
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus && connectionCtx.isSavedPosition
+                ? "btn-primary"
+                : "btn-secondary"
+            } mb-2`}
+            onClick={gotoPositionFn}
+            disabled={
+              !connectionCtx.connectionStatus && !connectionCtx.isSavedPosition
+            }
+          >
+            Goto Position
+          </button>
+        </div>
+        <div className="col-sm-4 text-end">
           <button
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
@@ -135,6 +201,9 @@ export default function CalibrationDwarf() {
         </div>
       </div>
       <div>
+        <div className="col-sm-8">
+          {position && <span className="text-success">{position}</span>}
+        </div>
         <GotoModal
           object={
             {

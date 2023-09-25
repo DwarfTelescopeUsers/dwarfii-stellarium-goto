@@ -236,7 +236,7 @@ export function padNumber(num: number, places = 2) {
 }
 
 // https://stackoverflow.com/a/32178833
-function formatFloatToDecimalPlaces(
+export function formatFloatToDecimalPlaces(
   value: number,
   decimalPlaces: number
 ): number {
@@ -257,4 +257,21 @@ export function convertRaDecToVec3d(dec: number, Ra: number) {
     y: y,
     z: z,
   };
+}
+
+export function ConvertStrDeg(data: number) {
+  let { degree, minute, second, negative } = convertDecimalDegreesToDMS(data);
+  let secondParts = second.toString().split(".");
+  let secondStr = padNumber(Number(secondParts[0]));
+  if (secondParts[1]) {
+    secondStr = secondStr + "." + secondParts[1];
+  }
+  let newData = `${padNumber(degree)}° ${padNumber(minute)}' ${secondStr}"`;
+
+  return negative ? "-" + newData : "+" + newData;
+}
+
+export function ConvertStrHours(data: number) {
+  let { hour, minute, second } = convertDecimalHoursToHMS(data);
+  return `${hour}h ${minute}m ${second}s`;
 }

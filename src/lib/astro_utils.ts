@@ -17,12 +17,7 @@ import {
 } from "astronomia";
 
 import { AstroObject } from "@/types";
-import {
-  extractHMSValues,
-  extractDMSValues,
-  convertDecimalDegreesToDMS,
-  convertDecimalDegreesToHMS,
-} from "@/lib/math_utils";
+import { extractHMSValues, extractDMSValues } from "@/lib/math_utils";
 import { isDstObserved } from "@/lib/date_utils";
 import { padNumber } from "@/lib/math_utils";
 
@@ -282,9 +277,17 @@ export function renderLocalRiseSetTime(
   return times;
 }
 
+// Unit : Deg for alt and az, Hours for lst and H
 type AltAsData = {
   alt: number;
   az: number;
+  lst: number;
+  H: number;
+};
+
+type RaDecHData = {
+  ra: number;
+  dec: number;
   lst: number;
   H: number;
 };
@@ -324,55 +327,19 @@ function greenwichMeanSiderealTime(jd: number): number {
   return gmst;
 }
 
-//All input and output angles are in radians, jd is Julian Date in UTC
-function raDecToAltAz(
-  ra: number,
-  dec: number,
-  lat: number,
-  lon: number,
-  jd_ut: number
-): AltAsData {
+function localSiderealTime(jd: number, lon: number): number {
   //Meeus 13.5 and 13.6, modified so West longitudes are negative and 0 is North
-  const gmst = greenwichMeanSiderealTime(jd_ut);
+  const gmst = greenwichMeanSiderealTime(jd);
   let localSiderealTime = (gmst + lon) % (2 * Math.PI);
 
-  let H = localSiderealTime - ra;
-  if (H < 0) {
-    H += 2 * Math.PI;
-  }
-  if (H > Math.PI) {
-    H = H - 2 * Math.PI;
-  }
-
-  let az = Math.atan2(
-    Math.sin(H),
-    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
-  );
-  let a = Math.asin(
-    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H)
-  );
-  az -= Math.PI;
-
-  if (az < 0) {
-    az += 2 * Math.PI;
-  }
-  return { alt: a, az: az, lst: localSiderealTime, H: H };
+  return localSiderealTime;
 }
 
-//Greg Miller (gmiller@gregmiller.net) 2021
-//Released as public domain
-//http://www.celestialprogramming.com/
-
-export function computeRaDecToAltAz(
-  lat: number,
-  lon: number,
-  raDecimal: number,
-  decDecimal: number,
-  date: Date,
-  timeZone: string = ""
-): AltAsData {
+function calc_jd(date: string, timeZone: string = "") {
   let now = new Date(date);
   let offsetTimeZone = 0;
+
+  console.log("DATE: " + now.toString());
 
   if (timeZone) {
     let timeZoneLocal = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -407,6 +374,13 @@ export function computeRaDecToAltAz(
   const seconds = now.getUTCSeconds();
   const milliseconds = now.getUTCMilliseconds();
 
+  console.log("year: " + year);
+  console.log("month: " + month);
+  console.log("day: " + day);
+  console.log("hours: " + hours);
+  console.log("minutes: " + minutes);
+  console.log("seconds: " + seconds);
+
   const now_UTC = new Date(
     year,
     month,
@@ -421,6 +395,57 @@ export function computeRaDecToAltAz(
 
   console.log(jd_ut); // -> '2456617.949335'
   console.log(julian.JDToDate(jd_ut));
+
+  return jd_ut;
+}
+
+//All input and output angles are in radians, jd is Julian Date in UTC
+function raDecToAltAz(
+  ra: number,
+  dec: number,
+  lat: number,
+  lon: number,
+  jd_ut: number
+): AltAsData {
+  let lst = localSiderealTime(jd_ut, lon);
+
+  let H = lst - ra;
+  if (H < 0) {
+    H += 2 * Math.PI;
+  }
+  if (H > Math.PI) {
+    H = H - 2 * Math.PI;
+  }
+
+  let az = Math.atan2(
+    Math.sin(H),
+    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+  );
+  let a = Math.asin(
+    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H)
+  );
+  az -= Math.PI;
+
+  if (az < 0) {
+    az += 2 * Math.PI;
+  }
+  return { alt: a, az: az, lst: lst, H: H };
+}
+
+//Greg Miller (gmiller@gregmiller.net) 2021
+//Released as public domain
+//http://www.celestialprogramming.com/
+
+// Return Unit : Deg
+export function computeRaDecToAltAz(
+  lat: number,
+  lon: number,
+  raDecimal: number,
+  decDecimal: number,
+  date: string,
+  timeZone: string = ""
+): AltAsData {
+  let jd_ut = calc_jd(date, timeZone);
 
   // convert to RAD
 
@@ -447,10 +472,99 @@ export function computeRaDecToAltAz(
   console.log(data.lst);
   console.log(data.H);
 
-  console.log(convertDecimalDegreesToDMS(data.alt));
-  console.log(convertDecimalDegreesToDMS(data.az));
-  console.log(convertDecimalDegreesToHMS(data.lst));
-  console.log(convertDecimalDegreesToHMS(data.H));
+  return data;
+}
+
+//Greg Miller (gmiller@gregmiller.net) 2022
+//Released as public domain
+//www.celestialprogramming.com
+
+//Converts Alt/Az to Hour Angle and Declination
+//Modified from Meeus so that 0 Az is North
+//All angles are in radians
+function altAzToHADec(
+  alt: number,
+  az: number,
+  lat: number,
+  lon: number,
+  jd_ut: number
+) {
+  let lst = localSiderealTime(jd_ut, lon);
+
+  let H = Math.atan2(
+    -Math.sin(az),
+    Math.tan(alt) * Math.cos(lat) - Math.cos(az) * Math.sin(lat)
+  );
+
+  console.log("H1 rad: " + H);
+
+  if (H < 0) {
+    H += Math.PI * 2;
+  }
+
+  if (H > Math.PI) {
+    H = H - 2 * Math.PI;
+  }
+  console.log("H2 rad: " + H);
+
+  let ra = lst - H;
+  console.log("raH rad: " + ra);
+  if (ra < 0) {
+    ra = ra + 2 * Math.PI;
+  }
+  if (ra > 2 * Math.PI) {
+    ra = ra - 2 * Math.PI;
+  }
+
+  const dec = Math.asin(
+    Math.sin(lat) * Math.sin(alt) + Math.cos(lat) * Math.cos(alt) * Math.cos(az)
+  );
+
+  let data: RaDecHData = {
+    ra: ra,
+    dec: dec,
+    lst: lst,
+    H: H,
+  };
+
+  return data;
+}
+
+// Return Unit : Deg
+export function computealtAzToHADec(
+  lat: number,
+  lon: number,
+  alt: number,
+  az: number,
+  date: string,
+  timeZone: string = ""
+): RaDecHData {
+  let jd_ut = calc_jd(date, timeZone);
+
+  // convert to RAD
+  let toRad = Math.PI / 180;
+
+  let lat_rad = lat * toRad;
+  let lon_rad = lon * toRad;
+  let alt_rad = alt * toRad;
+  let az_rad = az * toRad;
+
+  let data_rad = altAzToHADec(alt_rad, az_rad, lat_rad, lon_rad, jd_ut);
+
+  // convert to DEG
+  let toDeg = 180 / Math.PI;
+
+  let data: RaDecHData = {
+    ra: data_rad.ra * toDeg,
+    dec: data_rad.dec * toDeg,
+    lst: data_rad.lst * toDeg,
+    H: data_rad.H * toDeg,
+  };
+
+  console.log(data.ra);
+  console.log(data.dec);
+  console.log(data.lst);
+  console.log(data.H);
 
   return data;
 }

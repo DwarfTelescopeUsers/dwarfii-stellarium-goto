@@ -13,6 +13,8 @@ import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
 } from "@/lib/math_utils";
+import { toIsoStringInLocalTime } from "@/lib/date_utils";
+
 import GotoModal from "./GotoModal";
 
 type AstronomyObjectPropType = {
@@ -77,12 +79,18 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       raDecimal &&
       decDecimal
     ) {
+      let today = new Date();
+      console.log("Timezone:" + connectionCtx.timezone);
+      console.log(today.toISOString());
+      console.log(toIsoStringInLocalTime(today));
+
       let results = computeRaDecToAltAz(
         connectionCtx.latitude,
         connectionCtx.longitude,
         raDecimal,
         decDecimal,
-        new Date()
+        toIsoStringInLocalTime(today),
+        connectionCtx.timezone
       );
 
       if (results) {

@@ -77,6 +77,12 @@ export function useLoadIntialValues() {
       connectionCtx.setSearchTxt("Search");
     }
 
+    if (connectionCtx.savePositionStatus === undefined) {
+      connectionCtx.setSavePositionStatus(false);
+    }
+    if (connectionCtx.isSavedPosition === undefined) {
+      connectionCtx.setIsSavedPosition(false);
+    }
     if (connectionCtx.currentObjectListName === undefined) {
       let data = fetchCurrentObjectListNameDb();
       if (data !== undefined) {

@@ -1,7 +1,12 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
-import { ConnectionContextType, AstroSettings, ImagingSession } from "@/types";
+import {
+  ConnectionContextType,
+  AstroSettings,
+  AstroSavePosition,
+  ImagingSession,
+} from "@/types";
 
 type ProviderProps = {
   children: ReactNode;
@@ -34,6 +39,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
   const [searchTxt, setSearchTxt] = useState<string | undefined>("");
 
+  const [savePositionStatus, setSavePositionStatus] = useState<
+    boolean | undefined
+  >();
+
+  const [isSavedPosition, setIsSavedPosition] = useState<boolean | undefined>();
+
   const [currentObjectListName, setCurrentObjectListName] = useState<
     string | undefined
   >();
@@ -42,6 +53,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   >();
   const [astroSettings, setAstroSettings] = useState<AstroSettings>(
     {} as AstroSettings
+  );
+  const [astroSavePosition, setAstroSavePosition] = useState<AstroSavePosition>(
+    {} as AstroSavePosition
   );
   const [imagingSession, setImagingSession] = useState<ImagingSession>(
     {} as ImagingSession
@@ -86,6 +100,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     searchTxt,
     setSearchTxt,
 
+    savePositionStatus,
+    setSavePositionStatus,
+
+    isSavedPosition,
+    setIsSavedPosition,
+
     currentObjectListName,
     setCurrentObjectListName,
     currentUserObjectListName,
@@ -95,6 +115,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setAstroSettings,
     imagingSession,
     setImagingSession,
+    astroSavePosition,
+    setAstroSavePosition,
 
     deleteConnection,
 
