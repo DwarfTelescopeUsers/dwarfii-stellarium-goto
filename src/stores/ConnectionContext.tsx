@@ -1,7 +1,12 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
-import { ConnectionContextType, AstroSettings, ImagingSession } from "@/types";
+import {
+  ConnectionContextType,
+  AstroSettings,
+  AstroSavePosition,
+  ImagingSession,
+} from "@/types";
 
 type ProviderProps = {
   children: ReactNode;
@@ -19,6 +24,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     number | undefined
   >();
   const [IPDwarf, setIPDwarf] = useState<string | undefined>();
+  const [socketIPDwarf, setSocketIPDwarf] = useState<WebSocket | undefined>();
 
   const [connectionStatusStellarium, setConnectionStatusStellarium] = useState<
     boolean | undefined
@@ -29,6 +35,15 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
+  const [timezone, setTimezone] = useState<string | undefined>();
+
+  const [searchTxt, setSearchTxt] = useState<string | undefined>("");
+
+  const [savePositionStatus, setSavePositionStatus] = useState<
+    boolean | undefined
+  >();
+
+  const [isSavedPosition, setIsSavedPosition] = useState<boolean | undefined>();
 
   const [currentObjectListName, setCurrentObjectListName] = useState<
     string | undefined
@@ -38,6 +53,9 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   >();
   const [astroSettings, setAstroSettings] = useState<AstroSettings>(
     {} as AstroSettings
+  );
+  const [astroSavePosition, setAstroSavePosition] = useState<AstroSavePosition>(
+    {} as AstroSavePosition
   );
   const [imagingSession, setImagingSession] = useState<ImagingSession>(
     {} as ImagingSession
@@ -60,6 +78,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setInitialConnectionTime,
     IPDwarf,
     setIPDwarf,
+    socketIPDwarf,
+    setSocketIPDwarf,
 
     connectionStatusStellarium,
     setConnectionStatusStellarium,
@@ -74,6 +94,17 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setLatitude,
     longitude,
     setLongitude,
+    timezone,
+    setTimezone,
+
+    searchTxt,
+    setSearchTxt,
+
+    savePositionStatus,
+    setSavePositionStatus,
+
+    isSavedPosition,
+    setIsSavedPosition,
 
     currentObjectListName,
     setCurrentObjectListName,
@@ -84,6 +115,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setAstroSettings,
     imagingSession,
     setImagingSession,
+    astroSavePosition,
+    setAstroSavePosition,
 
     deleteConnection,
 

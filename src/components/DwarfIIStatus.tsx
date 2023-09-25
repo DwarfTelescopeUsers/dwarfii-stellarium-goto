@@ -23,7 +23,13 @@ export default function DwarfIIStatus() {
       return;
     }
 
-    const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    //socket connects to Dwarf
+    if (connectionCtx.socketIPDwarf) {
+      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+        connectionCtx.socketIPDwarf.close();
+    }
+    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    connectionCtx.setSocketIPDwarf(socket);
 
     socket.addEventListener("open", () => {
       console.log("start cameraSettings...");
@@ -47,13 +53,24 @@ export default function DwarfIIStatus() {
     socket.addEventListener("error", (message) => {
       console.log("cameraSettings error:", message);
     });
+
+    socket.addEventListener("close", (message) => {
+      console.log("cameraSettings close:", message);
+    });
   };
 
   const getShotField = () => {
     if (connectionCtx.IPDwarf == undefined) {
       return;
     }
-    const socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+
+    //socket connects to Dwarf
+    if (connectionCtx.socketIPDwarf) {
+      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+        connectionCtx.socketIPDwarf.close();
+    }
+    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    connectionCtx.setSocketIPDwarf(socket);
 
     socket.addEventListener("open", () => {
       console.log("start queryShotField...");
@@ -76,6 +93,10 @@ export default function DwarfIIStatus() {
     socket.addEventListener("error", (message) => {
       setShotFieldData(message);
       console.log("queryShotField error:", message);
+    });
+
+    socket.addEventListener("close", (message) => {
+      console.log("queryShotField close:", message);
     });
   };
 

@@ -10,6 +10,8 @@ export type ConnectionContextType = {
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPDwarf: string | undefined;
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
+  socketIPDwarf: WebSocket | undefined;
+  setSocketIPDwarf: Dispatch<SetStateAction<WebSocket | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
@@ -24,6 +26,16 @@ export type ConnectionContextType = {
   setLatitude: Dispatch<SetStateAction<number | undefined>>;
   longitude: number | undefined;
   setLongitude: Dispatch<SetStateAction<number | undefined>>;
+  timezone: string | undefined;
+  setTimezone: Dispatch<SetStateAction<string | undefined>>;
+
+  searchTxt: string | undefined;
+  setSearchTxt: Dispatch<SetStateAction<string | undefined>>;
+
+  savePositionStatus: boolean | undefined;
+  setSavePositionStatus: Dispatch<SetStateAction<boolean | undefined>>;
+  isSavedPosition: boolean | undefined;
+  setIsSavedPosition: Dispatch<SetStateAction<boolean | undefined>>;
 
   currentObjectListName: string | undefined;
   setCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;
@@ -34,6 +46,9 @@ export type ConnectionContextType = {
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
   imagingSession: ImagingSession;
   setImagingSession: Dispatch<SetStateAction<ImagingSession>>;
+
+  astroSavePosition: AstroSavePosition;
+  setAstroSavePosition: Dispatch<SetStateAction<AstroSavePosition>>;
 
   logger: { [k: string]: any }[] | undefined;
   setLogger: Dispatch<SetStateAction<{ [k: string]: any }[] | undefined>>;
@@ -197,8 +212,19 @@ export type AstroSettings = {
   count?: number;
 };
 
-type ImagingSession = {
+export type ImagingSession = {
   startTime: number;
   sessionElaspsedTime: string;
   imagesTaken: number;
+  imagesStacked: number;
+};
+
+export type AstroSavePosition = {
+  displayName: string;
+  rightAcension: number;
+  declination: number;
+  altitude: number;
+  azimuth: number;
+  lst: number;
+  strLocalTime: string;
 };

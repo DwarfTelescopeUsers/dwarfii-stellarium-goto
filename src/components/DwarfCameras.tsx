@@ -1,6 +1,7 @@
 /*  eslint-disable @next/next/no-img-element */
 
 import { useState, useContext, useEffect } from "react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import Link from "next/link";
 
 import {
@@ -9,6 +10,7 @@ import {
   telephotoURL,
   wideangleCamera,
   wideangleURL,
+  rawPreviewURL,
   socketSend,
   cameraWorkingState,
   statusWorkingStateTelephotoCmd,
@@ -21,10 +23,11 @@ import { turnOnCameraFn } from "@/lib/dwarf_utils";
 
 type PropType = {
   showWideangle: boolean;
+  useRawPreviewURL: boolean;
 };
 
 export default function DwarfCameras(props: PropType) {
-  const { showWideangle } = props;
+  const { showWideangle, useRawPreviewURL } = props;
   let connectionCtx = useContext(ConnectionContext);
 
   useEffect(() => {
@@ -56,7 +59,14 @@ export default function DwarfCameras(props: PropType) {
       return;
     }
 
+    //socket connects to Dwarf
+    if (connectionCtx.socketIPDwarf) {
+      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
+        connectionCtx.socketIPDwarf.close();
+    }
     let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
+    connectionCtx.setSocketIPDwarf(socket);
+
     socket.addEventListener("open", () => {
       let payload = cameraWorkingState(camera);
       logger("start cameraWorkingState...", payload, connectionCtx);
@@ -81,6 +91,10 @@ export default function DwarfCameras(props: PropType) {
     socket.addEventListener("error", (error) => {
       logger("cameraWorkingState error:", error, connectionCtx);
     });
+
+    socket.addEventListener("close", (error) => {
+      logger("cameraWorkingState close:", error, connectionCtx);
+    });
   }
 
   function renderWideAngle() {
@@ -97,12 +111,14 @@ export default function DwarfCameras(props: PropType) {
   }
 
   function renderMainCamera() {
-    // TODO: use rawPreviewURL
+    // TODO: use rawPreviewURL vs   telephotoURL,
     return (
       <div>
         <img
           onLoad={() => setTelephotoCameraStatus("on")}
-          src={telephotoURL(IPDwarf)}
+          src={
+            useRawPreviewURL ? rawPreviewURL(IPDwarf) : telephotoURL(IPDwarf)
+          }
           alt="livestream for telephoto camera"
           className={styles.telephoto}
         ></img>
@@ -140,8 +156,12 @@ export default function DwarfCameras(props: PropType) {
           </div>
         </div>
       )}
-      {renderWideAngle()}
-      {renderMainCamera()}
+      <TransformWrapper>
+        <TransformComponent>
+          {renderWideAngle()}
+          {renderMainCamera()}
+        </TransformComponent>
+      </TransformWrapper>
     </div>
   );
 }

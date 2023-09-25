@@ -16,6 +16,7 @@ import {
   fetchLoggerStatusDb,
   fetchLogMessagesDb,
   fetchImagingSessionDb,
+  fetchTimezoneDB,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -35,6 +36,16 @@ export function useLoadIntialValues() {
       if (data.latitude) {
         connectionCtx.setLatitude(data.latitude);
         connectionCtx.setLongitude(data.longitude);
+      }
+    }
+    if (connectionCtx.timezone === undefined || connectionCtx.timezone == "?") {
+      let data = fetchTimezoneDB();
+
+      if (data == "" || data == "?")
+        data = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      if (data) {
+        connectionCtx.setTimezone(data);
       }
     }
     if (connectionCtx.initialConnectionTime === undefined) {
@@ -62,6 +73,16 @@ export function useLoadIntialValues() {
       if (data !== undefined) connectionCtx.setUrlStellarium(data);
     }
 
+    if (connectionCtx.searchTxt === undefined) {
+      connectionCtx.setSearchTxt("Search");
+    }
+
+    if (connectionCtx.savePositionStatus === undefined) {
+      connectionCtx.setSavePositionStatus(false);
+    }
+    if (connectionCtx.isSavedPosition === undefined) {
+      connectionCtx.setIsSavedPosition(false);
+    }
     if (connectionCtx.currentObjectListName === undefined) {
       let data = fetchCurrentObjectListNameDb();
       if (data !== undefined) {

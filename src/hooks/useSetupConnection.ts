@@ -57,7 +57,7 @@ function checkDwarfConnection(
   }
   // if we can't connect to camera in 2 seconds, reset connection data
   fetch(utcURL(connectionCtx.IPDwarf), {
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(5000),
     mode: "no-cors",
   })
     .then(() => {

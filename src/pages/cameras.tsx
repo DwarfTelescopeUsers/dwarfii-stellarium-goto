@@ -15,6 +15,7 @@ export default function AstroPhoto() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [showWideangle, setShowWideangle] = useState(true);
+  const [useRawPreviewURL, setUseRawPreviewURL] = useState(false);
   let notConnected =
     connectionCtx.connectionStatus === undefined ||
     connectionCtx.connectionStatus === false;
@@ -53,11 +54,17 @@ export default function AstroPhoto() {
       <div className="container">
         <div className="row px-0">
           <main className="col">
-            <DwarfCameras showWideangle={showWideangle} />
+            <DwarfCameras
+              showWideangle={showWideangle}
+              useRawPreviewURL={useRawPreviewURL}
+            />
           </main>
 
           <div style={{ width: "60px" }} className="px-0">
-            <ImagingMenu setShowWideangle={setShowWideangle} />
+            <ImagingMenu
+              setShowWideangle={setShowWideangle}
+              setUseRawPreviewURL={setUseRawPreviewURL}
+            />
           </div>
         </div>
       </div>

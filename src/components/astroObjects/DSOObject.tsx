@@ -13,6 +13,8 @@ import {
   convertHMSToDecimalDegrees,
   convertDMSToDecimalDegrees,
 } from "@/lib/math_utils";
+import { toIsoStringInLocalTime } from "@/lib/date_utils";
+
 import GotoModal from "./GotoModal";
 
 type AstronomyObjectPropType = {
@@ -26,12 +28,16 @@ export default function DSOObject(props: AstronomyObjectPropType) {
 
   let connectionCtx = useContext(ConnectionContext);
   const [errors, setErrors] = useState<string | undefined>();
+  const [success, setSuccess] = useState<string | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [gotoMessages, setGotoMessages] = useState<Message[]>([] as Message[]);
 
   useEffect(() => {
     eventBus.on("clearErrors", () => {
       setErrors(undefined);
+    });
+    eventBus.on("clearSuccess", () => {
+      setSuccess(undefined);
     });
   }, []);
 
@@ -73,12 +79,18 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       raDecimal &&
       decDecimal
     ) {
+      let today = new Date();
+      console.log("Timezone:" + connectionCtx.timezone);
+      console.log(today.toISOString());
+      console.log(toIsoStringInLocalTime(today));
+
       let results = computeRaDecToAltAz(
         connectionCtx.latitude,
         connectionCtx.longitude,
         raDecimal,
         decDecimal,
-        new Date()
+        toIsoStringInLocalTime(today),
+        connectionCtx.timezone
       );
 
       if (results) {
@@ -112,6 +124,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
     startGotoHandler(
       connectionCtx,
       setErrors,
+      setSuccess,
       undefined,
       object.ra,
       object.dec,
@@ -155,7 +168,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           <button
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-            } mb-2`}
+            } me-2 mb-2`}
             onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
           >
@@ -170,6 +183,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             setMessages={setGotoMessages}
           />
           {errors && <span className="text-danger">{errors}</span>}
+          {success && <span className="text-success">{success}</span>}
         </div>
       </div>
     </div>

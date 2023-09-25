@@ -10,6 +10,7 @@ export default function Home() {
       <ul>
         <li>Object list with over 250 objects.</li>
         <li>Import objects lists from Telescopius.</li>
+        <li>Import Mosaic lists from Telescopius.</li>
         <li>Connect to Stellarium planeterium app to help select targets.</li>
         <li>Take Astro photos.</li>
         <li>1x1 binning for astro photos.</li>
@@ -24,20 +25,17 @@ export default function Home() {
       Bugs:
       <ul>
         <li>
-          The API does not correctly return the number images taken (10014).
-          Users should look at the mobile app to keep track of the imagining
-          progress.
-        </li>
-        <li>
-          Dwarf II ignores the API command to stop the taking astro photos
-          (10015) once imaging has started. Users need to use the mobile app to
-          stop taking photos.
-        </li>
-        <li>
           Dwarf II&apos;s internal date url does not work in the browser because
           of CORS (http://DWARF_IP:8092/date?date=).
         </li>
-        <li>Goto does not move the Dwarf II to the correct position.</li>
+        <li>
+          To get it working, you need CORS: Access-Control-Allow-Origin Plugin
+          on Chrome
+        </li>
+        <li>
+          Restriction : as this website use only http mode to communicate with
+          the dwarf, it can not detect your location.
+        </li>
       </ul>
     </div>
   );

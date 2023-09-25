@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { AstroObject } from "@/types";
 import DSOObject from "@/components/astroObjects/DSOObject";
+import DSOSearch from "@/components/astroObjects/DSOSearch";
 import { pluralize } from "@/lib/text_utils";
+import { ConnectionContext } from "@/stores/ConnectionContext";
 
 let objectTypesMenu = [
   { value: "all", label: "All" },
@@ -10,6 +12,7 @@ let objectTypesMenu = [
   { value: "galaxies", label: "Galaxies" },
   { value: "nebulae", label: "Nebulae" },
   { value: "stars", label: "Stars" },
+  { value: "mosaic", label: "Mosaic" },
 ];
 
 type PropType = {
@@ -17,6 +20,7 @@ type PropType = {
 };
 
 export default function DSOList(props: PropType) {
+  let connectionCtx = useContext(ConnectionContext);
   let dsoObjects: AstroObject[] = props.objects;
 
   const [objects, setObjects] = useState(dsoObjects);
@@ -47,12 +51,31 @@ export default function DSOList(props: PropType) {
   }
 
   function filterObjects() {
+    console.log("filterObjects");
+    let dataSearchTxt = "";
+    if (connectionCtx.searchTxt) dataSearchTxt = connectionCtx.searchTxt;
+
     if (selectedCategories.includes("all")) {
-      setObjects(dsoObjects);
+      if (dataSearchTxt)
+        setObjects(
+          dsoObjects.filter((object) => {
+            return object.displayName
+              .toLowerCase()
+              .includes(dataSearchTxt.toLowerCase());
+          })
+        );
+      else setObjects(dsoObjects);
     } else {
       setObjects(
         dsoObjects.filter((object) => {
-          return selectedCategories.includes(object.typeCategory);
+          if (dataSearchTxt)
+            return (
+              selectedCategories.includes(object.typeCategory) &&
+              object.displayName
+                .toLowerCase()
+                .includes(dataSearchTxt.toLowerCase())
+            );
+          else return selectedCategories.includes(object.typeCategory);
         })
       );
     }
@@ -73,6 +96,9 @@ export default function DSOList(props: PropType) {
           </li>
         ))}
       </ul>
+      <hr />
+      <DSOSearch />
+      <hr />
       <h4 className="mt-3">
         {objects.length} {pluralize(objects.length, "Object", "Objects")}
       </h4>
