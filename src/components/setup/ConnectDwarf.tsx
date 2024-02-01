@@ -5,8 +5,8 @@ import {
   wsURL,
   statusTelephotoCmd,
   statusWideangleCmd,
-  cameraSettings,
-  socketSend,
+  test_apiV2,
+  analysePacket
 } from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
@@ -40,11 +40,11 @@ export default function ConnectDwarf() {
 
     //socket connects to Dwarf
     let socket = new WebSocket(wsURL(IPDwarf));
+    socket.binaryType = 'arraybuffer';
 
     socket.addEventListener("open", () => {
-      let options = cameraSettings();
-      logger("start cameraSettings...", options, connectionCtx);
-      socketSend(socket, options);
+      // Send Command : TeleGetSystemWorkingStat
+      test_apiV2(socket);
     });
 
     // close socket is request takes too long
@@ -58,20 +58,37 @@ export default function ConnectDwarf() {
     socket.addEventListener("message", (event) => {
       clearTimeout(closeSocketTimer);
       setConnecting(false);
+      console.log(" -> Receiving data .....");
+ 
+     if (event.data instanceof ArrayBuffer) {
+       // binary frame
+      // transform data to the typed array needed
+      console.log(" -> Binary data .....");
+      const data_rcv = new Uint8Array(event.data);
+      console.log(data_rcv);
 
-      let message = JSON.parse(event.data);
+      let decodedmessage = analysePacket(data_rcv)
+      console.log(decodedmessage);
+
       if (
-        message.interface === statusTelephotoCmd ||
-        message.interface === statusWideangleCmd
+        decodedmessage === statusTelephotoCmd ||
+        decodedmessage === statusWideangleCmd
       ) {
-        logger("cameraSettings:", message, connectionCtx);
+        //logger("cameraSettings:", decodedmessage, connectionCtx);
         connectionCtx.setConnectionStatus(true);
         connectionCtx.setInitialConnectionTime(Date.now());
         saveConnectionStatusDB(true);
         saveInitialConnectionTimeDB();
       } else {
-        logger("", message, connectionCtx);
+        //logger("", decodedmessage, connectionCtx);
       }
+
+     } else {
+        // text frame ping ?
+        console.log(" -> Test data .....");
+        console.log(`Text Frame Received : ${event.data}`);
+     }  
+
     });
 
     socket.addEventListener("error", (error) => {

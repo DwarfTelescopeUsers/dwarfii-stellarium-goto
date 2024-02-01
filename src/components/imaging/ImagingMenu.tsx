@@ -110,7 +110,7 @@ export default function ImagingMenu(props: PropType) {
   }
 
   function startTimer() {
-    let timer = undefined;
+    let timer: string | any = "";
     if (!timerSessionInit) {
       timer = setInterval(() => {
         let time = calculateSessionTime(connectionCtx);
