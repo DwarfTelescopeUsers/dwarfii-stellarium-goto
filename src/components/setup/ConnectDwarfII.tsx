@@ -1,77 +1,89 @@
 import { useContext, useState } from "react";
+import { WebSocketHandler } from "@/lib/websocket_class";
 
-import {
-  wsURL,
-  statusTelephotoCmd,
-  statusWideangleCmd,
-  cameraSettings,
-  socketSend,
-  DwarfIP,
-} from "dwarfii_api";
+import { Dwarfii_Api, messageTeleGetSystemWorkingState } from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveConnectionStatusDB } from "@/db/db_utils";
-
-import { logger } from "@/lib/logger";
+import {
+  saveConnectionStatusDB,
+  saveInitialConnectionTimeDB,
+} from "@/db/db_utils";
 
 export default function ConnectDwarf() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);
+  const [slavemode, setSlavemode] = useState(false);
 
   function checkConnection() {
-    setConnecting(true);
+    const customMessageHandler = (
+      result_data,
+      txtInfoCommand,
+      callback,
+      webSocketHandlerInstance
+    ) => {
+      // Use webSocketHandlerInstance to access logic_data
+      webSocketHandlerInstance.logic_data = false;
+      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO) {
+        connectionCtx.setConnectionStatus(true);
+        connectionCtx.setInitialConnectionTime(Date.now());
+        saveConnectionStatusDB(true);
+        saveInitialConnectionTimeDB();
+      } else if (
+        result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
+      ) {
+        connectionCtx.setConnectionStatus(true);
+      } else if (
+        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE
+      ) {
+        if (result_data.data.mode == 1) {
+          console.log("WARNING SLAVE MODE");
+          setSlavemode(true);
+        } else {
+          console.log("OK : HOST MODE");
+          setSlavemode(false);
+        }
+      } else {
+        return false;
+      }
+      return true;
+    };
 
-    let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
+    // Create WebSocketHandler
+    const webSocketHandler = new WebSocketHandler(connectionCtx, true);
 
-    //socket connects to Dwarf
-    let socket = new WebSocket(wsURL(IPDwarf));
-
-    socket.addEventListener("open", () => {
-      let options = cameraSettings();
-      logger("start cameraSettings...", options, connectionCtx);
-      socketSend(socket, options);
-    });
+    webSocketHandler.closeTimerHandler = function () {
+      setConnecting(false);
+    };
+    webSocketHandler.onStopTimerHandler = function () {
+      setConnecting(false);
+      saveConnectionStatusDB(false);
+    };
 
     // close socket is request takes too long
-    let closeSocketTimer = setTimeout(() => {
+    webSocketHandler.closeSocketTimer = setTimeout(() => {
+      webSocketHandler.handleClose("");
+      console.log(" -> Close Timer.....");
       setConnecting(false);
       connectionCtx.setConnectionStatus(false);
       saveConnectionStatusDB(false);
-      socket.close();
-    }, 3000);
+    }, 5000);
 
-    socket.addEventListener("message", (event) => {
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
+    setConnecting(true);
+    setSlavemode(false);
 
-      let message = JSON.parse(event.data);
-      if (
-        message.interface === statusTelephotoCmd ||
-        message.interface === statusWideangleCmd
-      ) {
-        logger("cameraSettings:", message, connectionCtx);
-        connectionCtx.setConnectionStatus(true);
-        saveConnectionStatusDB(true);
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
+    // Send Command : cmdTeleGetSystemWorkingState
+    let WS_Packet = messageTeleGetSystemWorkingState();
+    let txtInfoCommand = "Connection";
 
-    socket.addEventListener("error", (error) => {
-      logger("cameraSettings error:", error, connectionCtx);
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-    });
+    webSocketHandler.prepare(
+      WS_Packet,
+      customMessageHandler,
+      txtInfoCommand,
+      undefined
+    );
 
-    socket.addEventListener("close", (error) => {
-      logger("cameraSettings close:", error, connectionCtx);
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-    });
+    webSocketHandler.run();
   }
 
   function renderConnectionStatus() {
@@ -83,6 +95,13 @@ export default function ConnectDwarf() {
     }
     if (connectionCtx.connectionStatus === false) {
       return <span className="text-danger">Connection failed.</span>;
+    }
+    if (slavemode) {
+      return (
+        <span className="text-warning">
+          Connection successful (Slave Mode).
+        </span>
+      );
     }
 
     return <span className="text-success">Connection successful.</span>;

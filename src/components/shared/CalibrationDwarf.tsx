@@ -9,8 +9,12 @@ import {
   savePositionHandler,
   gotoPositionHandler,
 } from "@/lib/goto_utils";
+{
+  /*
 import { turnOnCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
 import { telephotoCamera } from "dwarfii_api";
+*/
+}
 import eventBus from "@/lib/event_bus";
 import { AstroObject } from "@/types";
 import GotoModal from "../astroObjects/GotoModal";
@@ -87,12 +91,21 @@ export default function CalibrationDwarf() {
 
   function shutDownFn() {
     setShowModal(true);
-    shutDownHandler(connectionCtx, setErrors, (options) => {
+    shutDownHandler(false, connectionCtx, setErrors, (options) => {
+      setGotoMessages((prev) => prev.concat(options));
+    });
+  }
+
+  function rebootFn() {
+    setShowModal(true);
+    shutDownHandler(true, connectionCtx, setErrors, (options) => {
       setGotoMessages((prev) => prev.concat(options));
     });
   }
 
   function initCamera() {
+    {
+      /*
     setTimeout(() => {
       turnOnCameraFn(telephotoCamera, connectionCtx);
     }, 1000);
@@ -111,6 +124,8 @@ export default function CalibrationDwarf() {
     setTimeout(() => {
       updateTelescopeISPSetting("IR", 0, connectionCtx);
     }, 4500);
+    */
+    }
   }
 
   return (
@@ -192,11 +207,20 @@ export default function CalibrationDwarf() {
           <button
             className={`btn ${
               connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
-            } mb-2`}
+            } me-4 mb-2`}
             onClick={shutDownFn}
             disabled={!connectionCtx.connectionStatus}
           >
             Shutdown!
+          </button>
+          <button
+            className={`btn ${
+              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+            } mb-2`}
+            onClick={rebootFn}
+            disabled={!connectionCtx.connectionStatus}
+          >
+            Reboot!
           </button>
         </div>
       </div>

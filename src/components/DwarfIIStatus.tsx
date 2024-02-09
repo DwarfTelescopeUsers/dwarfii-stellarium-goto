@@ -1,5 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 
+{
+  /*
 import {
   wsURL,
   statusTelephotoCmd,
@@ -10,6 +12,8 @@ import {
   socketSend,
   binning2x2,
 } from "dwarfii_api";
+*/
+}
 import { ConnectionContext } from "@/stores/ConnectionContext";
 
 export default function DwarfIIStatus() {
@@ -19,10 +23,12 @@ export default function DwarfIIStatus() {
   const [shotFieldData, setShotFieldData] = useState<any>(null);
 
   const getCameraStatus = () => {
+    setCameraStatusData({});
     if (connectionCtx.IPDwarf == undefined) {
       return;
     }
-
+    {
+      /*
     //socket connects to Dwarf
     if (connectionCtx.socketIPDwarf) {
       if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
@@ -57,13 +63,17 @@ export default function DwarfIIStatus() {
     socket.addEventListener("close", (message) => {
       console.log("cameraSettings close:", message);
     });
+*/
+    }
   };
 
   const getShotField = () => {
+    setShotFieldData({});
+    {
+      /*
     if (connectionCtx.IPDwarf == undefined) {
       return;
     }
-
     //socket connects to Dwarf
     if (connectionCtx.socketIPDwarf) {
       if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
@@ -98,15 +108,20 @@ export default function DwarfIIStatus() {
     socket.addEventListener("close", (message) => {
       console.log("queryShotField close:", message);
     });
+*/
+    }
   };
 
   useEffect(() => {
+    {
+      /*
     getCameraStatus();
     setTimeout(() => {
       getShotField();
     }, 1000);
+*/
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
     <>
       <h2>ISP Parameters - Telephoto</h2>

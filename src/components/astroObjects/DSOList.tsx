@@ -51,7 +51,6 @@ export default function DSOList(props: PropType) {
   }
 
   function filterObjects() {
-    console.log("filterObjects");
     let dataSearchTxt = "";
     if (connectionCtx.searchTxt) dataSearchTxt = connectionCtx.searchTxt;
 

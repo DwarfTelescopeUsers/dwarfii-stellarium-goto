@@ -154,6 +154,7 @@ export default function ManualGoto() {
       undefined,
       RA,
       declination,
+      objectName,
       (options) => {
         setGotoMessages((prev) => prev.concat(options));
       }

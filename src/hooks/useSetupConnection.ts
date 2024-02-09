@@ -6,7 +6,7 @@ import {
   saveInitialConnectionTimeDB,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
-import { utcURL } from "dwarfii_api";
+import { firmwareVersion } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {
@@ -56,9 +56,10 @@ function checkDwarfConnection(
     return;
   }
   // if we can't connect to camera in 2 seconds, reset connection data
-  fetch(utcURL(connectionCtx.IPDwarf), {
+  fetch(firmwareVersion(connectionCtx.IPDwarf), {
     signal: AbortSignal.timeout(5000),
     mode: "no-cors",
+    method: "POST",
   })
     .then(() => {
       console.log("Dwarf connection ok.", loop ? " (loop)" : "");

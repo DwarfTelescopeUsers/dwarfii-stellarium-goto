@@ -270,7 +270,7 @@ export function renderLocalRiseSetTime(
     } else if (err.message === "always below horizon") {
       times.error = err.message;
     } else {
-      // console.log("err", err);
+      // console.debug("err", err);
     }
   }
 
@@ -339,11 +339,11 @@ function calc_jd(date: string, timeZone: string = "") {
   let now = new Date(date);
   let offsetTimeZone = 0;
 
-  console.log("DATE: " + now.toString());
+  console.debug("DATE: " + now.toString());
 
   if (timeZone) {
     let timeZoneLocal = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    console.log("timeZoneLocal: " + timeZoneLocal);
+    console.debug("timeZoneLocal: " + timeZoneLocal);
 
     // Get Offset TimeZone
     let d = new Date();
@@ -354,16 +354,16 @@ function calc_jd(date: string, timeZone: string = "") {
         timeZoneName: "short",
       })
       .split(/GMT/g)[1];
-    console.log("time a :" + a);
+    console.debug("time a :" + a);
     let b = d
       .toLocaleString("en-US", {
         timeZone: timeZone,
         timeZoneName: "short",
       })
       .split(/GMT/g)[1];
-    console.log("time b :" + b);
+    console.debug("time b :" + b);
     let offsetTimeZone = Number(b) - Number(a);
-    console.log("Offset: " + offsetTimeZone);
+    console.debug("Offset: " + offsetTimeZone);
   }
 
   const year = now.getUTCFullYear();
@@ -374,12 +374,12 @@ function calc_jd(date: string, timeZone: string = "") {
   const seconds = now.getUTCSeconds();
   const milliseconds = now.getUTCMilliseconds();
 
-  console.log("year: " + year);
-  console.log("month: " + month);
-  console.log("day: " + day);
-  console.log("hours: " + hours);
-  console.log("minutes: " + minutes);
-  console.log("seconds: " + seconds);
+  console.debug("year: " + year);
+  console.debug("month: " + month);
+  console.debug("day: " + day);
+  console.debug("hours: " + hours);
+  console.debug("minutes: " + minutes);
+  console.debug("seconds: " + seconds);
 
   const now_UTC = new Date(
     year,
@@ -393,8 +393,8 @@ function calc_jd(date: string, timeZone: string = "") {
 
   let jd_ut = julian.DateToJD(now_UTC);
 
-  console.log(jd_ut); // -> '2456617.949335'
-  console.log(julian.JDToDate(jd_ut));
+  console.debug(jd_ut); // -> '2456617.949335'
+  console.debug(julian.JDToDate(jd_ut));
 
   return jd_ut;
 }
@@ -467,10 +467,10 @@ export function computeRaDecToAltAz(
     lst: data_rad.lst * toDeg,
     H: data_rad.H * toDeg,
   };
-  console.log(data.alt);
-  console.log(data.az);
-  console.log(data.lst);
-  console.log(data.H);
+  console.debug(data.alt);
+  console.debug(data.az);
+  console.debug(data.lst);
+  console.debug(data.H);
 
   return data;
 }
@@ -496,7 +496,7 @@ function altAzToHADec(
     Math.tan(alt) * Math.cos(lat) - Math.cos(az) * Math.sin(lat)
   );
 
-  console.log("H1 rad: " + H);
+  console.debug("H1 rad: " + H);
 
   if (H < 0) {
     H += Math.PI * 2;
@@ -505,10 +505,10 @@ function altAzToHADec(
   if (H > Math.PI) {
     H = H - 2 * Math.PI;
   }
-  console.log("H2 rad: " + H);
+  console.debug("H2 rad: " + H);
 
   let ra = lst - H;
-  console.log("raH rad: " + ra);
+  console.debug("raH rad: " + ra);
   if (ra < 0) {
     ra = ra + 2 * Math.PI;
   }
@@ -561,10 +561,10 @@ export function computealtAzToHADec(
     H: data_rad.H * toDeg,
   };
 
-  console.log(data.ra);
-  console.log(data.dec);
-  console.log(data.lst);
-  console.log(data.H);
+  console.debug(data.ra);
+  console.debug(data.dec);
+  console.debug(data.lst);
+  console.debug(data.H);
 
   return data;
 }

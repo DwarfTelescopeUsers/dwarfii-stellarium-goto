@@ -1,30 +1,23 @@
 import { useContext, useState } from "react";
 import type { FormEvent } from "react";
+import { WebSocketHandler } from "@/lib/websocket_class";
 
-import {
-  wsURL,
-  statusTelephotoCmd,
-  statusWideangleCmd,
-  test_apiV2,
-  analysePacket
-} from "dwarfii_api";
+import { Dwarfii_Api, messageTeleGetSystemWorkingState } from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   saveConnectionStatusDB,
   saveInitialConnectionTimeDB,
   saveIPDwarfDB,
 } from "@/db/db_utils";
-import { logger } from "@/lib/logger";
 
 export default function ConnectDwarf() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);
+  const [slavemode, setSlavemode] = useState(false);
 
   function checkConnection(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
-    setConnecting(true);
 
     const formData = new FormData(e.currentTarget);
     const formIP = formData.get("ip");
@@ -38,74 +31,78 @@ export default function ConnectDwarf() {
     connectionCtx.setIPDwarf(IPDwarf);
     saveIPDwarfDB(IPDwarf);
 
-    //socket connects to Dwarf
-    let socket = new WebSocket(wsURL(IPDwarf));
-    socket.binaryType = 'arraybuffer';
-
-    socket.addEventListener("open", () => {
-      // Send Command : TeleGetSystemWorkingStat
-      test_apiV2(socket);
-    });
-
-    // close socket is request takes too long
-    let closeSocketTimer = setTimeout(() => {
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-      socket.close();
-    }, 3000);
-
-    socket.addEventListener("message", (event) => {
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
-      console.log(" -> Receiving data .....");
- 
-     if (event.data instanceof ArrayBuffer) {
-       // binary frame
-      // transform data to the typed array needed
-      console.log(" -> Binary data .....");
-      const data_rcv = new Uint8Array(event.data);
-      console.log(data_rcv);
-
-      let decodedmessage = analysePacket(data_rcv)
-      console.log(decodedmessage);
-
-      if (
-        decodedmessage === statusTelephotoCmd ||
-        decodedmessage === statusWideangleCmd
-      ) {
-        //logger("cameraSettings:", decodedmessage, connectionCtx);
+    const customMessageHandler = (
+      result_data,
+      txtInfoCommand,
+      callback,
+      webSocketHandlerInstance
+    ) => {
+      // Use webSocketHandlerInstance to access logic_data
+      webSocketHandlerInstance.logic_data = false;
+      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO) {
         connectionCtx.setConnectionStatus(true);
         connectionCtx.setInitialConnectionTime(Date.now());
         saveConnectionStatusDB(true);
         saveInitialConnectionTimeDB();
+      } else if (
+        result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
+      ) {
+        connectionCtx.setConnectionStatus(true);
+      } else if (
+        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE
+      ) {
+        if (result_data.data.mode == 1) {
+          console.log("WARNING SLAVE MODE");
+          setSlavemode(true);
+        } else {
+          console.log("OK : HOST MODE");
+          setSlavemode(false);
+        }
       } else {
-        //logger("", decodedmessage, connectionCtx);
+        return false;
       }
+      return true;
+    };
 
-     } else {
-        // text frame ping ?
-        console.log(" -> Test data .....");
-        console.log(`Text Frame Received : ${event.data}`);
-     }  
+    // Create WebSocketHandler
+    const webSocketHandler = new WebSocketHandler(connectionCtx);
 
-    });
+    // Force IP
+    webSocketHandler.IPDwarf = IPDwarf;
 
-    socket.addEventListener("error", (error) => {
-      logger("cameraSettings error:", error, connectionCtx);
-      clearTimeout(closeSocketTimer);
+    webSocketHandler.closeTimerHandler = function () {
+      setConnecting(false);
+    };
+    webSocketHandler.onStopTimerHandler = function () {
+      setConnecting(false);
+      saveConnectionStatusDB(false);
+    };
+
+    // close socket is request takes too long
+    webSocketHandler.closeSocketTimer = setTimeout(() => {
+      webSocketHandler.handleClose("");
+      console.log(" -> Close Timer.....");
       setConnecting(false);
       connectionCtx.setConnectionStatus(false);
       saveConnectionStatusDB(false);
-    });
+    }, 5000);
 
-    socket.addEventListener("close", (error) => {
-      logger("cameraSettings close:", error, connectionCtx);
-      clearTimeout(closeSocketTimer);
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(false);
-      saveConnectionStatusDB(false);
-    });
+    setConnecting(true);
+    setSlavemode(false);
+
+    // Send Command : cmdTeleGetSystemWorkingState
+    let WS_Packet = messageTeleGetSystemWorkingState();
+    let txtInfoCommand = "Connection";
+
+    webSocketHandler.prepare(
+      WS_Packet,
+      customMessageHandler,
+      txtInfoCommand,
+      undefined
+    );
+
+    webSocketHandler.run();
   }
 
   function renderConnectionStatus() {
@@ -117,6 +114,13 @@ export default function ConnectDwarf() {
     }
     if (connectionCtx.connectionStatus === false) {
       return <span className="text-danger">Connection failed.</span>;
+    }
+    if (slavemode) {
+      return (
+        <span className="text-warning">
+          Connection successful (Slave Mode).
+        </span>
+      );
     }
 
     return <span className="text-success">Connection successful.</span>;
