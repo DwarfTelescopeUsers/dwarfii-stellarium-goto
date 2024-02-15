@@ -5,9 +5,8 @@ import { WebSocketHandler } from "@/lib/websocket_class";
 
 import {
   Dwarfii_Api,
-  messageSetTime,
-  messageSetTimezone,
-  messageCameraTeleOpenCamera,
+  messageSystemSetTime,
+  messageSystemSetTimezone,
   messageAstroStartCalibration,
   messageAstroStartGotoSolarSystem,
   messageAstroStartGotoDso,
@@ -112,28 +111,6 @@ export async function calibrationHandler(
     webSocketHandlerInstance
   ) => {
     // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
-    if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA) {
-      if (result_data.data.code == 0) {
-        if (callback) {
-          callback(txtInfoCommand + " ok");
-        }
-      } else {
-        if (callback) {
-          callback(txtInfoCommand + " error");
-        }
-      }
-      return true;
-    } else return false;
-  };
-
-  const customMessageHandler4 = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CALIBRATION) {
       if (
         result_data.data.code ==
@@ -211,8 +188,8 @@ export async function calibrationHandler(
   // Create WebSocketHandler
   const webSocketHandler = new WebSocketHandler(connectionCtx);
 
-  // Send Command : messageSetTime
-  let WS_Packet1 = messageSetTime();
+  // Send Command : messageSystemSetTime
+  let WS_Packet1 = messageSystemSetTime();
   let txtInfoCommand1 = "SetTime";
 
   webSocketHandler.prepare(
@@ -224,10 +201,10 @@ export async function calibrationHandler(
 
   webSocketHandler.run();
 
-  await sleep(5000);
+  await sleep(2000);
 
-  // Send Command : messageSetTimezone
-  let WS_Packet2 = messageSetTimezone(timezone);
+  // Send Command : messageSystemSetTimezone
+  let WS_Packet2 = messageSystemSetTimezone(timezone);
   let txtInfoCommand2 = "SetTimezone";
 
   webSocketHandler.prepare(
@@ -237,24 +214,15 @@ export async function calibrationHandler(
     callback
   );
 
-  // Send Command : messageCameraTeleOpenCamera
-  let WS_Packet3 = messageCameraTeleOpenCamera(false);
-  let txtInfoCommand3 = "OpenTeleCamera";
+  await sleep(2000);
 
+  // Send Command : messageAstroStartCalibration
+  let WS_Packet3 = messageAstroStartCalibration();
+  let txtInfoCommand3 = "Calibration";
   webSocketHandler.prepare(
     WS_Packet3,
     customMessageHandler3,
     txtInfoCommand3,
-    callback
-  );
-
-  // Send Command : messageAstroStartCalibration
-  let WS_Packet4 = messageAstroStartCalibration();
-  let txtInfoCommand4 = "Calibration";
-  webSocketHandler.prepare(
-    WS_Packet4,
-    customMessageHandler4,
-    txtInfoCommand4,
     callback
   );
 }
@@ -629,12 +597,16 @@ export async function shutDownHandler(
   webSocketHandler.run();
 
   if (reboot) {
+    await sleep(10);
+
     webSocketHandler.prepare(
       WS_Packet2,
       customMessageHandler,
       txtInfoCommand,
       callback
     );
+
+    await sleep(20000);
 
     webSocketHandler.prepare(
       WS_Packet3,

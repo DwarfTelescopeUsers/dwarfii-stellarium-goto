@@ -4,13 +4,13 @@ import { Formik } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { modeManual, modeAuto, exposureTelephotoModeAuto } from "dwarfii_api";
-import { range } from "@/lib/math_utils";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
 import { calculateImagingTime } from "@/lib/date_utils";
 import { updateTelescopeISPSetting } from "@/lib/dwarf_utils";
+import { allowedExposures, allowedGains, getExposureValueByIndex} from "@/lib/data_utils";
 
 type PropTypes = {
   setValidSettings: any;
@@ -204,12 +204,20 @@ export default function TakeAstroPhoto(props: PropTypes) {
     setShowSettingsInfo(!showSettingsInfo);
   }
 
-  const allowedExposures = [
-    0.01, 0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-  ];
+  const allowedExposuresOptions = allowedExposures.values.map(({ index, name }) => (
+          <option key={index} value={index}>
+            {name}
+          </option>
+        ))
 
-  const allowedGains = range(30, 150, 10);
 
+  const allowedGainsOptions = allowedGains.values.map(({ index, name }) => (
+          <option key={index} value={index}>
+            {name}
+          </option>
+        ))
+  
+  
   if (showSettingsInfo) {
     return <AstroSettingsInfo onClick={toggleShowSettingsInfo} />;
   }
@@ -267,11 +275,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 >
                   <option value="default">Select</option>
                   <option value="auto">Auto</option>
-                  {allowedGains.map((exp) => (
-                    <option key={exp} value={exp}>
-                      {exp}
-                    </option>
-                  ))}
+                  {allowedGainsOptions}
                 </select>
               </div>
             </div>
@@ -293,11 +297,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 >
                   <option value="default">Select</option>
                   <option value="auto">Auto</option>
-                  {allowedExposures.map((exp) => (
-                    <option key={exp} value={exp}>
-                      {exp}
-                    </option>
-                  ))}
+                  {allowedExposuresOptions}
                 </select>
               </div>
             </div>
@@ -319,7 +319,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 >
                   <option value="default">Select</option>
                   <option value="0">Cut</option>
-                  <option value="3">Pass</option>
+                  <option value="1">Pass</option>
                 </select>
               </div>
             </div>
@@ -395,7 +395,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
               <div className="col-8">
                 {setImagingTime(
                   connectionCtx.astroSettings.count,
-                  connectionCtx.astroSettings.exposure
+                  getExposureValueByIndex(connectionCtx.astroSettings.exposure)
                 )}
               </div>
             </div>

@@ -3,23 +3,27 @@
 import { useState, useContext, useEffect } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import Link from "next/link";
+import { WebSocketHandler } from "@/lib/websocket_class";
 
 import {
-  wsURL,
-  telephotoCamera,
-  telephotoURL,
-  wideangleCamera,
-  wideangleURL,
-  rawPreviewURL,
-  socketSend,
-  cameraWorkingState,
-  statusWorkingStateTelephotoCmd,
+  Dwarfii_Api,
   DwarfIP,
+  wideangleURL,
+  telephotoURL,
+  rawPreviewURL,
+  messageCameraTeleGetAllParams,
+  messageCameraWideGetAllParams,
 } from "dwarfii_api";
+
 import styles from "@/components/DwarfCameras.module.css";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { logger } from "@/lib/logger";
-import { turnOnCameraFn } from "@/lib/dwarf_utils";
+import {
+  telephotoCamera,
+  wideangleCamera,
+  turnOnTeleCameraFn,
+  turnOnWideCameraFn,
+} from "@/lib/dwarf_utils";
 
 type PropType = {
   showWideangle: boolean;
@@ -46,10 +50,10 @@ export default function DwarfCameras(props: PropType) {
 
   function turnOnCameraHandler(cameraId: number) {
     if (cameraId === telephotoCamera) {
-      turnOnCameraFn(telephotoCamera, connectionCtx);
+      turnOnTeleCameraFn(connectionCtx);
       setTelephotoCameraStatus("on");
     } else {
-      turnOnCameraFn(wideangleCamera, connectionCtx);
+      turnOnWideCameraFn(connectionCtx);
       setWideangleCameraStatus("on");
     }
   }
@@ -59,42 +63,56 @@ export default function DwarfCameras(props: PropType) {
       return;
     }
 
-    //socket connects to Dwarf
-    if (connectionCtx.socketIPDwarf) {
-      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-        connectionCtx.socketIPDwarf.close();
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    connectionCtx.setSocketIPDwarf(socket);
-
-    socket.addEventListener("open", () => {
-      let payload = cameraWorkingState(camera);
-      logger("start cameraWorkingState...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === statusWorkingStateTelephotoCmd) {
-        let cameraName = camera === 0 ? "telephoto" : "wideangle";
-        if (message.camState === 1) {
-          logger(cameraName + " open", {}, connectionCtx);
+    const customMessageHandler = (
+      result_data,
+      txtInfoCommand,
+      callback,
+      webSocketHandlerInstance
+    ) => {
+      // Use webSocketHandlerInstance to access logic_data
+      webSocketHandlerInstance.logic_data = false;
+      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA) {
+        if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          logger("telephoto open", {}, connectionCtx);
+          setTelephotoCameraStatus("on");
+          return true;
         } else {
-          logger(cameraName + " closed", {}, connectionCtx);
-          camera === 0
-            ? setTelephotoCameraStatus("off")
-            : setWideangleCameraStatus("off");
+          setTelephotoCameraStatus("off");
+          return true;
         }
+      } else if (
+        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA
+      ) {
+        if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          logger("wide open", {}, connectionCtx);
+          setWideangleCameraStatus("on");
+          return true;
+        } else {
+          setWideangleCameraStatus("off");
+          return true;
+        }
+      } else {
+        return false;
       }
-    });
+    };
 
-    socket.addEventListener("error", (error) => {
-      logger("cameraWorkingState error:", error, connectionCtx);
-    });
+    // Create WebSocketHandler
+    const webSocketHandler = new WebSocketHandler(connectionCtx, true);
 
-    socket.addEventListener("close", (error) => {
-      logger("cameraWorkingState close:", error, connectionCtx);
-    });
+    // Send Command : messageCameraTeleGetAllParams
+    let WS_Packet;
+    if (camera == telephotoCamera) WS_Packet = messageCameraTeleGetAllParams();
+    else WS_Packet = messageCameraWideGetAllParams();
+    let txtInfoCommand = "cameraWorkingState";
+
+    webSocketHandler.prepare(
+      WS_Packet,
+      customMessageHandler,
+      txtInfoCommand,
+      undefined
+    );
+
+    webSocketHandler.run();
   }
 
   function renderWideAngle() {

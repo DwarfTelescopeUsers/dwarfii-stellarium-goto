@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { IRCut } from "dwarfii_api";
+import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
 
 export default function StatusBar() {
   let connectionCtx = useContext(ConnectionContext);
@@ -26,11 +27,11 @@ export default function StatusBar() {
       <span className="me-3">Dwarf II: {connection}</span>
       <span className="me-3">Stellarium: {connectionStellarium}</span>
       {connectionCtx.astroSettings.gain !== undefined && (
-        <span className="me-3">Gain: {connectionCtx.astroSettings.gain}</span>
+        <span className="me-3">Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}</span>
       )}
       {connectionCtx.astroSettings.exposure !== undefined && (
         <span className="me-3">
-          Exp: {connectionCtx.astroSettings.exposure}
+          Exp: {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
         </span>
       )}
       {connectionCtx.astroSettings.IR !== undefined && (

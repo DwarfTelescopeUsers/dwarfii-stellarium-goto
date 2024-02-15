@@ -2,7 +2,10 @@ import { useContext, useState } from "react";
 import type { FormEvent } from "react";
 import { WebSocketHandler } from "@/lib/websocket_class";
 
-import { Dwarfii_Api, messageTeleGetSystemWorkingState } from "dwarfii_api";
+import {
+  Dwarfii_Api,
+  messageCameraTeleGetSystemWorkingState,
+} from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   saveConnectionStatusDB,
@@ -91,8 +94,8 @@ export default function ConnectDwarf() {
     setConnecting(true);
     setSlavemode(false);
 
-    // Send Command : cmdTeleGetSystemWorkingState
-    let WS_Packet = messageTeleGetSystemWorkingState();
+    // Send Command : cmdCameraTeleGetSystemWorkingState
+    let WS_Packet = messageCameraTeleGetSystemWorkingState();
     let txtInfoCommand = "Connection";
 
     webSocketHandler.prepare(

@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useRef } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
+import { getExposureIndexByName, getGainIndexByName } from "@/lib/data_utils";
 
 import {
   calibrationHandler,
@@ -9,12 +10,7 @@ import {
   savePositionHandler,
   gotoPositionHandler,
 } from "@/lib/goto_utils";
-{
-  /*
-import { turnOnCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
-import { telephotoCamera } from "dwarfii_api";
-*/
-}
+import { turnOnTeleCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
 import eventBus from "@/lib/event_bus";
 import { AstroObject } from "@/types";
 import GotoModal from "../astroObjects/GotoModal";
@@ -105,9 +101,8 @@ export default function CalibrationDwarf() {
 
   function initCamera() {
     {
-      /*
     setTimeout(() => {
-      turnOnCameraFn(telephotoCamera, connectionCtx);
+      turnOnTeleCameraFn(connectionCtx);
     }, 1000);
     setTimeout(() => {
       updateTelescopeISPSetting("gainMode", 1, connectionCtx);
@@ -116,15 +111,14 @@ export default function CalibrationDwarf() {
       updateTelescopeISPSetting("exposureMode", 1, connectionCtx);
     }, 2000);
     setTimeout(() => {
-      updateTelescopeISPSetting("gain", 80, connectionCtx);
+      updateTelescopeISPSetting("gain", getGainIndexByName("80"), connectionCtx);
     }, 2500);
     setTimeout(() => {
-      updateTelescopeISPSetting("exposure", 1, connectionCtx);
+      updateTelescopeISPSetting("exposure", getExposureIndexByName("1"), connectionCtx);
     }, 3500);
     setTimeout(() => {
       updateTelescopeISPSetting("IR", 0, connectionCtx);
     }, 4500);
-    */
     }
   }
 

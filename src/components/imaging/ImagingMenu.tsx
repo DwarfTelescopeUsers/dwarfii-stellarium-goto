@@ -4,28 +4,15 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import Tooltip from "react-bootstrap/Tooltip";
 import Link from "next/link";
+import { WebSocketHandler } from "@/lib/websocket_class";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
-  wsURL,
-  takeAstroPhoto,
-  takeAstroPhotoCmd,
-  socketSend,
-  stopAstroPhoto,
-  stopAstroPhotoCmd,
-  numberRawImagesCmd,
-  numberSuperImposedImages,
-  telephotoCamera,
-  astroAutofocus,
-  astroAutofocusCmd,
-  startMotion,
-  startMotionCmd,
-  stopMotion,
-  stopMotionCmd,
-  rawPreviewURL,
-  setRAWPreviewCmd,
-  updateRawPreviewSource,
-  DwarfIP,
+  Dwarfii_Api,
+  messageAstroStartCaptureRawLiveStacking,
+  messageAstroStopCaptureRawLiveStacking,
+//  rawPreviewURL,
+//  DwarfIP,
 } from "dwarfii_api";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
@@ -35,7 +22,7 @@ import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { ImagingSession } from "@/types";
 import { saveImagingSessionDb, removeImagingSessionDb } from "@/db/db_utils";
 import {
-  turnOnCameraFn,
+  turnOnTeleCameraFn,
   calculateSessionTime,
   updateTelescopeISPSetting,
 } from "@/lib/dwarf_utils";
@@ -171,92 +158,75 @@ export default function ImagingMenu(props: PropType) {
         prev["imagesStacked"] = 0;
         return { ...prev };
       });
-      //socket connects to Dwarf
-      if (connectionCtx.socketIPDwarf) {
-        if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-          connectionCtx.socketIPDwarf.close();
-      }
-      let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-      connectionCtx.setSocketIPDwarf(socket);
 
-      socket.addEventListener("open", () => {
-        let payload = takeAstroPhoto(
-          connectionCtx.astroSettings.rightAcension as string,
-          connectionCtx.astroSettings.declination as string,
-          connectionCtx.astroSettings.exposure as number,
-          connectionCtx.astroSettings.gain as number,
-          connectionCtx.astroSettings.binning as number,
-          connectionCtx.astroSettings.count as number,
-          connectionCtx.astroSettings.fileFormat as number
-        );
-        logger("start takeAstroPhoto...", payload, connectionCtx);
-
-        socketSend(socket, payload);
-      });
-
-      socket.addEventListener("message", (event) => {
-        let message = JSON.parse(event.data);
-        if (message.interface === takeAstroPhotoCmd) {
-          logger("takeAstroPhoto:", message, connectionCtx);
-
-          // update image count
-        } else if (message.interface === numberRawImagesCmd) {
-          // BUG: dwarf does not return message for every image taken if Mobile App is On
-          logger("takeAstroPhoto count:", message, connectionCtx);
-          connectionCtx.setImagingSession((prev) => {
-            prev["imagesTaken"] = message.currentCount;
-            return { ...prev };
-          });
-          saveImagingSessionDb("imagesTaken", message.currentCount.toString());
-          logger(
-            "takeAstroPhoto currentCount:",
-            message.currentCount.toString(),
-            connectionCtx
-          );
-          if (timerSession) testTimer = timerSession.toString();
-          logger("takeAstroPhoto currentCount ST:", testTimer, connectionCtx);
-
-          // update UI once imaging session is done imaging
-          if (message.currentCount === connectionCtx.astroSettings.count) {
-            logger("takeAstroPhoto endImagingSession:", message, connectionCtx);
-            logger(
-              "ImagingSession befor clearInterval:",
-              testTimer,
-              connectionCtx
-            );
-            //Call endImagingSession
-            endImagingSession();
+      const customMessageHandler = (
+        result_data,
+        txtInfoCommand,
+        callback,
+        webSocketHandlerInstance
+      ) => {
+        // Use webSocketHandlerInstance to access logic_data
+        webSocketHandlerInstance.logic_data = false;
+        // CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING -> Start Capture
+        // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
+        // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
+        if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING) {
+          if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
+            logger("Start Capture error", {}, connectionCtx);
+            return false;
+          } else {
+            logger("Start Capture ok", {}, connectionCtx);
           }
-        } else if (message.interface == numberSuperImposedImages) {
-          logger("takeAstroPhoto Stacked count:", message, connectionCtx);
-          connectionCtx.setImagingSession((prev) => {
-            prev["imagesStacked"] = message.stackedCount;
-            return { ...prev };
-          });
-          saveImagingSessionDb(
-            "imagesStacked",
-            message.stackedCount.toString()
-          );
-          logger(
-            "takeAstroPhoto stackedCount:",
-            message.stackedCount.toString(),
-            connectionCtx
-          );
-
-          // update Camera to rawPreviewURL once first stacked image is done
-          if (message.stackedCount > 0 && !isStackedCountStart) {
-            setIsStackedCountStart(true);
-            logger(
-              "takeAstroPhoto Camera to rawPreviewURL:",
-              message,
-              connectionCtx
-            );
-            let payload = updateRawPreviewSource();
-            logger("start swithRawPreview...", payload, connectionCtx);
-            socketSend(socket, payload);
-            setUseRawPreviewURL(true);
+        } 
+        else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING) {
+          if (result_data.data.state == Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED) {
+            logger("Stop Capture", {}, connectionCtx);
+            return false;
           }
-        } else if (message.interface === setRAWPreviewCmd) {
+        }
+        else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING) {
+          if (result_data.data.updateCountType == 0 || result_data.data.updateCountType == 2) {
+            connectionCtx.setImagingSession((prev) => {
+              prev["imagesTaken"] = result_data.data.currentCount;
+              return { ...prev };
+            });
+            saveImagingSessionDb("imagesTaken", result_data.data.currentCount.toString());
+            logger("Photos count : ", result_data.data.currentCount, connectionCtx);
+
+            if (timerSession) testTimer = timerSession.toString();
+            logger("takeAstroPhoto currentCount ST:", testTimer, connectionCtx);
+
+            // update UI once imaging session is done imaging
+            if (result_data.data.currentCount === connectionCtx.astroSettings.count) {
+              logger(
+                "ImagingSession befor clearInterval:",
+                testTimer,
+                connectionCtx
+              );
+              //Call endImagingSession
+              endImagingSession();
+            }
+          }
+          if (result_data.data.updateCountType == 1 || result_data.data.updateCountType == 2) {
+            connectionCtx.setImagingSession((prev) => {
+              prev["imagesStacked"] = result_data.data.stackedCount;
+              return { ...prev };
+            });
+            saveImagingSessionDb(
+              "imagesStacked",
+              result_data.data.stackedCount.toString()
+            );
+            logger("Photos stacked : ", result_data.data.stackedCount, connectionCtx);
+            // update Camera to rawPreviewURL once first stacked image is done
+            if (result_data.data.stackedCount > 0 && !isStackedCountStart) {
+              setIsStackedCountStart(true);
+              //let payload = updateRawPreviewSource();
+              //logger("start swithRawPreview...", payload, connectionCtx);
+              //socketSend(socket, payload);
+              //setUseRawPreviewURL(true);
+            }
+          }
+/*        } else if (message.interface === setRAWPreviewCmd) {
           logger(
             "setRAWPreviewCmd Camera to rawPreviewURL:",
             message,
@@ -266,19 +236,28 @@ export default function ImagingMenu(props: PropType) {
           let testPreviewURL = rawPreviewURL(IPDwarf);
           if (testPreviewURL)
             console.log("start UseRawPreviewURL : " + testPreviewURL);
-        } else {
-          logger("", message, connectionCtx);
+*/        } else {
+          return false;
         }
-      });
+        return true;
+      };
 
-      socket.addEventListener("error", (err) => {
-        logger("takeAstroPhoto error:", err, connectionCtx);
-      });
+      // Create WebSocketHandler
+      const webSocketHandler = new WebSocketHandler(connectionCtx);
 
-      socket.addEventListener("close", (err) => {
-        logger("takeAstroPhoto close:", err, connectionCtx);
-        if (isRecording) endImagingSession();
-      });
+      // Send Command : messageAstroStartCaptureRawLiveStacking
+      let WS_Packet = messageAstroStartCaptureRawLiveStacking();
+      let txtInfoCommand = "takeAstroPhoto";
+
+      webSocketHandler.prepare(
+        WS_Packet,
+        customMessageHandler,
+        txtInfoCommand,
+        undefined
+      );
+
+      webSocketHandler.run();
+
     }
   }
 
@@ -287,64 +266,71 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
-    //socket connects to Dwarf
-    if (connectionCtx.socketIPDwarf) {
-      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-        connectionCtx.socketIPDwarf.close();
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    connectionCtx.setSocketIPDwarf(socket);
-
-    socket.addEventListener("open", () => {
-      let payload = stopAstroPhoto();
-      logger("begin stopAstroPhoto...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === stopAstroPhotoCmd) {
-        logger("stopAstroPhoto", message, connectionCtx);
+    const customMessageHandler = (
+      result_data,
+      txtInfoCommand,
+      callback,
+      webSocketHandlerInstance
+    ) => {
+      // Use webSocketHandlerInstance to access logic_data
+      webSocketHandlerInstance.logic_data = false;
+      // CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING -> Stop Capture
+        // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
+        // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
+      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING) {
+        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
+          logger("Stop Capture error", {}, connectionCtx);
+        } else {
+          logger("Stop Capture ok", {}, connectionCtx);
+        }
         endImagingSession();
-
-        // update image count
-      } else if (message.interface === numberRawImagesCmd) {
-        // BUG: dwarf does not return message for every image taken if Mobile App is On
-        logger("takeAstroPhoto count:", message, connectionCtx);
-        connectionCtx.setImagingSession((prev) => {
-          prev["imagesTaken"] = message.currentCount;
-          return { ...prev };
-        });
-        saveImagingSessionDb("imagesTaken", message.currentCount.toString());
-        logger(
-          "takeAstroPhoto currentCount:",
-          message.currentCount.toString(),
-          connectionCtx
-        );
-      } else if (message.interface === numberSuperImposedImages) {
-        logger("takeAstroPhoto Stacked count:", message, connectionCtx);
-        connectionCtx.setImagingSession((prev) => {
-          prev["imagesStacked"] = message.stackedCount;
-          return { ...prev };
-        });
-        saveImagingSessionDb("imagesStacked", message.stackedCount.toString());
-        logger(
-          "takeAstroPhoto stackedCount:",
-          message.currentCount.toString(),
-          connectionCtx
-        );
-      } else {
-        logger("", message, connectionCtx);
+        return true;
+      } 
+      else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING) {
+        if (result_data.data.state == Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED) {
+          logger("Stop Capture", {}, connectionCtx);
+          return false;
+        }
       }
-    });
+      else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING) {
+        if (result_data.data.updateCountType == 0 || result_data.data.updateCountType == 2) {
+          connectionCtx.setImagingSession((prev) => {
+            prev["imagesTaken"] = result_data.data.currentCount;
+            return { ...prev };
+          });
+          saveImagingSessionDb("imagesTaken", result_data.data.currentCount.toString());
+        }
+        if (result_data.data.updateCountType == 1 || result_data.data.updateCountType == 2) {
+          connectionCtx.setImagingSession((prev) => {
+            prev["imagesStacked"] = result_data.data.stackedCount;
+            return { ...prev };
+          });
+          saveImagingSessionDb(
+            "imagesStacked",
+            result_data.data.stackedCount.toString()
+          );
+        }
+        return true;
+      } else {
+        return false;
+      }
+    };
 
-    socket.addEventListener("error", (error) => {
-      logger("stopAstroPhoto error:", error, connectionCtx);
-    });
+      // Create WebSocketHandler
+      const webSocketHandler = new WebSocketHandler(connectionCtx);
 
-    socket.addEventListener("close", (error) => {
-      logger("stopAstroPhoto close:", error, connectionCtx);
-    });
+      // Send Command : messageAstroStopCaptureRawLiveStacking
+      let WS_Packet = messageAstroStopCaptureRawLiveStacking();
+      let txtInfoCommand = "stopAstroPhoto";
+
+      webSocketHandler.prepare(
+        WS_Packet,
+        customMessageHandler,
+        txtInfoCommand,
+        undefined
+      );
+
+      webSocketHandler.run();
   }
 
   function endImagingSession() {
@@ -373,7 +359,7 @@ export default function ImagingMenu(props: PropType) {
     setUseRawPreviewURL(false);
 
     setTimeout(() => {
-      turnOnCameraFn(telephotoCamera, connectionCtx);
+      turnOnTeleCameraFn(connectionCtx);
     }, 1000);
     setTimeout(() => {
       updateTelescopeISPSetting(
@@ -412,6 +398,7 @@ export default function ImagingMenu(props: PropType) {
     }, 3500);
   }
 
+/*
   function focusAction(
     motor: number,
     mode: number,
@@ -424,7 +411,6 @@ export default function ImagingMenu(props: PropType) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
-
     //socket connects to Dwarf
     if (connectionCtx.socketIPDwarf) {
       if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
@@ -464,7 +450,9 @@ export default function ImagingMenu(props: PropType) {
       logger("focusAction close:", error, connectionCtx);
     });
   }
+*/
 
+/*
   function focusActionStop(motor: number, decelStep: number) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
@@ -501,28 +489,30 @@ export default function ImagingMenu(props: PropType) {
       logger("focusActionStop close:", error, connectionCtx);
     });
   }
+*/
 
   function focusMinus() {
-    focusAction(3, 2, 1, 305, 1, 1, 0);
+    //focusAction(3, 2, 1, 305, 1, 1, 0);
   }
 
   function focusMinusLong() {
-    focusAction(3, 1, 8, 400, 0, 1, 0);
+    //focusAction(3, 1, 8, 400, 0, 1, 0);
   }
 
   function focusLongStop() {
-    focusActionStop(3, 0);
+    //focusActionStop(3, 0);
   }
 
   function focusPlus() {
-    focusAction(3, 2, 1, 305, 0, 1, 0);
+    //focusAction(3, 2, 1, 305, 0, 1, 0);
   }
 
   function focusPlusLong() {
-    focusAction(3, 1, 8, 400, 1, 1, 0);
+    //focusAction(3, 1, 8, 400, 1, 1, 0);
   }
 
   function focusAutoAstro() {
+    /*
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
@@ -556,7 +546,8 @@ export default function ImagingMenu(props: PropType) {
 
     socket.addEventListener("close", (error) => {
       logger("astroAutofocus close:", error, connectionCtx);
-    });
+    }); 
+    */
   }
 
   function renderRecordButton() {
