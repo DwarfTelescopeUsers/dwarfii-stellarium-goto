@@ -10,7 +10,10 @@ import {
   savePositionHandler,
   gotoPositionHandler,
 } from "@/lib/goto_utils";
-import { turnOnTeleCameraFn, updateTelescopeISPSetting } from "@/lib/dwarf_utils";
+import {
+  turnOnTeleCameraFn,
+  updateTelescopeISPSetting,
+} from "@/lib/dwarf_utils";
 import eventBus from "@/lib/event_bus";
 import { AstroObject } from "@/types";
 import GotoModal from "../astroObjects/GotoModal";
@@ -101,24 +104,32 @@ export default function CalibrationDwarf() {
 
   function initCamera() {
     {
-    setTimeout(() => {
-      turnOnTeleCameraFn(connectionCtx);
-    }, 1000);
-    setTimeout(() => {
-      updateTelescopeISPSetting("gainMode", 1, connectionCtx);
-    }, 1500);
-    setTimeout(() => {
-      updateTelescopeISPSetting("exposureMode", 1, connectionCtx);
-    }, 2000);
-    setTimeout(() => {
-      updateTelescopeISPSetting("gain", getGainIndexByName("80"), connectionCtx);
-    }, 2500);
-    setTimeout(() => {
-      updateTelescopeISPSetting("exposure", getExposureIndexByName("1"), connectionCtx);
-    }, 3500);
-    setTimeout(() => {
-      updateTelescopeISPSetting("IR", 0, connectionCtx);
-    }, 4500);
+      setTimeout(() => {
+        turnOnTeleCameraFn(connectionCtx);
+      }, 1000);
+      setTimeout(() => {
+        updateTelescopeISPSetting("gainMode", 1, connectionCtx);
+      }, 1500);
+      setTimeout(() => {
+        updateTelescopeISPSetting("exposureMode", 1, connectionCtx);
+      }, 2000);
+      setTimeout(() => {
+        updateTelescopeISPSetting(
+          "gain",
+          getGainIndexByName("80"),
+          connectionCtx
+        );
+      }, 2500);
+      setTimeout(() => {
+        updateTelescopeISPSetting(
+          "exposure",
+          getExposureIndexByName("1"),
+          connectionCtx
+        );
+      }, 3500);
+      setTimeout(() => {
+        updateTelescopeISPSetting("IR", 0, connectionCtx);
+      }, 4500);
     }
   }
 

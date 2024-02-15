@@ -27,7 +27,9 @@ export default function StatusBar() {
       <span className="me-3">Dwarf II: {connection}</span>
       <span className="me-3">Stellarium: {connectionStellarium}</span>
       {connectionCtx.astroSettings.gain !== undefined && (
-        <span className="me-3">Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}</span>
+        <span className="me-3">
+          Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
+        </span>
       )}
       {connectionCtx.astroSettings.exposure !== undefined && (
         <span className="me-3">

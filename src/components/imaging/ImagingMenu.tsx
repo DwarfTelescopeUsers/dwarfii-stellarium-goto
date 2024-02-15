@@ -11,8 +11,8 @@ import {
   Dwarfii_Api,
   messageAstroStartCaptureRawLiveStacking,
   messageAstroStopCaptureRawLiveStacking,
-//  rawPreviewURL,
-//  DwarfIP,
+  //  rawPreviewURL,
+  //  DwarfIP,
 } from "dwarfii_api";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
@@ -170,34 +170,57 @@ export default function ImagingMenu(props: PropType) {
         // CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING -> Start Capture
         // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
         // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
-        if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING) {
+        if (
+          result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING
+        ) {
           if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
             logger("Start Capture error", {}, connectionCtx);
             return false;
           } else {
             logger("Start Capture ok", {}, connectionCtx);
           }
-        } 
-        else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING) {
-          if (result_data.data.state == Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED) {
+        } else if (
+          result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING
+        ) {
+          if (
+            result_data.data.state ==
+            Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED
+          ) {
             logger("Stop Capture", {}, connectionCtx);
             return false;
           }
-        }
-        else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING) {
-          if (result_data.data.updateCountType == 0 || result_data.data.updateCountType == 2) {
+        } else if (
+          result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING
+        ) {
+          if (
+            result_data.data.updateCountType == 0 ||
+            result_data.data.updateCountType == 2
+          ) {
             connectionCtx.setImagingSession((prev) => {
               prev["imagesTaken"] = result_data.data.currentCount;
               return { ...prev };
             });
-            saveImagingSessionDb("imagesTaken", result_data.data.currentCount.toString());
-            logger("Photos count : ", result_data.data.currentCount, connectionCtx);
+            saveImagingSessionDb(
+              "imagesTaken",
+              result_data.data.currentCount.toString()
+            );
+            logger(
+              "Photos count : ",
+              result_data.data.currentCount,
+              connectionCtx
+            );
 
             if (timerSession) testTimer = timerSession.toString();
             logger("takeAstroPhoto currentCount ST:", testTimer, connectionCtx);
 
             // update UI once imaging session is done imaging
-            if (result_data.data.currentCount === connectionCtx.astroSettings.count) {
+            if (
+              result_data.data.currentCount ===
+              connectionCtx.astroSettings.count
+            ) {
               logger(
                 "ImagingSession befor clearInterval:",
                 testTimer,
@@ -207,7 +230,10 @@ export default function ImagingMenu(props: PropType) {
               endImagingSession();
             }
           }
-          if (result_data.data.updateCountType == 1 || result_data.data.updateCountType == 2) {
+          if (
+            result_data.data.updateCountType == 1 ||
+            result_data.data.updateCountType == 2
+          ) {
             connectionCtx.setImagingSession((prev) => {
               prev["imagesStacked"] = result_data.data.stackedCount;
               return { ...prev };
@@ -216,7 +242,11 @@ export default function ImagingMenu(props: PropType) {
               "imagesStacked",
               result_data.data.stackedCount.toString()
             );
-            logger("Photos stacked : ", result_data.data.stackedCount, connectionCtx);
+            logger(
+              "Photos stacked : ",
+              result_data.data.stackedCount,
+              connectionCtx
+            );
             // update Camera to rawPreviewURL once first stacked image is done
             if (result_data.data.stackedCount > 0 && !isStackedCountStart) {
               setIsStackedCountStart(true);
@@ -226,7 +256,7 @@ export default function ImagingMenu(props: PropType) {
               //setUseRawPreviewURL(true);
             }
           }
-/*        } else if (message.interface === setRAWPreviewCmd) {
+          /*        } else if (message.interface === setRAWPreviewCmd) {
           logger(
             "setRAWPreviewCmd Camera to rawPreviewURL:",
             message,
@@ -236,7 +266,8 @@ export default function ImagingMenu(props: PropType) {
           let testPreviewURL = rawPreviewURL(IPDwarf);
           if (testPreviewURL)
             console.log("start UseRawPreviewURL : " + testPreviewURL);
-*/        } else {
+*/
+        } else {
           return false;
         }
         return true;
@@ -257,7 +288,6 @@ export default function ImagingMenu(props: PropType) {
       );
 
       webSocketHandler.run();
-
     }
   }
 
@@ -275,9 +305,12 @@ export default function ImagingMenu(props: PropType) {
       // Use webSocketHandlerInstance to access logic_data
       webSocketHandlerInstance.logic_data = false;
       // CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING -> Stop Capture
-        // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
-        // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
-      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING) {
+      // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
+      // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
+      if (
+        result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING
+      ) {
         if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
           logger("Stop Capture error", {}, connectionCtx);
         } else {
@@ -285,22 +318,38 @@ export default function ImagingMenu(props: PropType) {
         }
         endImagingSession();
         return true;
-      } 
-      else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING) {
-        if (result_data.data.state == Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED) {
+      } else if (
+        result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING
+      ) {
+        if (
+          result_data.data.state ==
+          Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED
+        ) {
           logger("Stop Capture", {}, connectionCtx);
           return false;
         }
-      }
-      else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING) {
-        if (result_data.data.updateCountType == 0 || result_data.data.updateCountType == 2) {
+      } else if (
+        result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING
+      ) {
+        if (
+          result_data.data.updateCountType == 0 ||
+          result_data.data.updateCountType == 2
+        ) {
           connectionCtx.setImagingSession((prev) => {
             prev["imagesTaken"] = result_data.data.currentCount;
             return { ...prev };
           });
-          saveImagingSessionDb("imagesTaken", result_data.data.currentCount.toString());
+          saveImagingSessionDb(
+            "imagesTaken",
+            result_data.data.currentCount.toString()
+          );
         }
-        if (result_data.data.updateCountType == 1 || result_data.data.updateCountType == 2) {
+        if (
+          result_data.data.updateCountType == 1 ||
+          result_data.data.updateCountType == 2
+        ) {
           connectionCtx.setImagingSession((prev) => {
             prev["imagesStacked"] = result_data.data.stackedCount;
             return { ...prev };
@@ -316,21 +365,21 @@ export default function ImagingMenu(props: PropType) {
       }
     };
 
-      // Create WebSocketHandler
-      const webSocketHandler = new WebSocketHandler(connectionCtx);
+    // Create WebSocketHandler
+    const webSocketHandler = new WebSocketHandler(connectionCtx);
 
-      // Send Command : messageAstroStopCaptureRawLiveStacking
-      let WS_Packet = messageAstroStopCaptureRawLiveStacking();
-      let txtInfoCommand = "stopAstroPhoto";
+    // Send Command : messageAstroStopCaptureRawLiveStacking
+    let WS_Packet = messageAstroStopCaptureRawLiveStacking();
+    let txtInfoCommand = "stopAstroPhoto";
 
-      webSocketHandler.prepare(
-        WS_Packet,
-        customMessageHandler,
-        txtInfoCommand,
-        undefined
-      );
+    webSocketHandler.prepare(
+      WS_Packet,
+      customMessageHandler,
+      txtInfoCommand,
+      undefined
+    );
 
-      webSocketHandler.run();
+    webSocketHandler.run();
   }
 
   function endImagingSession() {
@@ -398,7 +447,7 @@ export default function ImagingMenu(props: PropType) {
     }, 3500);
   }
 
-/*
+  /*
   function focusAction(
     motor: number,
     mode: number,
@@ -452,7 +501,7 @@ export default function ImagingMenu(props: PropType) {
   }
 */
 
-/*
+  /*
   function focusActionStop(motor: number, decelStep: number) {
     if (connectionCtx.IPDwarf === undefined) {
       return;

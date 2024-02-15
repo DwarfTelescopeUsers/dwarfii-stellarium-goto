@@ -14,7 +14,7 @@ import {
   messageCameraTeleGetGainMode,
   messageCameraTeleGetGain,
   messageCameraTeleGetIRCut,
-//  messageCameraTeleSetAllParams
+  //  messageCameraTeleSetAllParams
 } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
@@ -65,9 +65,8 @@ export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
     undefined
   );
   webSocketHandler.run();
-  
-  await sleep(500);
 
+  await sleep(500);
 }
 
 export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
@@ -106,9 +105,8 @@ export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
     undefined
   );
   webSocketHandler.run();
-  
-  await sleep(500);
 
+  await sleep(500);
 }
 
 export async function updateTelescopeISPSetting(
@@ -137,7 +135,7 @@ export async function updateTelescopeISPSetting(
   } else if (type === "gain") {
     cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_GAIN;
     WS_Packet = messageCameraTeleSetGain(value);
-    cmd2= Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_GAIN;
+    cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_GAIN;
     WS_Packet2 = messageCameraTeleGetGain();
   } else if (type === "gainMode") {
     cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_GAIN_MODE;
@@ -163,8 +161,7 @@ export async function updateTelescopeISPSetting(
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         return true;
       }
-    }
-    else if (result_data.cmd == cmd2) {
+    } else if (result_data.cmd == cmd2) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         return true;
       }
@@ -197,8 +194,8 @@ export async function updateTelescopeISPSetting(
   );
 
   await sleep(100);
-  
-/*
+
+  /*
   cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_ALL_PARAMS;
   WS_Packet = messageCameraTeleSetAllParams(1,99, 1, 18, 1, 1, 2, 3, 120, 100, 90, 80, 60, 50 );
 

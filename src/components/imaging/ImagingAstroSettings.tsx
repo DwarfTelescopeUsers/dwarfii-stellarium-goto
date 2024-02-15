@@ -10,7 +10,11 @@ import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
 import { calculateImagingTime } from "@/lib/date_utils";
 import { updateTelescopeISPSetting } from "@/lib/dwarf_utils";
-import { allowedExposures, allowedGains, getExposureValueByIndex} from "@/lib/data_utils";
+import {
+  allowedExposures,
+  allowedGains,
+  getExposureValueByIndex,
+} from "@/lib/data_utils";
 
 type PropTypes = {
   setValidSettings: any;
@@ -204,20 +208,20 @@ export default function TakeAstroPhoto(props: PropTypes) {
     setShowSettingsInfo(!showSettingsInfo);
   }
 
-  const allowedExposuresOptions = allowedExposures.values.map(({ index, name }) => (
-          <option key={index} value={index}>
-            {name}
-          </option>
-        ))
-
+  const allowedExposuresOptions = allowedExposures.values.map(
+    ({ index, name }) => (
+      <option key={index} value={index}>
+        {name}
+      </option>
+    )
+  );
 
   const allowedGainsOptions = allowedGains.values.map(({ index, name }) => (
-          <option key={index} value={index}>
-            {name}
-          </option>
-        ))
-  
-  
+    <option key={index} value={index}>
+      {name}
+    </option>
+  ));
+
   if (showSettingsInfo) {
     return <AstroSettingsInfo onClick={toggleShowSettingsInfo} />;
   }
