@@ -6,11 +6,15 @@ import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
 export default function StatusBar() {
   let connectionCtx = useContext(ConnectionContext);
 
-  let connection = connectionCtx.connectionStatus ? (
-    <i className="bi bi-check-circle" style={{ color: "green" }}></i>
-  ) : (
-    <i className="bi bi-x-circle" style={{ color: "red" }}></i>
-  );
+  let connection =
+    connectionCtx.connectionStatus && !connectionCtx.connectionStatusSlave ? (
+      <i className="bi bi-check-circle" style={{ color: "green" }}></i>
+    ) : connectionCtx.connectionStatus &&
+      connectionCtx.connectionStatusSlave ? (
+      <i className="bi bi-check-circle" style={{ color: "orange" }}></i>
+    ) : (
+      <i className="bi bi-x-circle" style={{ color: "red" }}></i>
+    );
 
   let connectionStellarium = connectionCtx.connectionStatusStellarium ? (
     <i className="bi bi-check-circle" style={{ color: "green" }}></i>
@@ -48,6 +52,11 @@ export default function StatusBar() {
       )}
       {connectionCtx.astroSettings.count !== undefined && (
         <span className="me-3">Count: {connectionCtx.astroSettings.count}</span>
+      )}
+      {connectionCtx.astroSettings.quality !== undefined && (
+        <span className="me-3">
+          Quality: {connectionCtx.astroSettings.quality}
+        </span>
       )}
       {Object.keys(connectionCtx.imagingSession).length > 0 && (
         <>

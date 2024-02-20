@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { AstroObject, ConnectionContextType } from "@/types";
 import { focusPath, focusPosPath } from "@/lib/stellarium_utils";
-import { WebSocketHandler } from "@/lib/websocket_class";
 
 import {
   Dwarfii_Api,
@@ -15,6 +14,8 @@ import {
   messageCameraWideCloseCamera,
   messageRgbPowerReboot,
   messageRgbPowerDown,
+  //  messageCameraTeleGetAllFeatureParams,
+  WebSocketHandler,
 } from "dwarfii_api";
 import eventBus from "@/lib/event_bus";
 import { logger } from "@/lib/logger";
@@ -60,58 +61,34 @@ export async function calibrationHandler(
   if (connectionCtx.longitude) lon = -connectionCtx.longitude;
   if (lat === undefined) return;
   if (lon === undefined) return;
+  let calibration_status = false;
 
-  const customMessageHandler1 = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME) {
       if (result_data.data.code == 0) {
         if (callback) {
-          callback(txtInfoCommand + " ok");
+          callback(txt_info + " ok");
         }
       } else {
         if (callback) {
-          callback(txtInfoCommand + " error");
+          callback(txt_info + " error");
         }
       }
-      return true;
-    } else return false;
-  };
-  const customMessageHandler2 = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
-    if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME_ZONE) {
+    } else if (
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME_ZONE
+    ) {
       if (result_data.data.code == 0) {
         if (callback) {
-          callback(txtInfoCommand + " ok");
+          callback(txt_info + " ok");
         }
       } else {
         if (callback) {
-          callback(txtInfoCommand + " error");
+          callback(txt_info + " error");
         }
       }
-      return true;
-    } else return false;
-  };
-
-  const customMessageHandler3 = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CALIBRATION) {
+    } else if (
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CALIBRATION
+    ) {
       if (
         result_data.data.code ==
         Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_PLATE_SOLVING_FAILED
@@ -126,14 +103,26 @@ export async function calibrationHandler(
       }
       if (
         result_data.data.code ==
+        Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_FUNCTION_BUSY
+      ) {
+        setErrors("");
+        setSuccess("");
+        setErrors("Error function Busy, verify need Go Live");
+        if (callback) {
+          callback("Error function Busy, verify need Go Live");
+        }
+        console.error("Error CALIBRATION CODE_ASTRO_FUNCTION_BUSY");
+      }
+      if (
+        result_data.data.code ==
         Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_CALIBRATION_FAILED
       ) {
         setErrors("");
         setSuccess("");
-        webSocketHandlerInstance.logic_data = true;
-        setErrors(txtInfoCommand + " Failure");
+        calibration_status = true;
+        setErrors(txt_info + " Failure");
         if (callback) {
-          callback(txtInfoCommand + " Failure");
+          callback(txt_info + " Failure");
         }
         console.error("Error CALIBRATION CODE_ASTRO_CALIBRATION_FAILED");
       }
@@ -142,28 +131,28 @@ export async function calibrationHandler(
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_CALIBRATION
     ) {
       if (
-        webSocketHandlerInstance.logic_data == false &&
+        calibration_status == false &&
         result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
       ) {
         setErrors("");
-        setSuccess(txtInfoCommand + " Done");
+        setSuccess(txt_info + " Done");
         if (callback) {
-          callback(txtInfoCommand + " Successfully");
+          callback(txt_info + " Successfully");
         }
       } else if (
-        webSocketHandlerInstance.logic_data == true &&
+        calibration_status == true &&
         result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
       ) {
         setErrors("");
         setSuccess("");
-        setErrors(txtInfoCommand + " Failure");
+        setErrors(txt_info + " Failure");
         if (callback) {
-          callback(txtInfoCommand + " Failure");
+          callback(txt_info + " Failure");
         }
       } else {
         setErrors("");
         setSuccess(
-          txtInfoCommand +
+          txt_info +
             " Phase #" +
             result_data.data.plateSolvingTimes +
             " " +
@@ -171,7 +160,7 @@ export async function calibrationHandler(
         );
         if (callback) {
           callback(
-            txtInfoCommand +
+            txt_info +
               " Phase #" +
               result_data.data.plateSolvingTimes +
               " " +
@@ -180,13 +169,19 @@ export async function calibrationHandler(
         }
       }
     } else {
-      return false;
+      logger("", result_data, connectionCtx);
+      return;
     }
-    return true;
+    if (callback) {
+      callback(result_data);
+    }
+    logger(txt_info, result_data, connectionCtx);
   };
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command : messageSystemSetTime
   let WS_Packet1 = messageSystemSetTime();
@@ -194,14 +189,16 @@ export async function calibrationHandler(
 
   webSocketHandler.prepare(
     WS_Packet1,
-    customMessageHandler1,
     txtInfoCommand1,
-    callback
+    [Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME],
+    customMessageHandler
   );
 
-  webSocketHandler.run();
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
 
-  await sleep(2000);
+  await sleep(500);
 
   // Send Command : messageSystemSetTimezone
   let WS_Packet2 = messageSystemSetTimezone(timezone);
@@ -209,21 +206,24 @@ export async function calibrationHandler(
 
   webSocketHandler.prepare(
     WS_Packet2,
-    customMessageHandler2,
     txtInfoCommand2,
-    callback
+    [Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME_ZONE],
+    customMessageHandler
   );
 
-  await sleep(2000);
+  await sleep(500);
 
   // Send Command : messageAstroStartCalibration
   let WS_Packet3 = messageAstroStartCalibration();
   let txtInfoCommand3 = "Calibration";
   webSocketHandler.prepare(
     WS_Packet3,
-    customMessageHandler3,
     txtInfoCommand3,
-    callback
+    [
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CALIBRATION,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_CALIBRATION,
+    ],
+    customMessageHandler
   );
 }
 
@@ -245,6 +245,7 @@ export async function startGotoHandler(
   setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
+  let targetName = objectName;
   let lat = 0;
   if (connectionCtx.latitude) lat = connectionCtx.latitude;
   /////////////////////////////////////////
@@ -254,14 +255,9 @@ export async function startGotoHandler(
   if (connectionCtx.longitude) lon = -connectionCtx.longitude;
   if (lat === undefined) return;
   if (lon === undefined) return;
+  let goto_status = false;
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
+  const customMessageHandler = (txt_info, result_data) => {
     if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_DSO ||
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM
@@ -271,16 +267,18 @@ export async function startGotoHandler(
         setGotoErrors("Error GOTO : " + result_data.data.errorTxt);
         if (
           result_data.data.code ==
-          Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_GOTO_FAILED
+            Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_GOTO_FAILED ||
+          result_data.data.code ==
+            Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_FUNCTION_BUSY
         )
-          webSocketHandlerInstance.logic_data = true;
+          goto_status = true;
 
         if (callback) {
           callback("Error GoTo");
         }
       }
     } else if (
-      !webSocketHandlerInstance.logic_data &&
+      !goto_status &&
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO
     ) {
       setGotoSuccess(result_data.data.stateText);
@@ -289,12 +287,12 @@ export async function startGotoHandler(
         callback("Info GoTo");
       }
     } else if (
-      !webSocketHandlerInstance.logic_data &&
+      !goto_status &&
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_TRACKING
     ) {
       if (
         result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_RUNNING &&
-        result_data.data.target_name == objectName
+        result_data.data.target_name == targetName
       ) {
         setGotoSuccess("Start Tracking");
         setGotoErrors("");
@@ -312,9 +310,13 @@ export async function startGotoHandler(
         }
       }
     } else {
-      return false;
+      logger("", result_data, connectionCtx);
+      return;
     }
-    return true;
+    if (callback) {
+      callback(result_data);
+    }
+    logger(txt_info, result_data, connectionCtx);
   };
 
   let RA_number = RA ? convertHMSToDecimalHours(RA!, 7) : 0;
@@ -343,16 +345,15 @@ export async function startGotoHandler(
   let WS_Packet;
   if (planet) {
     // Send Command : cmdAstroStartGotoDso
+    targetName = Dwarfii_Api.SolarSystemTarget[planet];
     if (Dwarfii_Api.SolarSystemTarget[planet]) {
-      console.log("WS_Packet:1"),
-        (WS_Packet = messageAstroStartGotoSolarSystem(
-          planet,
-          lon,
-          lat,
-          Dwarfii_Api.SolarSystemTarget[planet]
-        ));
+      WS_Packet = messageAstroStartGotoSolarSystem(
+        planet,
+        lon,
+        lat,
+        Dwarfii_Api.SolarSystemTarget[planet]
+      );
     } else if (objectName) {
-      console.log("WS_Packet:2");
       WS_Packet = messageAstroStartGotoSolarSystem(
         planet,
         lon,
@@ -361,7 +362,6 @@ export async function startGotoHandler(
       );
     } else {
       WS_Packet = messageAstroStartGotoSolarSystem(planet, lon, lat, "-");
-      console.log("WS_Packet:2");
     }
   } else if (objectName) {
     // Send Command : messageAstroStartGotoDso
@@ -371,20 +371,30 @@ export async function startGotoHandler(
       objectName
     );
   }
+  connectionCtx.astroSettings.target = targetName!;
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command
-  let txtInfoCommand = "Start goto";
+  let txtInfoCommand = "Start Goto";
 
   webSocketHandler.prepare(
     WS_Packet,
-    customMessageHandler,
     txtInfoCommand,
-    callback
+    [
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_DSO,
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_TRACKING,
+    ],
+    customMessageHandler
   );
-  webSocketHandler.run();
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
 }
 
 export function savePositionHandler(
@@ -496,14 +506,7 @@ export async function stopGotoHandler(
   setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_GOTO) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         setGotoSuccess("Stopping Goto");
@@ -519,25 +522,42 @@ export async function stopGotoHandler(
         callback(result_data);
       }
     } else {
-      return false;
+      logger("", result_data, connectionCtx);
+      return;
     }
-    return true;
+    if (callback) {
+      callback(result_data);
+    }
+    logger(txt_info, result_data, connectionCtx);
   };
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  if (connectionCtx.socketIPDwarf) {
+    console.log("OK KEEP SOCKET");
+  } else {
+    console.log("NO NEW SOCKET");
+  }
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command : messageAstroStopGoto
   let WS_Packet = messageAstroStopGoto();
-  let txtInfoCommand = "stopGoto";
+  //  let WS_Packet = messageCameraTeleGetAllFeatureParams();
+  let txtInfoCommand = "Stop Goto";
 
   webSocketHandler.prepare(
     WS_Packet,
-    customMessageHandler,
     txtInfoCommand,
-    callback
+    [
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_GOTO,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO,
+    ],
+    customMessageHandler
   );
-  webSocketHandler.run();
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
 }
 
 export async function shutDownHandler(
@@ -552,14 +572,7 @@ export async function shutDownHandler(
   setGotoErrors(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN ||
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_REBOOT ||
@@ -567,9 +580,12 @@ export async function shutDownHandler(
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA ||
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF
     ) {
-      return true;
+      if (callback) {
+        callback(result_data);
+      }
+      logger(txt_info, result_data, connectionCtx);
     } else {
-      return false;
+      logger("", result_data, connectionCtx);
     }
   };
 
@@ -585,36 +601,45 @@ export async function shutDownHandler(
     txtInfoCommand = "Reboot";
   } else WS_Packet1 = messageRgbPowerDown();
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
-
-  webSocketHandler.prepare(
-    WS_Packet1,
-    customMessageHandler,
-    txtInfoCommand,
-    callback
-  );
-  webSocketHandler.run();
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   if (reboot) {
     await sleep(10);
 
     webSocketHandler.prepare(
-      WS_Packet2,
-      customMessageHandler,
+      [WS_Packet1, WS_Packet2, WS_Packet3],
       txtInfoCommand,
-      callback
+      [
+        Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_REBOOT,
+        Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN,
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF,
+      ],
+      customMessageHandler
     );
-
-    await sleep(20000);
-
+  } else {
     webSocketHandler.prepare(
-      WS_Packet3,
-      customMessageHandler,
+      WS_Packet1,
       txtInfoCommand,
-      callback
+      [
+        Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN,
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF,
+      ],
+      customMessageHandler
     );
   }
+
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
+
+  await sleep(20000);
 }
 
 export function stellariumErrorHandler(

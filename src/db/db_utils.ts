@@ -178,6 +178,7 @@ export function fetchAstroSettingsDb() {
       "fileFormat",
       "gain",
       "gainMode",
+      "qualityPreview",
     ].forEach((field) => {
       if (obj[field] !== undefined) {
         if (/^\d+$/.test(obj[field])) {

@@ -3,6 +3,8 @@ import type { Dispatch, SetStateAction } from "react";
 export type ConnectionContextType = {
   connectionStatus: boolean | undefined;
   setConnectionStatus: Dispatch<SetStateAction<boolean | undefined>>;
+  connectionStatusSlave: boolean | undefined;
+  setConnectionStatusSlave: Dispatch<SetStateAction<boolean | undefined>>;
   initialConnectionTime: number | undefined;
   setInitialConnectionTime: Dispatch<SetStateAction<number | undefined>>;
 
@@ -10,8 +12,8 @@ export type ConnectionContextType = {
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPDwarf: string | undefined;
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
-  socketIPDwarf: WebSocket | undefined;
-  setSocketIPDwarf: Dispatch<SetStateAction<WebSocket | undefined>>;
+  socketIPDwarf: any | undefined;
+  setSocketIPDwarf: Dispatch<SetStateAction<any | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
@@ -210,6 +212,8 @@ export type AstroSettings = {
   binning?: number;
   fileFormat?: number;
   count?: number;
+  quality?: number;
+  target?: string;
 };
 
 export type ImagingSession = {

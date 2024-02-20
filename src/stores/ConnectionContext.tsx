@@ -20,11 +20,14 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [connectionStatus, setConnectionStatus] = useState<
     boolean | undefined
   >();
+  const [connectionStatusSlave, setConnectionStatusSlave] = useState<
+    boolean | undefined
+  >();
   const [initialConnectionTime, setInitialConnectionTime] = useState<
     number | undefined
   >();
   const [IPDwarf, setIPDwarf] = useState<string | undefined>();
-  const [socketIPDwarf, setSocketIPDwarf] = useState<WebSocket | undefined>();
+  const [socketIPDwarf, setSocketIPDwarf] = useState<any | undefined>();
 
   const [connectionStatusStellarium, setConnectionStatusStellarium] = useState<
     boolean | undefined
@@ -66,6 +69,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
   function deleteConnection() {
     setConnectionStatus(undefined);
+    setConnectionStatusSlave(undefined);
     setInitialConnectionTime(undefined);
 
     setConnectionStatusStellarium(undefined);
@@ -74,6 +78,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   let context = {
     connectionStatus,
     setConnectionStatus,
+    connectionStatusSlave,
+    setConnectionStatusSlave,
     initialConnectionTime,
     setInitialConnectionTime,
     IPDwarf,

@@ -152,7 +152,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("binning", e.target.value);
-    // TODO: save binning to telescope if DL adds interface to api
+    updateTelescopeISPSetting("binning", value, connectionCtx);
   }
 
   function changeFileFormatHandler(e: ChangeEvent<HTMLSelectElement>) {
@@ -167,7 +167,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("fileFormat", e.target.value);
-    // TODO: save file format to telescope if DL adds interface to api
+    updateTelescopeISPSetting("fileFormat", value, connectionCtx);
   }
 
   function changeCountHandler(e: ChangeEvent<HTMLInputElement>) {
@@ -182,6 +182,26 @@ export default function TakeAstroPhoto(props: PropTypes) {
       return { ...prev };
     });
     saveAstroSettingsDb("count", e.target.value);
+    updateTelescopeISPSetting("count", value, connectionCtx);
+  }
+
+  function changeQualityHandler(e: ChangeEvent<HTMLInputElement>) {
+    if (Number(e.target.value) < 1) {
+      defaultValueHandler("quality");
+      return;
+    }
+    if (Number(e.target.value) > 100) {
+      e.target.value = "100";
+      return;
+    }
+
+    let value = Number(e.target.value);
+    connectionCtx.setAstroSettings((prev) => {
+      prev["quality"] = value;
+      return { ...prev };
+    });
+    saveAstroSettingsDb("quality", e.target.value);
+    updateTelescopeISPSetting("quality", value, connectionCtx);
   }
 
   function setImagingTime(
@@ -238,6 +258,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
           count: connectionCtx.astroSettings.count || 0,
           rightAcension: connectionCtx.astroSettings.rightAcension,
           declination: connectionCtx.astroSettings.declination,
+          quality: connectionCtx.astroSettings.quality,
+          target: connectionCtx.astroSettings.target,
         }}
         validate={(values) => {
           let errors = validateAstroSettings(values);
@@ -278,7 +300,6 @@ export default function TakeAstroPhoto(props: PropTypes) {
                   value={values.gain}
                 >
                   <option value="default">Select</option>
-                  <option value="auto">Auto</option>
                   {allowedGainsOptions}
                 </select>
               </div>
@@ -344,8 +365,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
                   value={values.binning}
                 >
                   <option value="default">Select</option>
-                  <option value="0">1x1</option>
-                  <option value="1">2x2</option>
+                  <option value="0">4k</option>
+                  <option value="1">2k</option>
                 </select>
               </div>
             </div>
@@ -393,6 +414,31 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 />
               </div>
               {errors.count && <p className="text-danger">{errors.count}</p>}
+            </div>
+            <div className="row mb-md-2 mb-sm-1">
+              <div className="col-4">
+                <label htmlFor="quality" className="form-label">
+                  Quality
+                </label>
+              </div>
+              <div className="col-8">
+                <input
+                  type="number"
+                  className="form-control"
+                  name="quality"
+                  placeholder="0"
+                  min="0"
+                  onChange={(e) => {
+                    handleChange(e);
+                    changeQualityHandler(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.quality}
+                />
+              </div>
+              {errors.quality && (
+                <p className="text-danger">{errors.quality}</p>
+              )}
             </div>
             <div className="row mb-md-2 mb-sm-1">
               <div className="col-4">Total time</div>

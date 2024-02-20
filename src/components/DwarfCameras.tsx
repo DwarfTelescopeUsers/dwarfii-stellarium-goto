@@ -3,7 +3,6 @@
 import { useState, useContext, useEffect } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import Link from "next/link";
-import { WebSocketHandler } from "@/lib/websocket_class";
 
 import {
   Dwarfii_Api,
@@ -13,6 +12,7 @@ import {
   rawPreviewURL,
   messageCameraTeleGetAllParams,
   messageCameraWideGetAllParams,
+  WebSocketHandler,
 } from "dwarfii_api";
 
 import styles from "@/components/DwarfCameras.module.css";
@@ -35,8 +35,8 @@ export default function DwarfCameras(props: PropType) {
   let connectionCtx = useContext(ConnectionContext);
 
   useEffect(() => {
-    // NOTE: checkCameraStatus only works with telephotoCamera
     checkCameraStatus(telephotoCamera);
+    checkCameraStatus(wideangleCamera);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [telephotoCameraStatus, setTelephotoCameraStatus] = useState<
@@ -59,60 +59,95 @@ export default function DwarfCameras(props: PropType) {
   }
 
   function checkCameraStatus(camera: number) {
+    if (camera == telephotoCamera) {
+      setTelephotoCameraStatus("off");
+    } else {
+      setWideangleCameraStatus("off");
+    }
+    setTimeout(() => {
+      checkCameraStatusLater(camera, true);
+    }, 4000);
+  }
+
+  function checkCameraStatusLater(camera: number, test: boolean) {
+    if (test) {
+      setTelephotoCameraStatus("on");
+      setWideangleCameraStatus("on");
+      return;
+    }
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
-
-    const customMessageHandler = (
-      result_data,
-      txtInfoCommand,
-      callback,
-      webSocketHandlerInstance
-    ) => {
-      // Use webSocketHandlerInstance to access logic_data
-      webSocketHandlerInstance.logic_data = false;
-      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA) {
+    const customMessageHandlerTele = (txt_info, result_data) => {
+      if (
+        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_PARAMS
+      ) {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           logger("telephoto open", {}, connectionCtx);
           setTelephotoCameraStatus("on");
-          return true;
-        } else {
+        } else if (
+          result_data.data.code ==
+          Dwarfii_Api.DwarfErrorCode.CODE_CAMERA_TELE_CLOSED
+        ) {
           setTelephotoCameraStatus("off");
-          return true;
         }
-      } else if (
-        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA
+      } else {
+        logger("", result_data, connectionCtx);
+      }
+      logger(txt_info, result_data, connectionCtx);
+    };
+
+    const customMessageHandlerWide = (txt_info, result_data) => {
+      if (
+        result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_GET_ALL_PARAMS
       ) {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           logger("wide open", {}, connectionCtx);
           setWideangleCameraStatus("on");
-          return true;
-        } else {
+        } else if (
+          result_data.data.code ==
+          Dwarfii_Api.DwarfErrorCode.CODE_CAMERA_WIDE_CLOSED
+        ) {
           setWideangleCameraStatus("off");
-          return true;
         }
       } else {
-        return false;
+        logger("", result_data, connectionCtx);
       }
+      logger(txt_info, result_data, connectionCtx);
     };
 
-    // Create WebSocketHandler
-    const webSocketHandler = new WebSocketHandler(connectionCtx, true);
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(connectionCtx.IPDwarf);
 
-    // Send Command : messageCameraTeleGetAllParams
+    // Send Command : messageCameraTeleOpenCamera
     let WS_Packet;
-    if (camera == telephotoCamera) WS_Packet = messageCameraTeleGetAllParams();
-    else WS_Packet = messageCameraWideGetAllParams();
-    let txtInfoCommand = "cameraWorkingState";
+    let cmd;
+    let txtInfoCommand = "";
+    let customMessageHandler;
+    if (camera == telephotoCamera) {
+      WS_Packet = messageCameraTeleGetAllParams();
+      txtInfoCommand = "OpenTeleCamera";
+      cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_PARAMS;
+      customMessageHandler = customMessageHandlerTele;
+    } else {
+      WS_Packet = messageCameraWideGetAllParams();
+      txtInfoCommand = "OpenWideCamera";
+      cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_GET_ALL_PARAMS;
+      customMessageHandler = customMessageHandlerWide;
+    }
 
     webSocketHandler.prepare(
       WS_Packet,
-      customMessageHandler,
       txtInfoCommand,
-      undefined
+      [cmd],
+      customMessageHandler
     );
 
-    webSocketHandler.run();
+    if (!webSocketHandler.run()) {
+      console.error(" Can't launch Web Socket Run Action!");
+    }
   }
 
   function renderWideAngle() {

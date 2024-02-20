@@ -205,14 +205,6 @@ export const allowedExposures = {
       index: 156,
       name: "15",
     },
-    {
-      index: 160,
-      name: "20",
-    },
-    {
-      index: 165,
-      name: "30",
-    },
   ],
 };
 
@@ -286,6 +278,58 @@ export const allowedGains = {
     {
       index: 33,
       name: "110",
+    },
+    {
+      index: 36,
+      name: "120",
+    },
+    {
+      index: 39,
+      name: "130",
+    },
+    {
+      index: 42,
+      name: "140",
+    },
+    {
+      index: 45,
+      name: "150",
+    },
+    {
+      index: 48,
+      name: "160",
+    },
+    {
+      index: 51,
+      name: "170",
+    },
+    {
+      index: 54,
+      name: "180",
+    },
+    {
+      index: 57,
+      name: "190",
+    },
+    {
+      index: 60,
+      name: "200",
+    },
+    {
+      index: 63,
+      name: "210",
+    },
+    {
+      index: 66,
+      name: "220",
+    },
+    {
+      index: 69,
+      name: "230",
+    },
+    {
+      index: 72,
+      name: "240",
     },
   ],
 };

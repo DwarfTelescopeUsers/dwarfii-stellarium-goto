@@ -4,15 +4,19 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import Tooltip from "react-bootstrap/Tooltip";
 import Link from "next/link";
-import { WebSocketHandler } from "@/lib/websocket_class";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   Dwarfii_Api,
   messageAstroStartCaptureRawLiveStacking,
   messageAstroStopCaptureRawLiveStacking,
-  //  rawPreviewURL,
-  //  DwarfIP,
+  messageAstroGoLive,
+  messageFocusStartAstroAutoFocus,
+  messageFocusStopAstroAutoFocus,
+  messageFocusManualSingleStepFocus,
+  messageFocusStartManualContinuFocus,
+  messageFocusStopManualContinuFocus,
+  WebSocketHandler,
 } from "dwarfii_api";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
@@ -37,6 +41,7 @@ export default function ImagingMenu(props: PropType) {
   const { setShowWideangle, setUseRawPreviewURL } = props;
   let connectionCtx = useContext(ConnectionContext);
   const [showWideAngle, setShowWideAngle] = useState(false);
+  const [astroFocus, setAstroFocus] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [validSettings, setValidSettings] = useState(isValid());
   const [isRecording, setIsRecording] = useState(false);
@@ -159,14 +164,7 @@ export default function ImagingMenu(props: PropType) {
         return { ...prev };
       });
 
-      const customMessageHandler = (
-        result_data,
-        txtInfoCommand,
-        callback,
-        webSocketHandlerInstance
-      ) => {
-        // Use webSocketHandlerInstance to access logic_data
-        webSocketHandlerInstance.logic_data = false;
+      const customMessageHandler = (txt_info, result_data) => {
         // CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING -> Start Capture
         // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
         // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
@@ -174,8 +172,15 @@ export default function ImagingMenu(props: PropType) {
           result_data.cmd ==
           Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING
         ) {
-          if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
+          if (
+            result_data.data.code ==
+            Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_NEED_GOTO
+          ) {
+            logger("Capture Need Goto ", {}, connectionCtx);
+            return false;
+          } else if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
             logger("Start Capture error", {}, connectionCtx);
+            endImagingSession();
             return false;
           } else {
             logger("Start Capture ok", {}, connectionCtx);
@@ -189,6 +194,8 @@ export default function ImagingMenu(props: PropType) {
             Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED
           ) {
             logger("Stop Capture", {}, connectionCtx);
+            //Call endImagingSession
+            endImagingSession();
             return false;
           }
         } else if (
@@ -215,20 +222,6 @@ export default function ImagingMenu(props: PropType) {
 
             if (timerSession) testTimer = timerSession.toString();
             logger("takeAstroPhoto currentCount ST:", testTimer, connectionCtx);
-
-            // update UI once imaging session is done imaging
-            if (
-              result_data.data.currentCount ===
-              connectionCtx.astroSettings.count
-            ) {
-              logger(
-                "ImagingSession befor clearInterval:",
-                testTimer,
-                connectionCtx
-              );
-              //Call endImagingSession
-              endImagingSession();
-            }
           }
           if (
             result_data.data.updateCountType == 1 ||
@@ -268,13 +261,15 @@ export default function ImagingMenu(props: PropType) {
             console.log("start UseRawPreviewURL : " + testPreviewURL);
 */
         } else {
-          return false;
+          logger("", result_data, connectionCtx);
         }
-        return true;
+        logger(txt_info, result_data, connectionCtx);
       };
 
-      // Create WebSocketHandler
-      const webSocketHandler = new WebSocketHandler(connectionCtx);
+      console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+      const webSocketHandler = connectionCtx.socketIPDwarf
+        ? connectionCtx.socketIPDwarf
+        : new WebSocketHandler(connectionCtx.IPDwarf);
 
       // Send Command : messageAstroStartCaptureRawLiveStacking
       let WS_Packet = messageAstroStartCaptureRawLiveStacking();
@@ -282,12 +277,18 @@ export default function ImagingMenu(props: PropType) {
 
       webSocketHandler.prepare(
         WS_Packet,
-        customMessageHandler,
         txtInfoCommand,
-        undefined
+        [
+          Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
+        ],
+        customMessageHandler
       );
 
-      webSocketHandler.run();
+      if (!webSocketHandler.run()) {
+        console.error(" Can't launch Web Socket Run Action!");
+      }
     }
   }
 
@@ -296,14 +297,7 @@ export default function ImagingMenu(props: PropType) {
       return;
     }
 
-    const customMessageHandler = (
-      result_data,
-      txtInfoCommand,
-      callback,
-      webSocketHandlerInstance
-    ) => {
-      // Use webSocketHandlerInstance to access logic_data
-      webSocketHandlerInstance.logic_data = false;
+    const customMessageHandler = (txt_info, result_data) => {
       // CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING -> Stop Capture
       // CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING -> get details of shooting progress
       // CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING  -> get state of shooting progress
@@ -317,7 +311,6 @@ export default function ImagingMenu(props: PropType) {
           logger("Stop Capture ok", {}, connectionCtx);
         }
         endImagingSession();
-        return true;
       } else if (
         result_data.cmd ==
         Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING
@@ -326,7 +319,8 @@ export default function ImagingMenu(props: PropType) {
           result_data.data.state ==
           Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED
         ) {
-          logger("Stop Capture", {}, connectionCtx);
+          logger("Stop Capture.", {}, connectionCtx);
+          endImagingSession();
           return false;
         }
       } else if (
@@ -359,14 +353,16 @@ export default function ImagingMenu(props: PropType) {
             result_data.data.stackedCount.toString()
           );
         }
-        return true;
       } else {
-        return false;
+        logger("", result_data, connectionCtx);
       }
+      logger(txt_info, result_data, connectionCtx);
     };
 
-    // Create WebSocketHandler
-    const webSocketHandler = new WebSocketHandler(connectionCtx);
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(connectionCtx.IPDwarf);
 
     // Send Command : messageAstroStopCaptureRawLiveStacking
     let WS_Packet = messageAstroStopCaptureRawLiveStacking();
@@ -374,12 +370,58 @@ export default function ImagingMenu(props: PropType) {
 
     webSocketHandler.prepare(
       WS_Packet,
-      customMessageHandler,
       txtInfoCommand,
-      undefined
+      [
+        Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING,
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING,
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
+      ],
+      customMessageHandler
     );
 
-    webSocketHandler.run();
+    if (!webSocketHandler.run()) {
+      console.error(" Can't launch Web Socket Run Action!");
+    }
+  }
+
+  function goLiveHandler() {
+    if (connectionCtx.IPDwarf === undefined) {
+      return;
+    }
+
+    const customMessageHandler = (txt_info, result_data) => {
+      // CMD_ASTRO_GO_LIVE -> Stop Capture
+      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE) {
+        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
+          logger("Go Live error", {}, connectionCtx);
+        } else {
+          logger("Go Live ok", {}, connectionCtx);
+        }
+      } else {
+        logger("", result_data, connectionCtx);
+      }
+      logger(txt_info, result_data, connectionCtx);
+    };
+
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(connectionCtx.IPDwarf);
+
+    // Send Command : messageAstroGoLive
+    let WS_Packet = messageAstroGoLive();
+    let txtInfoCommand = "goLive";
+
+    webSocketHandler.prepare(
+      WS_Packet,
+      txtInfoCommand,
+      [Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE],
+      customMessageHandler
+    );
+
+    if (!webSocketHandler.run()) {
+      console.error(" Can't launch Web Socket Run Action!");
+    }
   }
 
   function endImagingSession() {
@@ -447,156 +489,120 @@ export default function ImagingMenu(props: PropType) {
     }, 3500);
   }
 
-  /*
-  function focusAction(
-    motor: number,
-    mode: number,
-    mStep: number,
-    speed: number,
-    direction: number,
-    pulse: number,
-    accelStep: number
-  ) {
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
-    //socket connects to Dwarf
-    if (connectionCtx.socketIPDwarf) {
-      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-        connectionCtx.socketIPDwarf.close();
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    connectionCtx.setSocketIPDwarf(socket);
-
-    socket.addEventListener("open", () => {
-      let payload = startMotion(
-        motor,
-        mode,
-        mStep,
-        speed,
-        direction,
-        pulse,
-        accelStep
-      );
-      logger("begin focusAction...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === startMotionCmd) {
-        logger("focusAction", message, connectionCtx);
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
-
-    socket.addEventListener("error", (error) => {
-      logger("focusAction error:", error, connectionCtx);
-    });
-
-    socket.addEventListener("close", (error) => {
-      logger("focusAction close:", error, connectionCtx);
-    });
-  }
-*/
-
-  /*
-  function focusActionStop(motor: number, decelStep: number) {
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
-
-    //socket connects to Dwarf
-    if (connectionCtx.socketIPDwarf) {
-      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-        connectionCtx.socketIPDwarf.close();
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    connectionCtx.setSocketIPDwarf(socket);
-
-    socket.addEventListener("open", () => {
-      let payload = stopMotion(motor, decelStep);
-      logger("begin focusActionStop...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === stopMotionCmd) {
-        logger("focusActionStop", message, connectionCtx);
-      } else {
-        logger("", message, connectionCtx);
-      }
-    });
-
-    socket.addEventListener("error", (error) => {
-      logger("focusActionStop error:", error, connectionCtx);
-    });
-
-    socket.addEventListener("close", (error) => {
-      logger("focusActionStop close:", error, connectionCtx);
-    });
-  }
-*/
-
   function focusMinus() {
-    //focusAction(3, 2, 1, 305, 1, 1, 0);
+    focusAction(false, false, false, 0);
   }
 
   function focusMinusLong() {
-    //focusAction(3, 1, 8, 400, 0, 1, 0);
+    focusAction(false, true, false, 0);
   }
 
   function focusLongStop() {
-    //focusActionStop(3, 0);
+    focusAction(false, true, true, 0);
   }
 
   function focusPlus() {
-    //focusAction(3, 2, 1, 305, 0, 1, 0);
+    focusAction(false, false, false, 1);
   }
 
   function focusPlusLong() {
-    //focusAction(3, 1, 8, 400, 1, 1, 0);
+    focusAction(false, true, false, 1);
   }
 
   function focusAutoAstro() {
-    /*
+    setAstroFocus(true);
+    focusAction(true, false, false, 0);
+  }
+
+  function focusAutoAstroStop() {
+    setAstroFocus(false);
+    focusAction(true, false, true, 0);
+  }
+
+  function focusAction(Astro, Continu, Stop, Direction) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
 
-    //socket connects to Dwarf
-    if (connectionCtx.socketIPDwarf) {
-      if (connectionCtx.socketIPDwarf.readyState === WebSocket.OPEN)
-        connectionCtx.socketIPDwarf.close();
-    }
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    connectionCtx.setSocketIPDwarf(socket);
-
-    socket.addEventListener("open", () => {
-      let payload = astroAutofocus();
-      logger("begin astroAutofocus...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === astroAutofocusCmd) {
-        logger("astroAutofocus", message, connectionCtx);
+    const customMessageHandler = (txt_info, result_data) => {
+      // CMD_FOCUS_START_ASTRO_AUTO_FOCUS
+      // CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS
+      // CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS
+      // CMD_FOCUS_START_MANUAL_CONTINU_FOCUS
+      // CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS
+      if (
+        result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_ASTRO_AUTO_FOCUS ||
+        result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS ||
+        result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS ||
+        result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_MANUAL_CONTINU_FOCUS ||
+        result_data.cmd ==
+          Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS
+      ) {
+        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
+          logger("Focus error", {}, connectionCtx);
+        } else {
+          logger("Focus ok", {}, connectionCtx);
+        }
       } else {
-        logger("", message, connectionCtx);
+        logger("", result_data, connectionCtx);
       }
-    });
+      logger(txt_info, result_data, connectionCtx);
+    };
 
-    socket.addEventListener("error", (error) => {
-      logger("astroAutofocus error:", error, connectionCtx);
-    });
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(connectionCtx.IPDwarf);
 
-    socket.addEventListener("close", (error) => {
-      logger("astroAutofocus close:", error, connectionCtx);
-    }); 
-    */
+    // Send Command : messageFocusStartAstroAutoFocus
+    let WS_Packet;
+    let txtInfoCommand;
+    let Cmd;
+    if (Astro && !Continu && !Stop) {
+      WS_Packet = messageFocusStartAstroAutoFocus(1);
+      txtInfoCommand = "AstroFocus";
+      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_ASTRO_AUTO_FOCUS];
+      console.log("Focus : CMD_FOCUS_START_ASTRO_AUTO_FOCUS");
+    }
+    if (Astro && !Continu && Stop) {
+      WS_Packet = messageFocusStopAstroAutoFocus();
+      txtInfoCommand = "AstroFocus";
+      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS];
+      console.log("Focus : CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS");
+    }
+    if (!Astro && Continu && !Stop) {
+      WS_Packet = messageFocusStartManualContinuFocus(Direction);
+      txtInfoCommand = "AstroFocus";
+      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_MANUAL_CONTINU_FOCUS];
+      console.log("Focus : CMD_FOCUS_START_MANUAL_CONTINU_FOCUS");
+    }
+    if (!Astro && Continu && Stop) {
+      WS_Packet = messageFocusStopManualContinuFocus();
+      txtInfoCommand = "AstroFocus";
+      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS];
+      console.log("Focus : CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS");
+    }
+    if (!Astro && !Continu) {
+      WS_Packet = messageFocusManualSingleStepFocus(Direction);
+      txtInfoCommand = "AstroFocus";
+      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS];
+      console.log("Focus : CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS");
+    }
+
+    webSocketHandler.prepare(
+      WS_Packet,
+      txtInfoCommand,
+      [Cmd],
+      customMessageHandler
+    );
+
+    if (!webSocketHandler.run()) {
+      console.error(" Can't launch Web Socket Run Action!");
+    }
   }
 
   function renderRecordButton() {
@@ -614,7 +620,9 @@ export default function ImagingMenu(props: PropType) {
       } else if (endRecording) {
         console.log("Record Button4");
         // Live Button is on
-        return <RecordButton title="End of Recording" />;
+        return (
+          <RecordButton onClick={goLiveHandler} title="End of Recording" />
+        );
       } else {
         console.log("Record Button OK");
         return (
@@ -677,7 +685,35 @@ export default function ImagingMenu(props: PropType) {
       </Tooltip>
     );
   };
+  /*
+let startTime;
+let isLongPress = false;
 
+function handleMouseDown() {
+  startTime = new Date().getTime();
+
+  // Set a timeout for the long press
+  setTimeout(() => {
+    isLongPress = true;
+    console.log("Long press detected");
+  }, 500); // Adjust the duration as needed
+}
+
+function handleMouseUp() {
+  const endTime = new Date().getTime();
+  const duration = endTime - startTime;
+
+  // Check if it was a short click
+  if (duration < 500 && !isLongPress) {
+    console.log("Short click detected");
+    // Perform your action for a short click
+  }
+
+  // Reset variables for the next interaction
+  startTime = 0;
+  isLongPress = false;
+}
+*/
   return (
     <ul className="nav nav-pills flex-column mb-auto border">
       <li className={`nav-item ${styles.box}`}>
@@ -757,19 +793,43 @@ export default function ImagingMenu(props: PropType) {
       </li>
       {!isRecording && connectionCtx.imagingSession.startTime && (
         <li className={`nav-item ${styles.box}`}>
-          <Link href="#" className="" onClick={endPreview}>
+          <Link
+            href="#"
+            className=""
+            onClick={() => {
+              goLiveHandler();
+              endPreview();
+            }}
+          >
             Live
           </Link>
         </li>
       )}
       <hr />
-      {!isRecording && !endRecording && (
+      {!isRecording && !endRecording && !astroFocus && (
         <li className={`nav-item ${styles.box}`}>
           <Link
             href="#"
             className=""
             onClick={focusAutoAstro}
             title="Astro Auto Focus"
+          >
+            <i
+              className="icon-bullseye"
+              style={{
+                fontSize: "2rem",
+              }}
+            ></i>
+          </Link>
+        </li>
+      )}
+      {!isRecording && !endRecording && astroFocus && (
+        <li className={`nav-item ${styles.box}`}>
+          <Link
+            href="#"
+            className=""
+            onClick={focusAutoAstroStop}
+            title="Astro Focus Stop"
           >
             <i
               className="icon-bullseye"

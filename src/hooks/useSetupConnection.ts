@@ -6,7 +6,7 @@ import {
   saveInitialConnectionTimeDB,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
-import { firmwareVersion } from "dwarfii_api";
+import { firmwareVersion, WebSocketHandler } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {
@@ -71,11 +71,22 @@ function checkDwarfConnection(
     })
     .catch((err) => {
       if (err.name === "AbortError" || err.message == "Failed to fetch") {
-        console.log("Dwarf connection error");
-        clearInterval(timer);
+        console.log("Dwarf verification connection");
 
-        connectionCtx.setConnectionStatus(false);
-        saveConnectionStatusDB(false);
+        console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+        const webSocketHandler = connectionCtx.socketIPDwarf
+          ? connectionCtx.socketIPDwarf
+          : new WebSocketHandler(connectionCtx.IPDwarf);
+
+        if (webSocketHandler.isConnected()) {
+          console.log("Dwarf connection ok");
+        } else {
+          console.log("Dwarf connection error");
+          clearInterval(timer);
+          connectionCtx.setConnectionStatus(false);
+          saveConnectionStatusDB(false);
+          webSocketHandler.close();
+        }
       } else {
         console.log("checkDwarfConnection err ???", err.name, err.message);
       }

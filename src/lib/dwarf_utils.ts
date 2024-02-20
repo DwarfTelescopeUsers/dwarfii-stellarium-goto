@@ -1,7 +1,13 @@
-import { WebSocketHandler } from "@/lib/websocket_class";
 import {
   Dwarfii_Api,
+  binning1x1,
   binning2x2,
+  IRCut,
+  IRPass,
+  fileFits,
+  fileTiff,
+  modeManual,
+  modeAuto,
   messageCameraTeleOpenCamera,
   messageCameraWideOpenCamera,
   messageCameraTeleSetExpMode,
@@ -14,9 +20,15 @@ import {
   messageCameraTeleGetGainMode,
   messageCameraTeleGetGain,
   messageCameraTeleGetIRCut,
-  //  messageCameraTeleSetAllParams
+  messageCameraTeleSetFeatureParams,
+  messageCameraTeleGetAllParams,
+  messageCameraTeleGetAllFeatureParams,
+  messageCameraTeleSetJPGQuality,
+  WebSocketHandler,
 } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
+import { logger } from "@/lib/logger";
+import { saveAstroSettingsDb } from "@/db/db_utils";
 
 export const telephotoCamera = 0;
 export const wideangleCamera = 1;
@@ -34,25 +46,20 @@ export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
     ? connectionCtx.astroSettings.binning
     : binning2x2;
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
-        return true;
+        logger(txt_info, result_data, connectionCtx);
+        return;
       }
-    } else {
-      return false;
     }
+    logger(txt_info, result_data, connectionCtx);
   };
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command : messageCameraTeleOpenCamera
   let WS_Packet = messageCameraTeleOpenCamera(binning == binning2x2);
@@ -60,13 +67,16 @@ export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
 
   webSocketHandler.prepare(
     WS_Packet,
-    customMessageHandler,
     txtInfoCommand,
-    undefined
+    [Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA],
+    customMessageHandler
   );
-  webSocketHandler.run();
 
-  await sleep(500);
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
+
+  await sleep(100);
 }
 
 export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
@@ -74,25 +84,20 @@ export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
     return;
   }
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
-        return true;
+        logger(txt_info, result_data, connectionCtx);
+        return;
       }
-    } else {
-      return false;
     }
+    logger(txt_info, result_data, connectionCtx);
   };
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command : messageCameraWideOpenCamera
   let WS_Packet = messageCameraWideOpenCamera();
@@ -100,13 +105,16 @@ export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
 
   webSocketHandler.prepare(
     WS_Packet,
-    customMessageHandler,
     txtInfoCommand,
-    undefined
+    [Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA],
+    customMessageHandler
   );
-  webSocketHandler.run();
 
-  await sleep(500);
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
+
+  await sleep(100);
 }
 
 export async function updateTelescopeISPSetting(
@@ -147,53 +155,246 @@ export async function updateTelescopeISPSetting(
     WS_Packet = messageCameraTeleSetIRCut(value);
     cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_IRCUT;
     WS_Packet2 = messageCameraTeleGetIRCut();
+  } else if (type === "binning") {
+    cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_FEATURE_PARAM;
+    let hasAuto = false;
+    let autoMode = 1; // Manual
+    let id = 0; // "Astro binning"
+    let modeIndex = 0;
+    let index = value;
+    let continueValue = 0;
+    WS_Packet = messageCameraTeleSetFeatureParams(
+      hasAuto,
+      autoMode,
+      id,
+      modeIndex,
+      index,
+      continueValue
+    );
+    cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS;
+    WS_Packet2 = messageCameraTeleGetAllFeatureParams();
+  } else if (type === "fileFormat") {
+    cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_FEATURE_PARAM;
+    let hasAuto = false;
+    let autoMode = 1; // Manual
+    let id = 2; // "Astro format"
+    let modeIndex = 0;
+    let index = value;
+    let continueValue = 0;
+    WS_Packet = messageCameraTeleSetFeatureParams(
+      hasAuto,
+      autoMode,
+      id,
+      modeIndex,
+      index,
+      continueValue
+    );
+    cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS;
+    WS_Packet2 = messageCameraTeleGetAllFeatureParams();
+  } else if (type === "count") {
+    cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_FEATURE_PARAM;
+    let hasAuto = false;
+    let autoMode = 1; // Manual
+    let id = 1; // "Astro img_to_take"
+    let modeIndex = 1;
+    let index = 0;
+    let continueValue = value; // Imgages To Take
+    WS_Packet = messageCameraTeleSetFeatureParams(
+      hasAuto,
+      autoMode,
+      id,
+      modeIndex,
+      index,
+      continueValue
+    );
+    cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS;
+    WS_Packet2 = messageCameraTeleGetAllFeatureParams();
+  } else if (type === "quality") {
+    cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_JPG_QUALITY;
+    WS_Packet = messageCameraTeleSetJPGQuality(value);
+    cmd2 = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_PARAMS;
+    WS_Packet2 = messageCameraTeleGetAllParams();
   }
 
-  const customMessageHandler = (
-    result_data,
-    txtInfoCommand,
-    callback,
-    webSocketHandlerInstance
-  ) => {
-    // Use webSocketHandlerInstance to access logic_data
-    webSocketHandlerInstance.logic_data = false;
+  const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == cmd) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
-        return true;
+        logger(txt_info, result_data, connectionCtx);
+        return;
       }
     } else if (result_data.cmd == cmd2) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
-        return true;
+        logger(txt_info, result_data, connectionCtx);
+        return;
       }
-    } else {
-      return false;
+    }
+    logger("", result_data, connectionCtx);
+  };
+
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
+
+  let txtInfoCommand = `set ${type}`;
+
+  webSocketHandler.prepare(
+    [WS_Packet, WS_Packet2],
+    txtInfoCommand,
+    [cmd, cmd2],
+    customMessageHandler
+  );
+
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
+}
+
+export async function getAllTelescopeISPSetting(
+  connectionCtx: ConnectionContextType
+) {
+  if (connectionCtx.IPDwarf === undefined) {
+    return;
+  }
+
+  const customMessageHandler = (txt_info, result_data) => {
+    if (
+      result_data.cmd ==
+      Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS
+    ) {
+      if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+        let count = 0;
+        let binning;
+        let fileFormat;
+        if (result_data.data.allFeatureParams) {
+          console.log("allFeatureParams:", result_data.data.allFeatureParams);
+          // For id=0 : "Astro binning"
+          const filteredArray = result_data.data.allFeatureParams.filter(
+            (commonParam) =>
+              !Object.prototype.hasOwnProperty.call(commonParam, "id") ||
+              commonParam.id === undefined
+          );
+          console.log("filteredArray:", filteredArray);
+          console.log("filteredArray:", filteredArray[0]);
+          console.log("filteredArray:", filteredArray[0].index);
+          if (filteredArray[0].index) binning = binning2x2;
+          else binning = binning1x1;
+          // For id=1 : "Astro img_to_take"
+          const resultObject1 = result_data.data.allFeatureParams.find(
+            (item) => item.id === 1
+          );
+          console.log("allFeatureParams-resultObject1:", resultObject1);
+          count = 0;
+          if (resultObject1.continueValue) {
+            count = resultObject1.continueValue;
+            console.log("allFeatureParams-count:", resultObject1.continueValue);
+          }
+          // For id=2 : Astro Format
+          const resultObject2 = result_data.data.allFeatureParams.find(
+            (item) => item.id === 2
+          );
+          console.log("allFeatureParams-resultObject2:", resultObject2);
+          if (resultObject2.index) fileFormat = fileTiff;
+          else fileFormat = fileFits;
+          connectionCtx.astroSettings.binning = binning;
+          saveAstroSettingsDb("binning", binning.toString());
+          connectionCtx.astroSettings.fileFormat = fileFormat;
+          saveAstroSettingsDb("fileFormat", fileFormat.toString());
+          connectionCtx.astroSettings.count = count;
+          saveAstroSettingsDb("count", count.toString());
+        }
+      }
+    }
+    if (
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_PARAMS
+    ) {
+      if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+        let exposureMode;
+        let exposure = 0;
+        if (result_data.data.allParams) {
+          console.log("allParams:", result_data.data.allParams);
+          // For id=0 : "Exposure"
+          const filteredArray = result_data.data.allParams.filter(
+            (commonParam) =>
+              !Object.prototype.hasOwnProperty.call(commonParam, "id") ||
+              commonParam.id === undefined
+          );
+          console.log("filteredArray:", filteredArray);
+          console.log("filteredArray:", filteredArray[0]);
+          console.log("filteredArray:", filteredArray[0].index);
+          // id = 0 (no present)
+          // autoMode == 0 => Auto not present
+          if (!filteredArray[0].autoMode) exposureMode = modeAuto;
+          else exposureMode = modeManual;
+          if (filteredArray[0].index) exposure = filteredArray[0].index;
+          // For id=1 : "Gain"
+          const resultObject1 = result_data.data.allParams.find(
+            (item) => item.id === 1
+          );
+          console.log("allParams-resultObject1:", resultObject1);
+          let gain = 0;
+          if (resultObject1.index) gain = resultObject1.index;
+          // For id=8 : IR Cut
+          const resultObject2 = result_data.data.allParams.find(
+            (item) => item.id === 8
+          );
+          console.log("allParams-resultObject2:", resultObject2);
+          let val_IRCut;
+          if (resultObject2.index) val_IRCut = IRPass;
+          else val_IRCut = IRCut;
+          // For id=8 : IR Cut
+          const resultObject3 = result_data.data.allParams.find(
+            (item) => item.id === 8
+          );
+          console.log("allParams-resultObject3:", resultObject3);
+          // For id=9 : previewQuality
+          let previewQuality = 0;
+          const resultObject4 = result_data.data.allParams.find(
+            (item) => item.id === 9
+          );
+          console.log(
+            "previewQuality: allParams-resultObject4:",
+            resultObject4
+          );
+          if (resultObject4.continueValue)
+            previewQuality = resultObject4.continueValue;
+          connectionCtx.astroSettings.gain = gain;
+          saveAstroSettingsDb("gain", gain.toString());
+          saveAstroSettingsDb("gainMode", modeManual.toString());
+          connectionCtx.astroSettings.exposure = exposure;
+          saveAstroSettingsDb("exposure", exposure.toString());
+          saveAstroSettingsDb("exposureMode", exposureMode.toString());
+          connectionCtx.astroSettings.IR = val_IRCut;
+          saveAstroSettingsDb("IR", val_IRCut.toString());
+          connectionCtx.astroSettings.quality = previewQuality;
+          saveAstroSettingsDb("quality", previewQuality.toString());
+        }
+      }
     }
   };
 
-  // Create WebSocketHandler
-  const webSocketHandler = new WebSocketHandler(connectionCtx, true);
+  console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+  const webSocketHandler = connectionCtx.socketIPDwarf
+    ? connectionCtx.socketIPDwarf
+    : new WebSocketHandler(connectionCtx.IPDwarf);
 
-  // Send Command : cmd
-  let txtInfoCommand = "set ${type}";
-
-  webSocketHandler.prepare(
-    WS_Packet,
-    customMessageHandler,
-    txtInfoCommand,
-    undefined
-  );
-  webSocketHandler.run();
-
-  await sleep(100);
+  let txtInfoCommand = "get CameraParameter";
+  let WS_Packet = messageCameraTeleGetAllParams();
+  let WS_Packet2 = messageCameraTeleGetAllFeatureParams();
 
   webSocketHandler.prepare(
-    WS_Packet2,
-    customMessageHandler,
+    [WS_Packet, WS_Packet2],
     txtInfoCommand,
-    undefined
+    [
+      Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_PARAMS,
+      Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS,
+    ],
+    customMessageHandler
   );
 
-  await sleep(100);
+  if (!webSocketHandler.run()) {
+    console.error(" Can't launch Web Socket Run Action!");
+  }
 
   /*
   cmd = Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_ALL_PARAMS;
@@ -201,9 +402,11 @@ export async function updateTelescopeISPSetting(
 
   webSocketHandler.prepare(
     WS_Packet,
-    customMessageHandler,
     txtInfoCommand,
-    undefined
+    [
+      Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_SET_ALL_PARAMS,
+    ],
+    customMessageHandler,
   );
 */
 }
