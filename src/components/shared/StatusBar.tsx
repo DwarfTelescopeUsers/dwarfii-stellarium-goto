@@ -71,6 +71,11 @@ export default function StatusBar() {
           </span>
         </>
       )}
+      {connectionCtx.astroSettings.target !== undefined && (
+        <span className="me-3">
+          Target: {connectionCtx.astroSettings.target}
+        </span>
+      )}
     </div>
   );
 }

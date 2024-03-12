@@ -75,6 +75,17 @@ export function fetchIPDwarfDB(): string | undefined {
   }
 }
 
+export function saveBlePWDDwarfDB(ble_pwd: string) {
+  localStorage.setItem("BlePWDDwarf", ble_pwd);
+}
+
+export function fetchBlePWDDwarf(): string | undefined {
+  let data = localStorage.getItem("BlePWDDwarf");
+  if (data) {
+    return data;
+  } else return "DWARF_12345678";
+}
+
 export function saveConnectionStatusStellariumDB(status: boolean) {
   localStorage.setItem("connectionStatusStellarium", status ? "true" : "false");
 }

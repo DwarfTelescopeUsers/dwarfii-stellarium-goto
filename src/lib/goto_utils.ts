@@ -30,6 +30,7 @@ import {
 } from "@/lib/math_utils";
 import { computeRaDecToAltAz, computealtAzToHADec } from "@/lib/astro_utils";
 import { toIsoStringInLocalTime } from "@/lib/date_utils";
+import { getAllTelescopeISPSetting } from "@/lib/dwarf_utils";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,6 +135,7 @@ export async function calibrationHandler(
         calibration_status == false &&
         result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
       ) {
+        getAllTelescopeISPSetting(connectionCtx);
         setErrors("");
         setSuccess(txt_info + " Done");
         if (callback) {
@@ -143,6 +145,7 @@ export async function calibrationHandler(
         calibration_status == true &&
         result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
       ) {
+        getAllTelescopeISPSetting(connectionCtx);
         setErrors("");
         setSuccess("");
         setErrors(txt_info + " Failure");
@@ -245,7 +248,13 @@ export async function startGotoHandler(
   setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
-  let targetName = objectName;
+  //Get all Character before ( and remove spaces in Target Name
+  let targetName = "";
+  if (objectName) {
+    let beginStr = objectName.substring(0, objectName.indexOf("("));
+    if (beginStr) targetName = beginStr.trim().replace(/ /g, "_");
+    else targetName = objectName.trim().replace(/ /g, "_");
+  }
   let lat = 0;
   if (connectionCtx.latitude) lat = connectionCtx.latitude;
   /////////////////////////////////////////
@@ -275,6 +284,8 @@ export async function startGotoHandler(
 
         if (callback) {
           callback("Error GoTo");
+
+          getAllTelescopeISPSetting(connectionCtx);
         }
       }
     } else if (
@@ -291,9 +302,11 @@ export async function startGotoHandler(
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_TRACKING
     ) {
       if (
-        result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_RUNNING &&
-        result_data.data.target_name == targetName
+        result_data.data.state ==
+          Dwarfii_Api.OperationState.OPERATION_STATE_RUNNING &&
+        result_data.data.targetName == targetName
       ) {
+        goto_status = true;
         setGotoSuccess("Start Tracking");
         setGotoErrors("");
         if (callback) {
@@ -308,6 +321,7 @@ export async function startGotoHandler(
             callback
           );
         }
+        getAllTelescopeISPSetting(connectionCtx);
       }
     } else {
       logger("", result_data, connectionCtx);
@@ -336,6 +350,7 @@ export async function startGotoHandler(
     connectionCtx.setSavePositionStatus(true);
   }
   console.log("Object Name :  " + objectName);
+  console.log("Target Name :  " + targetName);
   if (planet) {
     console.log("planet :  " + planet);
   }
@@ -345,30 +360,30 @@ export async function startGotoHandler(
   let WS_Packet;
   if (planet) {
     // Send Command : cmdAstroStartGotoDso
-    targetName = Dwarfii_Api.SolarSystemTarget[planet];
     if (Dwarfii_Api.SolarSystemTarget[planet]) {
+      targetName = Dwarfii_Api.SolarSystemTarget[planet];
       WS_Packet = messageAstroStartGotoSolarSystem(
         planet,
         lon,
         lat,
         Dwarfii_Api.SolarSystemTarget[planet]
       );
-    } else if (objectName) {
+    } else if (targetName) {
       WS_Packet = messageAstroStartGotoSolarSystem(
         planet,
         lon,
         lat,
-        objectName
+        targetName
       );
     } else {
       WS_Packet = messageAstroStartGotoSolarSystem(planet, lon, lat, "-");
     }
-  } else if (objectName) {
+  } else if (targetName) {
     // Send Command : messageAstroStartGotoDso
     WS_Packet = messageAstroStartGotoDso(
       RA_number,
       declination_number,
-      objectName
+      targetName
     );
   }
   connectionCtx.astroSettings.target = targetName!;
@@ -502,6 +517,7 @@ export async function stopGotoHandler(
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
+
   setGotoErrors(undefined);
   setGotoSuccess(undefined);
   eventBus.dispatch("clearErrors", { message: "clear errors" });
@@ -511,6 +527,7 @@ export async function stopGotoHandler(
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         setGotoSuccess("Stopping Goto");
         setGotoErrors("");
+        connectionCtx.astroSettings.target = undefined;
         if (callback) {
           callback("Stopping Goto");
         }

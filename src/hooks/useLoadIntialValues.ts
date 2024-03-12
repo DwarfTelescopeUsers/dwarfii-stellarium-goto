@@ -9,6 +9,7 @@ import {
   fetchUrlStellariumDB,
   fetchConnectionStatusStellariumDB,
   fetchIPDwarfDB,
+  fetchBlePWDDwarf,
   fetchUserCurrentObjectListNameDb,
   fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
@@ -55,6 +56,10 @@ export function useLoadIntialValues() {
     if (connectionCtx.IPDwarf === undefined) {
       let data = fetchIPDwarfDB();
       if (data !== undefined) connectionCtx.setIPDwarf(data);
+    }
+    if (connectionCtx.BlePWDDwarf === undefined) {
+      let data = fetchBlePWDDwarf();
+      if (data !== undefined) connectionCtx.setBlePWDDwarf(data);
     }
     if (connectionCtx.connectionStatusStellarium === undefined) {
       let data = fetchConnectionStatusStellariumDB();

@@ -14,6 +14,8 @@ export type ConnectionContextType = {
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
   socketIPDwarf: any | undefined;
   setSocketIPDwarf: Dispatch<SetStateAction<any | undefined>>;
+  BlePWDDwarf: string | undefined;
+  setBlePWDDwarf: Dispatch<SetStateAction<string | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
