@@ -79,11 +79,33 @@ export function saveBlePWDDwarfDB(ble_pwd: string) {
   localStorage.setItem("BlePWDDwarf", ble_pwd);
 }
 
-export function fetchBlePWDDwarf(): string | undefined {
+export function fetchBlePWDDwarfDB(): string | undefined {
   let data = localStorage.getItem("BlePWDDwarf");
   if (data) {
     return data;
   } else return "DWARF_12345678";
+}
+
+export function saveBleSTASSIDDwarfDB(ble_STA_ssid: string) {
+  localStorage.setItem("BleSTASSIDDwarf", ble_STA_ssid);
+}
+
+export function fetchBleSTASSIDDwarfDB(): string | undefined {
+  let data = localStorage.getItem("BleSTASSIDDwarf");
+  if (data) {
+    return data;
+  }
+}
+
+export function saveBleSTAPWDDwarfDB(ble_STA_pwd: string) {
+  localStorage.setItem("BleSTAPWDDwarf", ble_STA_pwd);
+}
+
+export function fetchBleSTAPWDDwarfDB(): string | undefined {
+  let data = localStorage.getItem("BleSTAPWDDwarf");
+  if (data) {
+    return data;
+  }
 }
 
 export function saveConnectionStatusStellariumDB(status: boolean) {

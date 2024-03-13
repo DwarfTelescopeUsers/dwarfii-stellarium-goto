@@ -9,7 +9,12 @@ import {
   analyzePacketBle,
 } from "dwarfii_api";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveIPDwarfDB, saveBlePWDDwarfDB } from "@/db/db_utils";
+import {
+  saveIPDwarfDB,
+  saveBlePWDDwarfDB,
+  saveBleSTASSIDDwarfDB,
+  saveBleSTAPWDDwarfDB,
+} from "@/db/db_utils";
 
 export default function ConnectDwarfSTA() {
   let connectionCtx = useContext(ConnectionContext);
@@ -31,16 +36,25 @@ export default function ConnectDwarfSTA() {
   async function checkConnection(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    IsFirstStepOK = false;
     const formData = new FormData(e.currentTarget);
     const formBluetoothPWD = formData.get("pwd");
     BluetoothPWD = formBluetoothPWD?.toString();
-    console.log("Get BluetoothPWD:", BluetoothPWD);
+    console.debug("Get BluetoothPWD:", BluetoothPWD);
+    console.debug("saved DB BluetoothSTA_SSID:", connectionCtx.BleSTASSIDDwarf);
+    console.debug("saved DB BluetoothSTA_PWD:", connectionCtx.BleSTAPWDDwarf);
 
     try {
       // Connecting
       setConnecting(true);
       setFindDwarfBluetooth(false);
       setEtatBluetooth(false);
+
+      if (deviceDwarfII) {
+        // disconnect Bluetooth
+        console.debug("disconnect already connected device");
+        actionDisconnect();
+      }
 
       const device = await navigator.bluetooth.requestDevice({
         filters: [
@@ -55,26 +69,25 @@ export default function ConnectDwarfSTA() {
         // Add the new class
         setFindDwarfBluetooth(true);
         setErrorTxt(deviceDwarfII.name);
-        console.log("Got device:", deviceDwarfII.name);
-        console.log("id:", deviceDwarfII.id);
-        //console.log('uuids:', deviceDwarfII.uuids);
+        console.debug("Got device:", deviceDwarfII.name);
+        console.debug("id:", deviceDwarfII.id);
         deviceDwarfII.addEventListener(
           "gattserverdisconnected",
           onDisconnected
         );
 
         if (!deviceDwarfII.gatt) throw new Error("Can't get bluetooth gatt ");
-        else console.log("gatt:", deviceDwarfII.gatt);
+        else console.debug("gatt:", deviceDwarfII.gatt);
 
         const server = await deviceDwarfII.gatt.connect();
         if (!server) throw new Error("Can't get gatt bluetooth service");
-        else console.log("Got bluetooth server");
+        else console.debug("Got bluetooth connected");
 
         const service = await server.getPrimaryService(
           "0000daf2-0000-1000-8000-00805f9b34fb"
         );
-        if (!server) throw new Error("Can't get bluetooth service");
-        else console.log("Got bluetooth service");
+        if (!service) throw new Error("Can't get bluetooth service");
+        else console.debug("Got bluetooth service");
 
         const characteristic = await service.getCharacteristic(
           "00009999-0000-1000-8000-00805f9b34fb"
@@ -83,9 +96,9 @@ export default function ConnectDwarfSTA() {
           throw new Error("Can't get bluetooth characteristic");
 
         characteristicDwarfII = characteristic;
-        console.log("Got characteristic:", characteristicDwarfII.uuid);
-        console.log("Got characteristic:", characteristicDwarfII.service);
-        console.log(characteristicDwarfII);
+        console.debug("Got characteristic:", characteristicDwarfII.uuid);
+        console.debug("Got characteristic:", characteristicDwarfII.service);
+        console.debug(characteristicDwarfII);
         setEtatBluetooth(true);
 
         characteristicDwarfII.addEventListener(
@@ -95,8 +108,8 @@ export default function ConnectDwarfSTA() {
         await characteristicDwarfII.startNotifications();
 
         const data_test = await characteristicDwarfII.readValue();
-        console.log("Got detail characteristic:", data_test);
-        console.log(data_test);
+        console.debug("Got detail characteristic:", data_test);
+        console.debug(data_test);
 
         // get Wifi
         let bufferGetConfig = messageGetconfig(BluetoothPWD);
@@ -115,7 +128,10 @@ export default function ConnectDwarfSTA() {
   async function handleValueChanged(event) {
     try {
       let value = event.target.value;
-      console.log("Value changed:", value);
+      console.log("########## New Value Received ##########");
+      console.debug("Value changed:", value);
+      console.debug("IsFirstStepOK:", IsFirstStepOK);
+      console.debug("##########");
 
       if (!IsFirstStepOK && value.byteLength) {
         let bufferReadConfig = new Uint8Array(value.buffer);
@@ -124,8 +140,11 @@ export default function ConnectDwarfSTA() {
         console.log("Read:", configValue);
         let result_data = JSON.parse(configValue);
 
-        // check Error
-        if (result_data.code && result_data.code != 0) {
+        // check if Config Frame received
+        if (result_data.cmd === undefined || result_data.cmd != 1) {
+          // Ignore Frame
+          console.log("Ignore Frame Received: cmd=", result_data.cmd);
+        } else if (result_data.code && result_data.code != 0) {
           setErrorTxt(
             "Error get Config:" +
               result_data.code +
@@ -135,6 +154,26 @@ export default function ConnectDwarfSTA() {
           );
           setConnecting(false);
           setConnectionStatus(false);
+          // disconnect Bluetooth
+          actionDisconnect();
+        }
+        // check StaMod Not Configured but config saved in memory
+        else if (
+          result_data.state == 0 &&
+          connectionCtx.BleSTASSIDDwarf !== undefined &&
+          connectionCtx.BleSTASSIDDwarf &&
+          connectionCtx.BleSTAPWDDwarf !== undefined &&
+          connectionCtx.BleSTAPWDDwarf
+        ) {
+          setErrorTxt("Load WiFi configuration...");
+          IsFirstStepOK = true;
+          let bufferSetWifiSta = messageWifiSTA(
+            1,
+            BluetoothPWD,
+            connectionCtx.BleSTASSIDDwarf,
+            connectionCtx.BleSTAPWDDwarf
+          );
+          await characteristicDwarfII.writeValue(bufferSetWifiSta);
         }
         // check StaMod Configured
         else if (result_data.state != 2) {
@@ -143,12 +182,16 @@ export default function ConnectDwarfSTA() {
           );
           setConnecting(false);
           setConnectionStatus(false);
+          // disconnect Bluetooth
+          actionDisconnect();
         } else if (result_data.wifiMode != 2) {
           setErrorTxt(
             "Error STA MODE not Configured! Restart it and Use the mobile App."
           );
           setConnecting(false);
           setConnectionStatus(false);
+          // disconnect Bluetooth
+          actionDisconnect();
         }
         // set WifiSTA
         else {
@@ -169,7 +212,11 @@ export default function ConnectDwarfSTA() {
         console.log("Read:", configValue);
         let result_data = JSON.parse(configValue);
 
-        if (result_data.code && result_data.code != 0) {
+        // check if STA Frame received
+        if (result_data.cmd === undefined || result_data.cmd != 3) {
+          // Ignore Frame
+          console.log("Ignore Frame Received: cmd=", result_data.cmd);
+        } else if (result_data.code && result_data.code != 0) {
           setErrorTxt(
             "Error set WifiSTA:" +
               result_data.code +
@@ -179,6 +226,8 @@ export default function ConnectDwarfSTA() {
           );
           setConnecting(false);
           setConnectionStatus(false);
+          // disconnect Bluetooth
+          actionDisconnect();
         } else {
           console.log("Connected with IP: ", result_data.ip);
           setErrorTxt(" IP: " + result_data.ip);
@@ -187,8 +236,17 @@ export default function ConnectDwarfSTA() {
           saveIPDwarfDB(result_data.ip);
           connectionCtx.setBlePWDDwarf(BluetoothPWD);
           saveBlePWDDwarfDB(BluetoothPWD);
+          connectionCtx.setBleSTASSIDDwarf(result_data.ssid);
+          saveBleSTASSIDDwarfDB(result_data.ssid);
+          connectionCtx.setBleSTAPWDDwarf(result_data.psd);
+          saveBleSTAPWDDwarfDB(result_data.psd);
           setConnecting(false);
           setConnectionStatus(true);
+          await characteristicDwarfII.stopNotifications();
+          characteristicDwarfII.removeEventListener(
+            "characteristicvaluechanged",
+            handleValueChanged
+          );
         }
       }
     } catch (error) {
@@ -197,12 +255,33 @@ export default function ConnectDwarfSTA() {
       console.error(error);
       setConnecting(false);
       setConnectionStatus(false);
+      // disconnect Bluetooth
+      actionDisconnect();
     }
   }
 
   function onDisconnected() {
     console.log("> Bluetooth Device disconnected");
     setConnectionStatus(false);
+  }
+
+  async function actionDisconnect() {
+    try {
+      // disconnect Bluetooth
+      if (characteristicDwarfII) {
+        await characteristicDwarfII.stopNotifications();
+        characteristicDwarfII.removeEventListener(
+          "characteristicvaluechanged",
+          handleValueChanged
+        );
+      }
+      if (deviceDwarfII) {
+        deviceDwarfII.removeEventListener("gattserverdisconnected");
+        if (deviceDwarfII.gatt) await deviceDwarfII.gatt.disconnect();
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   function renderConnectionStatus() {

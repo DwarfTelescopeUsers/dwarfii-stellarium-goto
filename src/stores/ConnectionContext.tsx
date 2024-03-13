@@ -29,6 +29,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [IPDwarf, setIPDwarf] = useState<string | undefined>();
   const [socketIPDwarf, setSocketIPDwarf] = useState<any | undefined>();
   const [BlePWDDwarf, setBlePWDDwarf] = useState<string | undefined>();
+  const [BleSTASSIDDwarf, setBleSTASSIDDwarf] = useState<string | undefined>();
+  const [BleSTAPWDDwarf, setBleSTAPWDDwarf] = useState<string | undefined>();
 
   const [connectionStatusStellarium, setConnectionStatusStellarium] = useState<
     boolean | undefined
@@ -89,6 +91,10 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setSocketIPDwarf,
     BlePWDDwarf,
     setBlePWDDwarf,
+    BleSTASSIDDwarf,
+    setBleSTASSIDDwarf,
+    BleSTAPWDDwarf,
+    setBleSTAPWDDwarf,
     connectionStatusStellarium,
     setConnectionStatusStellarium,
     IPStellarium,

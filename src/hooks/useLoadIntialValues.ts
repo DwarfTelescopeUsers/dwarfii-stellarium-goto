@@ -9,7 +9,9 @@ import {
   fetchUrlStellariumDB,
   fetchConnectionStatusStellariumDB,
   fetchIPDwarfDB,
-  fetchBlePWDDwarf,
+  fetchBlePWDDwarfDB,
+  fetchBleSTASSIDDwarfDB,
+  fetchBleSTAPWDDwarfDB,
   fetchUserCurrentObjectListNameDb,
   fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
@@ -58,8 +60,16 @@ export function useLoadIntialValues() {
       if (data !== undefined) connectionCtx.setIPDwarf(data);
     }
     if (connectionCtx.BlePWDDwarf === undefined) {
-      let data = fetchBlePWDDwarf();
+      let data = fetchBlePWDDwarfDB();
       if (data !== undefined) connectionCtx.setBlePWDDwarf(data);
+    }
+    if (connectionCtx.BleSTASSIDDwarf === undefined) {
+      let data = fetchBleSTASSIDDwarfDB();
+      if (data !== undefined) connectionCtx.setBleSTASSIDDwarf(data);
+    }
+    if (connectionCtx.BleSTAPWDDwarf === undefined) {
+      let data = fetchBleSTAPWDDwarfDB();
+      if (data !== undefined) connectionCtx.setBleSTAPWDDwarf(data);
     }
     if (connectionCtx.connectionStatusStellarium === undefined) {
       let data = fetchConnectionStatusStellariumDB();
