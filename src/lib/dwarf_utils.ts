@@ -251,7 +251,8 @@ export async function updateTelescopeISPSetting(
 }
 
 export async function getAllTelescopeISPSetting(
-  connectionCtx: ConnectionContextType
+  connectionCtx: ConnectionContextType,
+  webSocketHandlerVal: any | undefined = undefined
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -373,8 +374,11 @@ export async function getAllTelescopeISPSetting(
     }
   };
 
+  // get webSocketHandlerVal from first connection : avoid undefined value from connectionCtx
   console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-  const webSocketHandler = connectionCtx.socketIPDwarf
+  const webSocketHandler = webSocketHandlerVal
+    ? webSocketHandlerVal
+    : connectionCtx.socketIPDwarf
     ? connectionCtx.socketIPDwarf
     : new WebSocketHandler(connectionCtx.IPDwarf);
 

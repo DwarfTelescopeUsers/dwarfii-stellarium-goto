@@ -25,6 +25,15 @@ export default function ConnectDwarf() {
   const [errorTxt, setErrorTxt] = useState("");
 
   function checkConnection() {
+    let getInfoCamera = true;
+
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(connectionCtx.IPDwarf);
+
+    connectionCtx.setSocketIPDwarf(webSocketHandler);
+
     const customMessageHandler = (txt_info, result_data) => {
       if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO) {
         connectionCtx.setConnectionStatus(true);
@@ -37,7 +46,10 @@ export default function ConnectDwarf() {
       ) {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setConnectionStatus(true);
-          getAllTelescopeISPSetting(connectionCtx);
+          if (getInfoCamera) {
+            getAllTelescopeISPSetting(connectionCtx, webSocketHandler);
+            getInfoCamera = false;
+          }
         } else {
           connectionCtx.setConnectionStatus(true);
           if (result_data.data.errorTxt)
@@ -91,13 +103,6 @@ export default function ConnectDwarf() {
       connectionCtx.setConnectionStatus(state);
       saveConnectionStatusDB(state);
     };
-
-    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    connectionCtx.setSocketIPDwarf(webSocketHandler);
 
     webSocketHandler.closeTimerHandler = () => {
       setConnecting(false);

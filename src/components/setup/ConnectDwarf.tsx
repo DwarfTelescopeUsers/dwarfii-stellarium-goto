@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ChangeEvent } from "react";
 
 import {
   Dwarfii_Api,
@@ -26,9 +26,10 @@ export default function ConnectDwarf() {
   const [goLive, setGoLive] = useState(false);
   const [errorTxt, setErrorTxt] = useState("");
 
-  function checkConnection(e: FormEvent<HTMLFormElement>) {
+  async function checkConnection(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    let getInfoCamera = true;
     const formData = new FormData(e.currentTarget);
     const formIP = formData.get("ip");
     let IPDwarf = formIP?.toString();
@@ -40,6 +41,16 @@ export default function ConnectDwarf() {
     setConnecting(true);
     connectionCtx.setIPDwarf(IPDwarf);
     saveIPDwarfDB(IPDwarf);
+
+    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+    const webSocketHandler = connectionCtx.socketIPDwarf
+      ? connectionCtx.socketIPDwarf
+      : new WebSocketHandler(IPDwarf);
+
+    connectionCtx.setSocketIPDwarf(webSocketHandler);
+
+    // Force IP
+    await webSocketHandler.setNewIpDwarf(IPDwarf);
 
     const customMessageHandler = (txt_info, result_data) => {
       if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO) {
@@ -53,7 +64,10 @@ export default function ConnectDwarf() {
       ) {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setConnectionStatus(true);
-          getAllTelescopeISPSetting(connectionCtx);
+          if (getInfoCamera) {
+            getAllTelescopeISPSetting(connectionCtx, webSocketHandler);
+            getInfoCamera = false;
+          }
         } else {
           connectionCtx.setConnectionStatus(true);
           if (result_data.data.errorTxt)
@@ -108,16 +122,6 @@ export default function ConnectDwarf() {
       saveConnectionStatusDB(state);
     };
 
-    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(IPDwarf);
-
-    connectionCtx.setSocketIPDwarf(webSocketHandler);
-
-    // Force IP
-    webSocketHandler.setIpDwarf(IPDwarf);
-
     webSocketHandler.closeTimerHandler = () => {
       setConnecting(false);
     };
@@ -166,6 +170,14 @@ export default function ConnectDwarf() {
     if (!webSocketHandler.run()) {
       console.error(" Can't launch Web Socket Run Action!");
     }
+  }
+
+  function ipHandler(e: ChangeEvent<HTMLInputElement>) {
+    let value = e.target.value.trim();
+    if (value === "") return;
+
+    saveIPDwarfDB(value);
+    connectionCtx.setIPDwarf(value);
   }
 
   function renderConnectionStatus() {
@@ -246,6 +258,7 @@ export default function ConnectDwarf() {
                 placeholder="127.00.00.00"
                 required
                 defaultValue={connectionCtx.IPDwarf}
+                onChange={(e) => ipHandler(e)}
               />
             </div>
           </div>

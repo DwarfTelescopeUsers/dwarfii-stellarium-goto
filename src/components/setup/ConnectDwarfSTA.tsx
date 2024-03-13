@@ -231,7 +231,12 @@ export default function ConnectDwarfSTA() {
         } else {
           console.log("Connected with IP: ", result_data.ip);
           setErrorTxt(" IP: " + result_data.ip);
-
+          // force disconnect if new IP
+          if (connectionCtx.IPDwarf != result_data.ip) {
+            if (connectionCtx.socketIPDwarf) {
+              connectionCtx.socketIPDwarf.close();
+            }
+          }
           connectionCtx.setIPDwarf(result_data.ip);
           saveIPDwarfDB(result_data.ip);
           connectionCtx.setBlePWDDwarf(BluetoothPWD);
@@ -276,7 +281,10 @@ export default function ConnectDwarfSTA() {
         );
       }
       if (deviceDwarfII) {
-        deviceDwarfII.removeEventListener("gattserverdisconnected");
+        deviceDwarfII.removeEventListener(
+          "gattserverdisconnected",
+          onDisconnected
+        );
         if (deviceDwarfII.gatt) await deviceDwarfII.gatt.disconnect();
       }
     } catch (error) {
