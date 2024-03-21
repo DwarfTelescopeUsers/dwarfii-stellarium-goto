@@ -44,7 +44,7 @@ export default function StatusBar() {
         <span className="me-3">Stellarium: {connectionStellarium}</span>
         {connectionCtx.BatteryLevelDwarf !== undefined && (
           <span className="me-3">
-            Battery: {connectionCtx.BatteryLevelDwarf.toString()} %
+            Battery: {connectionCtx.BatteryLevelDwarf.toString()}%
           </span>
         )}
         {connectionCtx.availableSizeDwarf !== undefined &&
