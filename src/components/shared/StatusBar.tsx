@@ -44,7 +44,7 @@ export default function StatusBar() {
         <span className="me-3">Stellarium: {connectionStellarium}</span>
         {connectionCtx.BatteryLevelDwarf !== undefined && (
           <span className="me-3">
-            Battery: {connectionCtx.BatteryLevelDwarf.toString()}
+            Battery: {connectionCtx.BatteryLevelDwarf.toString()} %
           </span>
         )}
         {connectionCtx.availableSizeDwarf !== undefined &&
@@ -54,7 +54,7 @@ export default function StatusBar() {
               {connectionCtx.availableSizeDwarf.toString() +
                 "/" +
                 connectionCtx.totalSizeDwarf.toString() +
-                "GB"}
+                "GB - " + (Math.round(((connectionCtx.availableSizeDwarf * 100) / connectionCtx.totalSizeDwarf)*100) / 100).toFixed(2) + "%"}
             </span>
           )}
         {connectionCtx.astroSettings.gain !== undefined && (
