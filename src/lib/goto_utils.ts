@@ -30,7 +30,11 @@ import {
 } from "@/lib/math_utils";
 import { computeRaDecToAltAz, computealtAzToHADec } from "@/lib/astro_utils";
 import { toIsoStringInLocalTime } from "@/lib/date_utils";
-import { getAllTelescopeISPSetting } from "@/lib/dwarf_utils";
+import {
+  turnOnTeleCameraFn,
+  updateTelescopeISPSetting,
+  getAllTelescopeISPSetting,
+} from "@/lib/dwarf_utils";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -63,6 +67,9 @@ export async function calibrationHandler(
   if (lat === undefined) return;
   if (lon === undefined) return;
   let calibration_status = false;
+
+  connectionCtx.astroSettings.target = undefined;
+  connectionCtx.astroSettings.status = undefined;
 
   const customMessageHandler = (txt_info, result_data) => {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME) {
@@ -281,11 +288,12 @@ export async function startGotoHandler(
             Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_FUNCTION_BUSY
         )
           goto_status = true;
+        connectionCtx.astroSettings.status = -1; // Error
 
         if (callback) {
           callback("Error GoTo");
 
-          getAllTelescopeISPSetting(connectionCtx);
+          resetCameraData(connectionCtx);
         }
       }
     } else if (
@@ -307,6 +315,7 @@ export async function startGotoHandler(
         result_data.data.targetName == targetName
       ) {
         goto_status = true;
+        connectionCtx.astroSettings.status = 1; // OK
         setGotoSuccess("Start Tracking");
         setGotoErrors("");
         if (callback) {
@@ -321,7 +330,7 @@ export async function startGotoHandler(
             callback
           );
         }
-        getAllTelescopeISPSetting(connectionCtx);
+        resetCameraData(connectionCtx);
       }
     } else {
       logger("", result_data, connectionCtx);
@@ -347,7 +356,7 @@ export async function startGotoHandler(
     connectionCtx.astroSavePosition.declination = declination_number;
     connectionCtx.astroSavePosition.strLocalTime =
       toIsoStringInLocalTime(today);
-    connectionCtx.setSavePositionStatus(true);
+    connectionCtx.setSavePositionStatus(true); // OK
   }
   console.log("Object Name :  " + objectName);
   console.log("Target Name :  " + targetName);
@@ -387,6 +396,7 @@ export async function startGotoHandler(
     );
   }
   connectionCtx.astroSettings.target = targetName!;
+  connectionCtx.astroSettings.status = 0; // in progress
 
   console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
   const webSocketHandler = connectionCtx.socketIPDwarf
@@ -410,6 +420,47 @@ export async function startGotoHandler(
   if (!webSocketHandler.run()) {
     console.error(" Can't launch Web Socket Run Action!");
   }
+}
+
+function resetCameraData(connectionCtx) {
+  setTimeout(() => {
+    turnOnTeleCameraFn(connectionCtx);
+  }, 1000);
+  setTimeout(() => {
+    updateTelescopeISPSetting(
+      "gainMode",
+      connectionCtx.astroSettings.gainMode as number,
+      connectionCtx
+    );
+  }, 1500);
+  setTimeout(() => {
+    updateTelescopeISPSetting(
+      "exposureMode",
+      connectionCtx.astroSettings.exposureMode as number,
+      connectionCtx
+    );
+  }, 2000);
+  setTimeout(() => {
+    updateTelescopeISPSetting(
+      "gain",
+      connectionCtx.astroSettings.gain as number,
+      connectionCtx
+    );
+  }, 2500);
+  setTimeout(() => {
+    updateTelescopeISPSetting(
+      "exposure",
+      connectionCtx.astroSettings.exposure as number,
+      connectionCtx
+    );
+  }, 3000);
+  setTimeout(() => {
+    updateTelescopeISPSetting(
+      "IR",
+      connectionCtx.astroSettings.IR as number,
+      connectionCtx
+    );
+  }, 3500);
 }
 
 export function savePositionHandler(
@@ -528,6 +579,7 @@ export async function stopGotoHandler(
         setGotoSuccess("Stopping Goto");
         setGotoErrors("");
         connectionCtx.astroSettings.target = undefined;
+        connectionCtx.astroSettings.status = undefined;
         if (callback) {
           callback("Stopping Goto");
         }

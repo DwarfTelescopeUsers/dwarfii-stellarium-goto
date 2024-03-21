@@ -8,10 +8,11 @@ import { processObjectListOpenNGC } from "@/lib/observation_lists_utils";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { saveCurrentObjectListNameDb } from "@/db/db_utils";
 
+let dsoObject = processObjectListOpenNGC(dsoCatalog);
+console.info("DSO processObjectListOpenNGC");
+
 export default function AutoGoto() {
   let connectionCtx = useContext(ConnectionContext);
-  let dsoObject = processObjectListOpenNGC(dsoCatalog);
-
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
     connectionCtx.setCurrentObjectListName(e.target.value);
     saveCurrentObjectListNameDb(e.target.value);

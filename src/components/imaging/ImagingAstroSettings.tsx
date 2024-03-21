@@ -260,6 +260,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
           declination: connectionCtx.astroSettings.declination,
           quality: connectionCtx.astroSettings.quality,
           target: connectionCtx.astroSettings.target,
+          status: connectionCtx.astroSettings.status,
         }}
         validate={(values) => {
           let errors = validateAstroSettings(values);

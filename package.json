@@ -23,7 +23,7 @@
     "astronomia": "^4.1.1",
     "bootstrap": "^5.3.0",
     "bootstrap-icons": "^1.10.5",
-    "dwarfii_api": "github:DwarfTelescopeUsers/dwarfii_api",
+    "dwarfii_api": "github:stevejcl/dwarfii_api#apiV2",
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "eslint-config-prettier": "^8.8.0",
@@ -39,6 +39,7 @@
     "react-dom": "18.2.0",
     "react-zoom-pan-pinch": "^3.1.0",
     "star-rise-and-set-times": "^1.0.0",
+    "suncalc": "^1.9.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {

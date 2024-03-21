@@ -283,6 +283,18 @@ export default function ManualGoto() {
         </div>
       </div>
       <div className="row mb-3">
+        <div className="col-sm-4">
+          {prevErrors && <span className="text-danger"> {prevErrors} </span>}
+          {gotoErrors && gotoErrors != prevErrors && (
+            <span className="text-danger">{gotoErrors} </span>
+          )}
+          {prevSuccess && <span className="text-success"> {prevSuccess} </span>}
+          {gotoSuccess && gotoSuccess != prevSuccess && (
+            <span className="text-danger">{gotoSuccess} </span>
+          )}
+        </div>
+      </div>
+      <div className="row mb-3">
         <div className="col-sm-4 text-end">
           <p>You can gently move the Center: </p>
         </div>
@@ -296,15 +308,6 @@ export default function ManualGoto() {
           </ol>
         </div>
       </div>
-      <br />
-      {prevErrors && <span className="text-danger"> {prevErrors} </span>}
-      {gotoErrors && gotoErrors != prevErrors && (
-        <span className="text-danger">{gotoErrors} </span>
-      )}
-      {prevSuccess && <span className="text-success"> {prevSuccess} </span>}
-      {gotoSuccess && gotoSuccess != prevSuccess && (
-        <span className="text-danger">{gotoSuccess} </span>
-      )}
       <GotoModal
         object={
           {

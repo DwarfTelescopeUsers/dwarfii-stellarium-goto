@@ -31,6 +31,11 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [BlePWDDwarf, setBlePWDDwarf] = useState<string | undefined>();
   const [BleSTASSIDDwarf, setBleSTASSIDDwarf] = useState<string | undefined>();
   const [BleSTAPWDDwarf, setBleSTAPWDDwarf] = useState<string | undefined>();
+  const [BatteryLevelDwarf, setBatteryLevelDwarf] = useState<any | undefined>();
+  const [availableSizeDwarf, setAvailableSizeDwarf] = useState<
+    any | undefined
+  >();
+  const [totalSizeDwarf, setTotalSizeDwarf] = useState<any | undefined>();
 
   const [connectionStatusStellarium, setConnectionStatusStellarium] = useState<
     boolean | undefined
@@ -95,6 +100,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setBleSTASSIDDwarf,
     BleSTAPWDDwarf,
     setBleSTAPWDDwarf,
+    BatteryLevelDwarf,
+    setBatteryLevelDwarf,
+    availableSizeDwarf,
+    setAvailableSizeDwarf,
+    totalSizeDwarf,
+    setTotalSizeDwarf,
     connectionStatusStellarium,
     setConnectionStatusStellarium,
     IPStellarium,

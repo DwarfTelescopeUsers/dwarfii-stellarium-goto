@@ -36,6 +36,8 @@ export default function ConnectDwarf() {
 
     const customMessageHandler = (txt_info, result_data) => {
       if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO) {
+        connectionCtx.setAvailableSizeDwarf(result_data.data.availableSize);
+        connectionCtx.setTotalSizeDwarf(result_data.data.totalSize);
         connectionCtx.setConnectionStatus(true);
         connectionCtx.setInitialConnectionTime(Date.now());
         saveConnectionStatusDB(true);
@@ -76,7 +78,7 @@ export default function ConnectDwarf() {
           result_data.data.state ==
           Dwarfii_Api.OperationState.OPERATION_STATE_STOPPED
         ) {
-          if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
             if (result_data.data.errorTxt)
               setErrorTxt(errorTxt + " " + result_data.data.errorTxt);
             else
@@ -84,6 +86,10 @@ export default function ConnectDwarf() {
           }
           logger("Need Go LIVE", {}, connectionCtx);
           setGoLive(true);
+        }
+      } else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_ELE) {
+        if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          connectionCtx.setBatteryLevelDwarf(result_data.data.value);
         }
       } else {
         logger("", result_data, connectionCtx);
@@ -99,9 +105,11 @@ export default function ConnectDwarf() {
     };
 
     const customStateHandler = (state) => {
-      setConnecting(false);
-      connectionCtx.setConnectionStatus(state);
-      saveConnectionStatusDB(state);
+      if (connecting) setConnecting(false);
+      if (state != connectionCtx.connectionStatus) {
+        connectionCtx.setConnectionStatus(state);
+        saveConnectionStatusDB(state);
+      }
     };
 
     webSocketHandler.closeTimerHandler = () => {
@@ -168,7 +176,7 @@ export default function ConnectDwarf() {
     if (connectionCtx.connectionStatus === false) {
       return <span className="text-danger">Connection failed{errorTxt}.</span>;
     }
-    if (slavemode) {
+    if (connectionCtx.connectionStatusSlave || slavemode) {
       return (
         <span className="text-warning">
           Connection successful (Slave Mode) {goLiveMessage}

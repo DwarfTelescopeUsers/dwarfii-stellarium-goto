@@ -20,6 +20,12 @@ export type ConnectionContextType = {
   setBleSTASSIDDwarf: Dispatch<SetStateAction<string | undefined>>;
   BleSTAPWDDwarf: string | undefined;
   setBleSTAPWDDwarf: Dispatch<SetStateAction<string | undefined>>;
+  BatteryLevelDwarf: number | undefined;
+  setBatteryLevelDwarf: Dispatch<SetStateAction<number | undefined>>;
+  availableSizeDwarf: number | undefined;
+  setAvailableSizeDwarf: Dispatch<SetStateAction<number | undefined>>;
+  totalSizeDwarf: number | undefined;
+  setTotalSizeDwarf: Dispatch<SetStateAction<number | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
@@ -112,6 +118,7 @@ export type AstroObject = {
   objectNumber: number;
   size?: string;
   constellation: string | null | undefined;
+  visible?: boolean | undefined;
 };
 
 export type ObjectStellariumInfo = {
@@ -220,6 +227,7 @@ export type AstroSettings = {
   count?: number;
   quality?: number;
   target?: string;
+  status?: number;
 };
 
 export type ImagingSession = {
