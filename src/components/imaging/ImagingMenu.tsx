@@ -120,15 +120,12 @@ export default function ImagingMenu(props: PropType) {
 
   const customErrorHandler = () => {
     console.error("ConnectDwarf : Socket Close!");
-    setConnecting(false);
     connectionCtx.setConnectionStatus(false);
-    saveConnectionStatusDB(false);
   };
 
   const customStateHandler = (state) => {
     if (state != connectionCtx.connectionStatus) {
       connectionCtx.setConnectionStatus(state);
-      saveConnectionStatusDB(state);
     }
   };
 
