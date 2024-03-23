@@ -32,6 +32,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [BleSTASSIDDwarf, setBleSTASSIDDwarf] = useState<string | undefined>();
   const [BleSTAPWDDwarf, setBleSTAPWDDwarf] = useState<string | undefined>();
   const [BatteryLevelDwarf, setBatteryLevelDwarf] = useState<any | undefined>();
+  const [BatteryStatusDwarf, setBatteryStatusDwarf] = useState<any>(0);
   const [availableSizeDwarf, setAvailableSizeDwarf] = useState<
     any | undefined
   >();
@@ -102,6 +103,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setBleSTAPWDDwarf,
     BatteryLevelDwarf,
     setBatteryLevelDwarf,
+    BatteryStatusDwarf,
+    setBatteryStatusDwarf,
     availableSizeDwarf,
     setAvailableSizeDwarf,
     totalSizeDwarf,

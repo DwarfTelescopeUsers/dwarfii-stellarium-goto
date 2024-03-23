@@ -116,6 +116,20 @@ export default function DwarfCameras(props: PropType) {
       logger(txt_info, result_data, connectionCtx);
     };
 
+    const customErrorHandler = () => {
+      console.error("ConnectDwarf : Socket Close!");
+      setConnecting(false);
+      connectionCtx.setConnectionStatus(false);
+      saveConnectionStatusDB(false);
+    };
+
+    const customStateHandler = (state) => {
+      if (state != connectionCtx.connectionStatus) {
+        connectionCtx.setConnectionStatus(state);
+        saveConnectionStatusDB(state);
+      }
+    };
+
     console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
     const webSocketHandler = connectionCtx.socketIPDwarf
       ? connectionCtx.socketIPDwarf
@@ -142,7 +156,9 @@ export default function DwarfCameras(props: PropType) {
       WS_Packet,
       txtInfoCommand,
       [cmd],
-      customMessageHandler
+      customMessageHandler,
+      customStateHandler,
+      customErrorHandler
     );
 
     if (!webSocketHandler.run()) {
