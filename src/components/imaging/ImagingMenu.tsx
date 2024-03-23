@@ -391,7 +391,7 @@ export default function ImagingMenu(props: PropType) {
       ],
       customMessageHandler,
       customStateHandler,
-      customErrorHandler,
+      customErrorHandler
     );
 
     if (!webSocketHandler.run()) {
@@ -433,7 +433,7 @@ export default function ImagingMenu(props: PropType) {
       [Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE],
       customMessageHandler,
       customStateHandler,
-      customErrorHandler,
+      customErrorHandler
     );
 
     if (!webSocketHandler.run()) {
@@ -626,7 +626,7 @@ export default function ImagingMenu(props: PropType) {
       [Cmd],
       customMessageHandler,
       customStateHandler,
-      customErrorHandler,
+      customErrorHandler
     );
 
     if (!webSocketHandler.run()) {

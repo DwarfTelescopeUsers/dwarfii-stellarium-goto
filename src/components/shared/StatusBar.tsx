@@ -40,7 +40,8 @@ export default function StatusBar() {
         <div className="col-sm align-self-center">
           <span className="me-3">Dwarf II: {connection}</span>
           <span className="me-3">Stellarium: {connectionStellarium}</span>
-          {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
+          {connectionCtx.connectionStatus &&
+            connectionCtx.availableSizeDwarf !== undefined &&
             connectionCtx.totalSizeDwarf !== undefined && (
               <span className="me-3">
                 SDCard:{" "}
@@ -104,13 +105,14 @@ export default function StatusBar() {
       </div>
       <div className="row mb">
         <div className="col-md-auto">
-          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
-            <BatteryMeter
-              batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
-              isCharging={connectionCtx.BatteryStatusDwarf > 0}
-              isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
-            />
-          )}
+          {connectionCtx.connectionStatus &&
+            connectionCtx.BatteryLevelDwarf !== undefined && (
+              <BatteryMeter
+                batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+                isCharging={connectionCtx.BatteryStatusDwarf > 0}
+                isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+              />
+            )}
         </div>
         <div className="col-sm align-self-center">
           {connectionCtx.astroSettings.target !== undefined && (
