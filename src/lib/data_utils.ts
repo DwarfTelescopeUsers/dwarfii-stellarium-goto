@@ -208,6 +208,19 @@ export const allowedExposures = {
   ],
 };
 
+export const getExposureIndexDefault = () => {
+  let index = allowedExposures.defaultValueIndex;
+  return index;
+};
+
+export const getExposureDefault = () => {
+  let index = allowedExposures.defaultValueIndex;
+  const foundOption = allowedExposures.values.find(
+    (option) => option.index === index
+  );
+  return foundOption ? foundOption.name : "1/30";
+};
+
 export const getExposureNameByIndex = (index) => {
   const foundOption = allowedExposures.values.find(
     (option) => option.index === index
@@ -217,7 +230,7 @@ export const getExposureNameByIndex = (index) => {
 
 export const getExposureValueByIndex = (index) => {
   const name = getExposureNameByIndex(index);
-  if (name == "Auto") return 1;
+  if (name == "Auto") return eval(getExposureDefault());
   else return eval(name);
 };
 

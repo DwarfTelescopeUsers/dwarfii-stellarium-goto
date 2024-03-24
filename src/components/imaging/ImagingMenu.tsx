@@ -623,7 +623,7 @@ export default function ImagingMenu(props: PropType) {
     webSocketHandler.prepare(
       WS_Packet,
       txtInfoCommand,
-      [Cmd],
+      Cmd,
       customMessageHandler,
       customStateHandler,
       customErrorHandler
