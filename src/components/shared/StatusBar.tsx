@@ -40,6 +40,14 @@ export default function StatusBar() {
         <div className="col-sm align-self-center">
           <span className="me-3">Dwarf II: {connection}</span>
           <span className="me-3">Stellarium: {connectionStellarium}</span>
+          <div className="container-battery">{connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
+             <BatteryMeter
+                          batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+                          isCharging={connectionCtx.BatteryStatusDwarf > 0}
+                          isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+             />
+                  )}</div>
+          <div className="container-status">
           {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
             connectionCtx.totalSizeDwarf !== undefined && (
               <span className="me-3">
@@ -99,19 +107,11 @@ export default function StatusBar() {
                 Time: {connectionCtx.imagingSession.sessionElaspsedTime}
               </span>
             </>
-          )}
+          )}</div>
         </div>
       </div>
       <div className="row mb">
-        <div className="col-md-auto">
-          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
-            <BatteryMeter
-              batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
-              isCharging={connectionCtx.BatteryStatusDwarf > 0}
-              isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
-            />
-          )}
-        </div>
+        
         <div className="col-sm align-self-center">
           {connectionCtx.astroSettings.target !== undefined && (
             <span className="me-3">

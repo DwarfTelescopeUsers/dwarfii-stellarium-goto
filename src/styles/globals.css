@@ -23,8 +23,17 @@ body {
   display: flex;
   flex-direction: row;
   margin-left: 16px;
+  width: 80px;
+  margin: -36px 0px 1px 200px;
 }
-
+.container-battery {
+    display: flex;
+    margin-left: 0px;
+}
+.container-status {
+    display: flex;
+    
+}
 .battery-meter--value {
   color: #53A03f;
   font-size: 1em;
