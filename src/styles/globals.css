@@ -17,3 +17,62 @@ body {
 #__next div{
   background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
 }
+
+.battery-meter {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  margin-left: 16px;
+}
+
+.battery-meter--value {
+  color: #53A03f;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.battery-meter--low-battery {
+  animation: pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.battery-meter path {
+  transition: fill 0.3s ease-out;
+}
+.low-battery-notice {
+  white-space: nowrap;
+  color: #ff533f;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.lightning-bolt {
+  animation: lightning-bold-reveal 0.3s forwards;
+  transform-origin: center center;
+}
+
+.lightning-bolt-fast {
+  animation: lightning-bold-reveal 0.3s forwards infinite;
+  transform-origin: center center;
+}
+
+@keyframes lightning-bold-reveal {
+  0% {
+    transform: scale(0);
+  }
+
+  90% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

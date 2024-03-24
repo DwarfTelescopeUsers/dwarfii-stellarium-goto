@@ -42,7 +42,7 @@ export default function AutoGoto() {
       >
         <option value="default">Select object lists</option>
         <option value="dso">DSO</option>
-        <option value="planets">Planets and Moon</option>
+        <option value="planets">Planets, Moon and Sun</option>
       </select>
       {showInstructions && (
         <>
@@ -67,8 +67,8 @@ export default function AutoGoto() {
               </ul>
             </li>
             <li>
-              The Planets and Moon list has the planets in our solar system and
-              the Moon. Be aware, Dwarf II is not good for taking images of the
+              The Planets, Moon and Sun list has the planets in our solar system and
+              the Moon and The Sun. Be aware, Dwarf II is not good for taking images of the
               planets.
             </li>
           </ol>

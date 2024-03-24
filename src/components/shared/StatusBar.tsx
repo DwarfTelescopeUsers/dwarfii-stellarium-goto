@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { IRCut } from "dwarfii_api";
 import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
+import BatteryMeter from "@/components/BatteryMeter";
 
 export default function StatusBar() {
   let connectionCtx = useContext(ConnectionContext);
@@ -34,79 +35,91 @@ export default function StatusBar() {
     );
 
   return (
-    <div className="mb-2">
-      <div>
-        {/* {JSON.stringify(connectionCtx.astroSettings, null, 2)}
-      <br />
-      {JSON.stringify(connectionCtx.imagingSession, null, 2)}
-      <br /> */}
-        <span className="me-3">Dwarf II: {connection}</span>
-        <span className="me-3">Stellarium: {connectionStellarium}</span>
-        {connectionCtx.BatteryLevelDwarf !== undefined && (
-          <span className="me-3">
-            Battery: {connectionCtx.BatteryLevelDwarf.toString()}%
-          </span>
-        )}
-        {connectionCtx.availableSizeDwarf !== undefined &&
-          connectionCtx.totalSizeDwarf !== undefined && (
+    <div>
+      <div className="row mb">
+        <div className="col-sm align-self-center">
+          <span className="me-3">Dwarf II: {connection}</span>
+          <span className="me-3">Stellarium: {connectionStellarium}</span>
+          {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
+            connectionCtx.totalSizeDwarf !== undefined && (
+              <span className="me-3">
+                SDCard:{" "}
+                {connectionCtx.availableSizeDwarf.toString() +
+                  "/" +
+                  connectionCtx.totalSizeDwarf.toString() +
+                  "GB - " +
+                  (
+                    (connectionCtx.availableSizeDwarf /
+                      connectionCtx.totalSizeDwarf) *
+                    100
+                  ).toFixed(2)}
+                %
+              </span>
+            )}
+          {connectionCtx.astroSettings.gain !== undefined && (
             <span className="me-3">
-              SDCard:{" "}
-              {connectionCtx.availableSizeDwarf.toString() +
-                "/" +
-                connectionCtx.totalSizeDwarf.toString() +
-                "GB - " + (Math.round(((connectionCtx.availableSizeDwarf * 100) / connectionCtx.totalSizeDwarf)*100) / 100).toFixed(2) + "%"}
+              Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
             </span>
           )}
-        {connectionCtx.astroSettings.gain !== undefined && (
-          <span className="me-3">
-            Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
-          </span>
-        )}
-        {connectionCtx.astroSettings.exposure !== undefined && (
-          <span className="me-3">
-            Exp: {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
-          </span>
-        )}
-        {connectionCtx.astroSettings.IR !== undefined && (
-          <span className="me-3">
-            IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
-          </span>
-        )}
-        {connectionCtx.astroSettings.binning !== undefined && (
-          <span className="me-3">
-            Bin: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
-          </span>
-        )}
-        {connectionCtx.astroSettings.count !== undefined && (
-          <span className="me-3">
-            Count: {connectionCtx.astroSettings.count}
-          </span>
-        )}
-        {connectionCtx.astroSettings.quality !== undefined && (
-          <span className="me-3">
-            Quality: {connectionCtx.astroSettings.quality}
-          </span>
-        )}
-        {Object.keys(connectionCtx.imagingSession).length > 0 && (
-          <>
+          {connectionCtx.astroSettings.exposure !== undefined && (
             <span className="me-3">
-              Taken: {connectionCtx.imagingSession.imagesTaken}
+              Exp:{" "}
+              {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
             </span>
+          )}
+          {connectionCtx.astroSettings.IR !== undefined && (
             <span className="me-3">
-              Stacked: {connectionCtx.imagingSession.imagesStacked}
+              IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
             </span>
+          )}
+          {connectionCtx.astroSettings.binning !== undefined && (
             <span className="me-3">
-              Time: {connectionCtx.imagingSession.sessionElaspsedTime}
+              Bin: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
             </span>
-          </>
-        )}
+          )}
+          {connectionCtx.astroSettings.count !== undefined && (
+            <span className="me-3">
+              Count: {connectionCtx.astroSettings.count}
+            </span>
+          )}
+          {connectionCtx.astroSettings.quality !== undefined && (
+            <span className="me-3">
+              Quality: {connectionCtx.astroSettings.quality}
+            </span>
+          )}
+          {Object.keys(connectionCtx.imagingSession).length > 0 && (
+            <>
+              <span className="me-3">
+                Taken: {connectionCtx.imagingSession.imagesTaken}
+              </span>
+              <span className="me-3">
+                Stacked: {connectionCtx.imagingSession.imagesStacked}
+              </span>
+              <span className="me-3">
+                Time: {connectionCtx.imagingSession.sessionElaspsedTime}
+              </span>
+            </>
+          )}
+        </div>
       </div>
-      <div>
-        {connectionCtx.astroSettings.target !== undefined && (
-          <span className="me-3">
-            Current Target: {connectionCtx.astroSettings.target} {goto_progress}
-          </span>
-        )}
+      <div className="row mb">
+        <div className="col-md-auto">
+          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
+            <BatteryMeter
+              batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+              isCharging={connectionCtx.BatteryStatusDwarf > 0}
+              isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+            />
+          )}
+        </div>
+        <div className="col-sm align-self-center">
+          {connectionCtx.astroSettings.target !== undefined && (
+            <span className="me-3">
+              Current Target: {connectionCtx.astroSettings.target}{" "}
+              {goto_progress}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

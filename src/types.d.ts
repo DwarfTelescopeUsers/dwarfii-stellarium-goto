@@ -22,6 +22,8 @@ export type ConnectionContextType = {
   setBleSTAPWDDwarf: Dispatch<SetStateAction<string | undefined>>;
   BatteryLevelDwarf: number | undefined;
   setBatteryLevelDwarf: Dispatch<SetStateAction<number | undefined>>;
+  BatteryStatusDwarf: number;
+  setBatteryStatusDwarf: Dispatch<SetStateAction<number>>;
   availableSizeDwarf: number | undefined;
   setAvailableSizeDwarf: Dispatch<SetStateAction<number | undefined>>;
   totalSizeDwarf: number | undefined;

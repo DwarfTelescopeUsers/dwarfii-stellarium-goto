@@ -109,6 +109,10 @@ export default function ConnectDwarf() {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setBatteryLevelDwarf(result_data.data.value);
         }
+      } else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CHARGE) {
+        if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          connectionCtx.setBatteryStatusDwarf(result_data.data.value);
+        }
       } else {
         logger("", result_data, connectionCtx);
       }
@@ -146,37 +150,54 @@ export default function ConnectDwarf() {
       saveConnectionStatusDB(false);
     }, 5000);
 
-    setSlavemode(false);
-    setGoLive(false);
-    connectionCtx.setConnectionStatusSlave(false);
-    setConnecting(true);
+    // function for connection and reconnection
+    const customReconnectHandler = () => {
+      startConnect();
+    }
 
-    // Send Commands : cmdCameraTeleGetSystemWorkingState
-    let WS_Packet = messageCameraTeleGetSystemWorkingState();
-    let WS_Packet1 = messageCameraTeleOpenCamera();
-    let WS_Packet2 = messageCameraWideOpenCamera();
-    let txtInfoCommand = "Connection";
+    function startConnect () {
 
-    webSocketHandler.prepare(
-      [WS_Packet, WS_Packet1, WS_Packet2],
-      txtInfoCommand,
-      [
-        "*", // Get All Data
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE,
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
-      ],
-      customMessageHandler,
-      customStateHandler,
-      customErrorHandler
-    );
+      console.log("ConnectDwarf startConnect Function started");
+
+      setSlavemode(false);
+      setGoLive(false);
+      connectionCtx.setConnectionStatusSlave(false);
+      setConnecting(true);
+
+      // Send Commands : cmdCameraTeleGetSystemWorkingState
+      let WS_Packet = messageCameraTeleGetSystemWorkingState();
+      let WS_Packet1 = messageCameraTeleOpenCamera();
+      let WS_Packet2 = messageCameraWideOpenCamera();
+      let txtInfoCommand = "Connection";
+
+      webSocketHandler.prepare(
+        [WS_Packet, WS_Packet1, WS_Packet2],
+        txtInfoCommand,
+        [
+          "*", // Get All Data
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_ELE,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CHARGE,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
+        ],
+        customMessageHandler,
+        customStateHandler,
+        customErrorHandler,
+        customReconnectHandler
+      );
+    }
+
+    // Start Connection
+    startConnect();
 
     if (!webSocketHandler.run()) {
       console.error(" Can't launch Web Socket Run Action!");
     }
+
   }
 
   function ipHandler(e: ChangeEvent<HTMLInputElement>) {

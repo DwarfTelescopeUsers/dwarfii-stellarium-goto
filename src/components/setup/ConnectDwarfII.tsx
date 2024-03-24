@@ -16,7 +16,11 @@ import { logger } from "@/lib/logger";
 
 import { getAllTelescopeISPSetting } from "@/lib/dwarf_utils";
 
-export default function ConnectDwarf() {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export default function ConnectDwarfII() {
   let connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);
@@ -24,8 +28,12 @@ export default function ConnectDwarf() {
   const [goLive, setGoLive] = useState(false);
   const [errorTxt, setErrorTxt] = useState("");
 
-  function checkConnection() {
+  async function checkConnection() {
     let getInfoCamera = true;
+
+    await sleep(100);
+    
+    setConnecting(true);
 
     console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
     const webSocketHandler = connectionCtx.socketIPDwarf
@@ -91,6 +99,10 @@ export default function ConnectDwarf() {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setBatteryLevelDwarf(result_data.data.value);
         }
+      } else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CHARGE) {
+        if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
+          connectionCtx.setBatteryStatusDwarf(result_data.data.value);
+        }
       } else {
         logger("", result_data, connectionCtx);
       }
@@ -129,37 +141,54 @@ export default function ConnectDwarf() {
       saveConnectionStatusDB(false);
     }, 5000);
 
-    setSlavemode(false);
-    setGoLive(false);
-    connectionCtx.setConnectionStatusSlave(false);
-    setConnecting(true);
+    // function for connection and reconnection
+    const customReconnectHandler = () => {
+      startConnect();
+    }
 
-    // Send Command : cmdCameraTeleGetSystemWorkingState
-    let WS_Packet = messageCameraTeleGetSystemWorkingState();
-    let WS_Packet1 = messageCameraTeleOpenCamera();
-    let WS_Packet2 = messageCameraWideOpenCamera();
-    let txtInfoCommand = "Connection2";
+    function startConnect () {
 
-    webSocketHandler.prepare(
-      [WS_Packet, WS_Packet1, WS_Packet2],
-      txtInfoCommand,
-      [
-        "*", // Get All Data
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE,
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
-      ],
-      customMessageHandler,
-      customStateHandler,
-      customErrorHandler
-    );
+      console.log("ConnectDwarfII startConnect Function started");
+
+      setSlavemode(false);
+      setGoLive(false);
+      connectionCtx.setConnectionStatusSlave(false);
+      setConnecting(true);
+
+      // Send Commands : cmdCameraTeleGetSystemWorkingState
+      let WS_Packet = messageCameraTeleGetSystemWorkingState();
+      let WS_Packet1 = messageCameraTeleOpenCamera();
+      let WS_Packet2 = messageCameraWideOpenCamera();
+      let txtInfoCommand = "Connection2";
+
+      webSocketHandler.prepare(
+        [WS_Packet, WS_Packet1, WS_Packet2],
+        txtInfoCommand,
+        [
+          "*", // Get All Data
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_SDCARD_INFO,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_ELE,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CHARGE,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_WS_HOST_SLAVE_MODE,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA,
+          Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA,
+          Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
+        ],
+        customMessageHandler,
+        customStateHandler,
+        customErrorHandler,
+        customReconnectHandler
+      );
+    }
+
+    // Start Connection
+    startConnect();
 
     if (!webSocketHandler.run()) {
       console.error(" Can't launch Web Socket Run Action!");
     }
+
   }
 
   function renderConnectionStatus() {

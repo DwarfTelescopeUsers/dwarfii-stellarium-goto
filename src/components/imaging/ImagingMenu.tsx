@@ -118,6 +118,17 @@ export default function ImagingMenu(props: PropType) {
     return timer;
   }
 
+  const customErrorHandler = () => {
+    console.error("ConnectDwarf : Socket Close!");
+    connectionCtx.setConnectionStatus(false);
+  };
+
+  const customStateHandler = (state) => {
+    if (state != connectionCtx.connectionStatus) {
+      connectionCtx.setConnectionStatus(state);
+    }
+  };
+
   function takeAstroPhotoHandler() {
     if (connectionCtx.IPDwarf == undefined) {
       return;
@@ -283,7 +294,9 @@ export default function ImagingMenu(props: PropType) {
           Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING,
           Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
         ],
-        customMessageHandler
+        customMessageHandler,
+        customStateHandler,
+        customErrorHandler
       );
 
       if (!webSocketHandler.run()) {
@@ -376,7 +389,9 @@ export default function ImagingMenu(props: PropType) {
         Dwarfii_Api.DwarfCMD.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING,
         Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING,
       ],
-      customMessageHandler
+      customMessageHandler,
+      customStateHandler,
+      customErrorHandler,
     );
 
     if (!webSocketHandler.run()) {
@@ -416,7 +431,9 @@ export default function ImagingMenu(props: PropType) {
       WS_Packet,
       txtInfoCommand,
       [Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE],
-      customMessageHandler
+      customMessageHandler,
+      customStateHandler,
+      customErrorHandler,
     );
 
     if (!webSocketHandler.run()) {
@@ -510,8 +527,9 @@ export default function ImagingMenu(props: PropType) {
   }
 
   function focusAutoAstro() {
+    console.log("Astro click");
     setAstroFocus(true);
-    focusAction(true, false, false, 0);
+    focusAction(true, false, false, 0, 1);
   }
 
   function focusAutoAstroStop() {
@@ -519,7 +537,16 @@ export default function ImagingMenu(props: PropType) {
     focusAction(true, false, true, 0);
   }
 
-  function focusAction(Astro, Continu, Stop, Direction) {
+  const handleRightClick = (event) => {
+    event.preventDefault(); // Prevent default context menu
+    console.log("Right-click detected!");
+    // Your custom logic for right-click event
+    console.log("Astro Right click");
+    setAstroFocus(true);
+    focusAction(true, false, false, 0, 0);
+  };
+
+  function focusAction(Astro, Continu, Stop, Direction, ModeAstro = 1) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
@@ -563,7 +590,7 @@ export default function ImagingMenu(props: PropType) {
     let txtInfoCommand;
     let Cmd;
     if (Astro && !Continu && !Stop) {
-      WS_Packet = messageFocusStartAstroAutoFocus(1);
+      WS_Packet = messageFocusStartAstroAutoFocus(ModeAstro);
       txtInfoCommand = "AstroFocus";
       Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_ASTRO_AUTO_FOCUS];
       console.log("Focus : CMD_FOCUS_START_ASTRO_AUTO_FOCUS");
@@ -597,7 +624,9 @@ export default function ImagingMenu(props: PropType) {
       WS_Packet,
       txtInfoCommand,
       [Cmd],
-      customMessageHandler
+      customMessageHandler,
+      customStateHandler,
+      customErrorHandler,
     );
 
     if (!webSocketHandler.run()) {
@@ -685,35 +714,37 @@ export default function ImagingMenu(props: PropType) {
       </Tooltip>
     );
   };
+
   /*
-let startTime;
-let isLongPress = false;
+  let startTime;
+  let isLongPress = false;
 
-function handleMouseDown() {
-  startTime = new Date().getTime();
+  function handleMouseDown() {
+    startTime = new Date().getTime();
 
-  // Set a timeout for the long press
-  setTimeout(() => {
-    isLongPress = true;
-    console.log("Long press detected");
-  }, 500); // Adjust the duration as needed
-}
-
-function handleMouseUp() {
-  const endTime = new Date().getTime();
-  const duration = endTime - startTime;
-
-  // Check if it was a short click
-  if (duration < 500 && !isLongPress) {
-    console.log("Short click detected");
-    // Perform your action for a short click
+    // Set a timeout for the long press
+    setTimeout(() => {
+      isLongPress = true;
+      console.log("Long press detected");
+    }, 500); // Adjust the duration as needed
   }
 
-  // Reset variables for the next interaction
-  startTime = 0;
-  isLongPress = false;
-}
-*/
+  function handleMouseUp() {
+    const endTime = new Date().getTime();
+    const duration = endTime - startTime;
+
+    // Check if it was a short click
+    if (duration < 500 && !isLongPress) {
+      console.log("Short click detected");
+      // Perform your action for a short click
+    }
+
+    // Reset variables for the next interaction
+    startTime = 0;
+    isLongPress = false;
+  }
+  */
+
   return (
     <ul className="nav nav-pills flex-column mb-auto border">
       <li className={`nav-item ${styles.box}`}>
@@ -807,21 +838,23 @@ function handleMouseUp() {
       )}
       <hr />
       {!isRecording && !endRecording && !astroFocus && (
-        <li className={`nav-item ${styles.box}`}>
-          <Link
-            href="#"
-            className=""
-            onClick={focusAutoAstro}
-            title="Astro Auto Focus"
-          >
-            <i
-              className="icon-bullseye"
-              style={{
-                fontSize: "2rem",
-              }}
-            ></i>
-          </Link>
-        </li>
+        <div onContextMenu={handleRightClick}>
+          <li className={`nav-item ${styles.box}`}>
+            <Link
+              href="#"
+              className=""
+              onClick={focusAutoAstro}
+              title="Astro Auto Focus"
+            >
+              <i
+                className="icon-bullseye"
+                style={{
+                  fontSize: "2rem",
+                }}
+              ></i>
+            </Link>
+          </li>
+        </div>
       )}
       {!isRecording && !endRecording && astroFocus && (
         <li className={`nav-item ${styles.box}`}>
