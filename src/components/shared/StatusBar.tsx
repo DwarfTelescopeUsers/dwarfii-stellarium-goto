@@ -40,18 +40,21 @@ export default function StatusBar() {
         <div className="col-sm align-self-center">
           <span className="me-3">Dwarf II: {connection}</span>
           <span className="me-3">Stellarium: {connectionStellarium}</span>
-          <div className="container-battery">{connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
+          <div className="container-battery">
+          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
              <BatteryMeter
-                          batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
-                          isCharging={connectionCtx.BatteryStatusDwarf > 0}
-                          isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+                 batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+                 isCharging={connectionCtx.BatteryStatusDwarf > 0}
+                 isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
              />
-                  )}</div>
+          )}
+          </div>
           <div className="container-status">
           {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
             connectionCtx.totalSizeDwarf !== undefined && (
-              <span className="me-3">
-                SDCard:{" "}
+             <span className="me-3"><div className="hover-text"><i className="icon-drive" />
+             <span className="tooltip-text" id="top">Sd-Card</span>                          
+                              :{" "}
                 {connectionCtx.availableSizeDwarf.toString() +
                   "/" +
                   connectionCtx.totalSizeDwarf.toString() +
@@ -62,38 +65,39 @@ export default function StatusBar() {
                     100
                   ).toFixed(2)}
                 %
-              </span>
+              </div>
+             </span>
             )}
           {connectionCtx.astroSettings.gain !== undefined && (
-            <span className="me-3">
-              Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
-            </span>
+                          <span className="me-3"><div className="hover-text"><i className="icon-bullseye" />
+                              <span className="tooltip-text" id="top">Gain</span>: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
+            </div></span>
           )}
           {connectionCtx.astroSettings.exposure !== undefined && (
-            <span className="me-3">
-              Exp:{" "}
+                          <span className="me-3"><div className="hover-text"><i className="icon-adjust" />
+                              <span className="tooltip-text" id="top">Exposure</span>:{" "}
               {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
-            </span>
+            </div></span>
           )}
           {connectionCtx.astroSettings.IR !== undefined && (
-            <span className="me-3">
-              IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
-            </span>
+                          <span className="me-3"><div className="hover-text"><i className="icon-filter" />
+                              <span className="tooltip-text" id="top">IR-Filter</span>: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
+            </div></span>
           )}
           {connectionCtx.astroSettings.binning !== undefined && (
-            <span className="me-3">
-              Bin: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
-            </span>
+                          <span className="me-3"><div className="hover-text"><i className="icon-picture" />
+                              <span className="tooltip-text" id="top">Binning</span>: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
+            </div></span>
           )}
           {connectionCtx.astroSettings.count !== undefined && (
-            <span className="me-3">
-              Count: {connectionCtx.astroSettings.count}
-            </span>
+                          <span className="me-3"><div className="hover-text"><i className="icon-counter-4" />
+                              <span className="tooltip-text" id="top">Counter</span>: {connectionCtx.astroSettings.count}
+            </div></span>
           )}
           {connectionCtx.astroSettings.quality !== undefined && (
-            <span className="me-3">
-              Quality: {connectionCtx.astroSettings.quality}
-            </span>
+                          <span className="me-3"><div className="hover-text"><i className="icon-star-empty" />
+                              <span className="tooltip-text" id="top">Quality</span> : {connectionCtx.astroSettings.quality}
+            </div></span>
           )}
           {Object.keys(connectionCtx.imagingSession).length > 0 && (
             <>
