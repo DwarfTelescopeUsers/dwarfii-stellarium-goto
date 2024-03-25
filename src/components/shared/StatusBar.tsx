@@ -51,10 +51,12 @@ export default function StatusBar() {
 
   return (
     <div>
-      <div className="row mb">
-        <div className="col-sm align-self-center">
+      <div className="row mb ">
+        <div className="col-sm align-center">
+          <div className="container-connection">
           <span className="me-3">Dwarf II: {connection}</span>
           <span className="me-3">Stellarium: {connectionStellarium}</span>
+          </div>
           <div className="container-battery">
           {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
              <BatteryMeter
@@ -88,11 +90,6 @@ export default function StatusBar() {
                               <span className="tooltip-text" id="top">Gain</span>: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
             </div></span>
           )}
-          {connectionCtx.astroSettings.exposure !== undefined && (
-                          <span className="me-3"><div className="hover-text"><i className="icon-adjust" />
-                              <span className="tooltip-text" id="top">Exposure</span>:{" "}
-              {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
-            </div></span>
           {exposureValue !== undefined && (
                           <span className="me-3"><div className="hover-text"><i className="icon-adjust" />
                               <span className="tooltip-text" id="top">Exposure</span>:{" "}
@@ -122,20 +119,17 @@ export default function StatusBar() {
           {Object.keys(connectionCtx.imagingSession).length > 0 && (
             <>
               <span className="me-3">
-                IR: {connectionCtx.astroSettings.IR === IRCut ? "Cut" : "Pass"}
+                Taken: {connectionCtx.imagingSession.imagesTaken}
               </span>
-            )}
-            {connectionCtx.astroSettings.binning !== undefined && (
               <span className="me-3">
-                Bin: {connectionCtx.astroSettings.binning == 0 ? "1x1" : "2x2"}
+                Stacked: {connectionCtx.imagingSession.imagesStacked}
               </span>
-            )}
-            {connectionCtx.astroSettings.count !== undefined && (
               <span className="me-3">
-                Count: {connectionCtx.astroSettings.count}
+                Time: {connectionCtx.imagingSession.sessionElaspsedTime}
               </span>
             </>
-          )}</div>
+          )}
+          </div>
         </div>
       </div>
       <div className="row mb">

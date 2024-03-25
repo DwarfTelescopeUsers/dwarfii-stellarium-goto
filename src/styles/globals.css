@@ -18,17 +18,26 @@ body {
   background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
 }
 
+.container-connection {
+  align-items: center;
+  display: flex;
+  margin-left: 0px;
+  margin-top: 10px;
+  margin-bottom: -6px;
+}
+
 .battery-meter {
   align-items: center;
   display: flex;
   flex-direction: row;
   margin-left: 16px;
-  width: 80px;
+  width: 180px;
   margin: -36px 0px 1px 200px;
 }
 .container-battery {
     display: flex;
     margin-left: 0px;
+    margin-top: 6px;
 }
 .container-status {
     display: flex;
