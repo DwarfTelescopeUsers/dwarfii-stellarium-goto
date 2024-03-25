@@ -32,7 +32,7 @@ export default function ConnectDwarfII() {
     let getInfoCamera = true;
 
     await sleep(100);
-    
+
     setConnecting(true);
 
     console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
@@ -144,10 +144,9 @@ export default function ConnectDwarfII() {
     // function for connection and reconnection
     const customReconnectHandler = () => {
       startConnect();
-    }
+    };
 
-    function startConnect () {
-
+    function startConnect() {
       console.log("ConnectDwarfII startConnect Function started");
 
       setSlavemode(false);
@@ -188,7 +187,6 @@ export default function ConnectDwarfII() {
     if (!webSocketHandler.run()) {
       console.error(" Can't launch Web Socket Run Action!");
     }
-
   }
 
   function renderConnectionStatus() {

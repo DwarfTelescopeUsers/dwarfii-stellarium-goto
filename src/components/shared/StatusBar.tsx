@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { IRCut } from "dwarfii_api";
+import { IRCut, modeAuto, modeManual } from "dwarfii_api";
 import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
 import BatteryMeter from "@/components/BatteryMeter";
 
@@ -32,6 +32,21 @@ export default function StatusBar() {
       <i className="bi bi-check-circle" style={{ color: "orange" }}></i>
     ) : (
       <i className="bi bi-x-circle" style={{ color: "red" }}></i>
+    );
+
+  let exposureValue: string | undefined = undefined;
+  if (
+    connectionCtx.astroSettings.exposureMode !== undefined &&
+    connectionCtx.astroSettings.exposureMode == modeAuto
+  )
+    exposureValue = "Auto";
+  else if (
+    connectionCtx.astroSettings.exposureMode !== undefined &&
+    connectionCtx.astroSettings.exposureMode == modeManual &&
+    connectionCtx.astroSettings.exposure !== undefined
+  )
+    exposureValue = getExposureNameByIndex(
+      connectionCtx.astroSettings.exposure
     );
 
   return (
@@ -78,6 +93,11 @@ export default function StatusBar() {
                               <span className="tooltip-text" id="top">Exposure</span>:{" "}
               {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
             </div></span>
+          {exposureValue !== undefined && (
+                          <span className="me-3"><div className="hover-text"><i className="icon-adjust" />
+                              <span className="tooltip-text" id="top">Exposure</span>:{" "}
+              {exposureValue}
+            </div></span>
           )}
           {connectionCtx.astroSettings.IR !== undefined && (
                           <span className="me-3"><div className="hover-text"><i className="icon-filter" />
@@ -115,7 +135,6 @@ export default function StatusBar() {
         </div>
       </div>
       <div className="row mb">
-        
         <div className="col-sm align-self-center">
           {connectionCtx.astroSettings.target !== undefined && (
             <span className="me-3">

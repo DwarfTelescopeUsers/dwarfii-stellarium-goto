@@ -3,13 +3,17 @@ import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { Formik } from "formik";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { modeManual, modeAuto, exposureTelephotoModeAuto } from "dwarfii_api";
+import { modeManual, modeAuto } from "dwarfii_api";
 import { saveAstroSettingsDb } from "@/db/db_utils";
 import { validateAstroSettings } from "@/components/imaging/form_validations";
 import { AstroSettings } from "@/types";
 import AstroSettingsInfo from "@/components/imaging/AstroSettingsInfo";
 import { calculateImagingTime } from "@/lib/date_utils";
-import { updateTelescopeISPSetting } from "@/lib/dwarf_utils";
+import {
+  updateTelescopeISPSetting,
+  getAllTelescopeISPSetting,
+} from "@/lib/dwarf_utils";
+import { getExposureDefault } from "@/lib/data_utils";
 import {
   allowedExposures,
   allowedGains,
@@ -97,8 +101,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
     let modeValue: number;
 
     if (targetValue === "auto") {
-      modeValue = exposureTelephotoModeAuto;
-      value = 0;
+      modeValue = modeAuto;
+      value = Number(getExposureDefault);
     } else {
       modeValue = modeManual;
       value = Number(targetValue);
@@ -121,7 +125,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
         return { ...prev };
       });
       saveAstroSettingsDb("exposure", targetValue);
-      updateTelescopeISPSetting("exposure", value, connectionCtx);
+      if (targetValue != "auto")
+        updateTelescopeISPSetting("exposure", value, connectionCtx);
     }, 500);
   }
 
@@ -245,12 +250,13 @@ export default function TakeAstroPhoto(props: PropTypes) {
   if (showSettingsInfo) {
     return <AstroSettingsInfo onClick={toggleShowSettingsInfo} />;
   }
-
   return (
     <div>
       <Formik
+        enableReinitialize
         initialValues={{
           gain: connectionCtx.astroSettings.gain,
+          exposureMode: connectionCtx.astroSettings.exposureMode,
           exposure: connectionCtx.astroSettings.exposure,
           IR: connectionCtx.astroSettings.IR,
           binning: connectionCtx.astroSettings.binning,
@@ -319,7 +325,9 @@ export default function TakeAstroPhoto(props: PropTypes) {
                     changeExposureHandler(e);
                   }}
                   onBlur={handleBlur}
-                  value={values.exposure}
+                  value={
+                    values.exposureMode == modeAuto ? "auto" : values.exposure
+                  }
                 >
                   <option value="default">Select</option>
                   <option value="auto">Auto</option>
@@ -450,12 +458,24 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 )}
               </div>
             </div>
-            <button
-              onClick={() => setShowSettingsMenu(false)}
-              className="btn btn-outline-primary"
-            >
-              Close
-            </button>
+            <div className="row mb">
+              <div className="col-md-auto">
+                <button
+                  onClick={() => setShowSettingsMenu(false)}
+                  className="btn btn-outline-primary"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="col-md text-end">
+                <button
+                  onClick={() => getAllTelescopeISPSetting(connectionCtx)}
+                  className="btn btn-outline-primary"
+                >
+                  Read Values
+                </button>
+              </div>
+            </div>
             {/* {JSON.stringify(values)} */}
           </form>
         )}

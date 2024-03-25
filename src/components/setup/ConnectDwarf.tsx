@@ -153,10 +153,9 @@ export default function ConnectDwarf() {
     // function for connection and reconnection
     const customReconnectHandler = () => {
       startConnect();
-    }
+    };
 
-    function startConnect () {
-
+    function startConnect() {
       console.log("ConnectDwarf startConnect Function started");
 
       setSlavemode(false);
@@ -197,7 +196,6 @@ export default function ConnectDwarf() {
     if (!webSocketHandler.run()) {
       console.error(" Can't launch Web Socket Run Action!");
     }
-
   }
 
   function ipHandler(e: ChangeEvent<HTMLInputElement>) {

@@ -67,9 +67,9 @@ export default function AutoGoto() {
               </ul>
             </li>
             <li>
-              The Planets, Moon and Sun list has the planets in our solar system and
-              the Moon and The Sun. Be aware, Dwarf II is not good for taking images of the
-              planets.
+              The Planets, Moon and Sun list has the planets in our solar system
+              and the Moon and The Sun. Be aware, Dwarf II is not good for
+              taking images of the planets.
             </li>
           </ol>
           <p>
