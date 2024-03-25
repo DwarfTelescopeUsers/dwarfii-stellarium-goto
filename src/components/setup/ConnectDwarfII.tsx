@@ -221,11 +221,11 @@ export default function ConnectDwarfII() {
   }
 
   return (
-    <div>
+    <div className="float-right">
+      {renderConnectionStatus()}{" "}
       <button className="btn btn-primary me-3" onClick={checkConnection}>
         Connect
-      </button>{" "}
-      {renderConnectionStatus()}
+      </button>
     </div>
   );
 }
