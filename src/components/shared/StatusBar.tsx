@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { IRCut, modeAuto, modeManual } from "dwarfii_api";
+import ConnectDwarfII from "@/components/setup/ConnectDwarfII";
 import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
 import BatteryMeter from "@/components/BatteryMeter";
 
@@ -52,6 +53,7 @@ export default function StatusBar() {
   return (
     <div>
       <div className="row mb ">
+        <ConnectDwarfII />
         <div className="col-sm align-center">
           <div className="container-connection">
             <span className="me-3">Dwarf II: {connection}</span>
