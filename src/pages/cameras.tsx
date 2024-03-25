@@ -113,7 +113,7 @@ export default function AstroPhoto() {
       <StatusBar />
       <div className="container">
         <div className="row px-0">
-          <main className="col">
+          <main className="col"><br/>
             <DwarfCameras
               showWideangle={showWideangle}
               useRawPreviewURL={useRawPreviewURL}
