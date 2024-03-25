@@ -174,7 +174,6 @@ export default function AstroPhoto() {
       <style jsx>{`
         .bottom-container {
           position: fixed;
-          bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
           text-align: center;
