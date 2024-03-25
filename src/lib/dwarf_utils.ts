@@ -26,6 +26,7 @@ import {
   messageCameraTeleSetJPGQuality,
   WebSocketHandler,
 } from "dwarfii_api";
+import { getExposureIndexDefault } from "@/lib/data_utils";
 import { ConnectionContextType } from "@/types";
 import { logger } from "@/lib/logger";
 import { saveAstroSettingsDb } from "@/db/db_utils";
@@ -37,7 +38,10 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
+export async function turnOnTeleCameraFn(
+  connectionCtx: ConnectionContextType,
+  setTelephotoCameraStatus: any | undefined = undefined
+) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
@@ -50,6 +54,7 @@ export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_OPEN_CAMERA) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         logger(txt_info, result_data, connectionCtx);
+        if (setTelephotoCameraStatus) setTelephotoCameraStatus("on");
         return;
       }
     }
@@ -79,7 +84,10 @@ export async function turnOnTeleCameraFn(connectionCtx: ConnectionContextType) {
   await sleep(100);
 }
 
-export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
+export async function turnOnWideCameraFn(
+  connectionCtx: ConnectionContextType,
+  setWideangleCameraStatus: any | undefined = undefined
+) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
@@ -88,6 +96,7 @@ export async function turnOnWideCameraFn(connectionCtx: ConnectionContextType) {
     if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_OPEN_CAMERA) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
         logger(txt_info, result_data, connectionCtx);
+        if (setWideangleCameraStatus) setWideangleCameraStatus("on");
         return;
       }
     }
@@ -275,9 +284,6 @@ export async function getAllTelescopeISPSetting(
               !Object.prototype.hasOwnProperty.call(commonParam, "id") ||
               commonParam.id === undefined
           );
-          console.log("filteredArray:", filteredArray);
-          console.log("filteredArray:", filteredArray[0]);
-          console.log("filteredArray:", filteredArray[0].index);
           if (filteredArray[0].index) binning = binning2x2;
           else binning = binning1x1;
           // For id=1 : "Astro img_to_take"
@@ -288,7 +294,6 @@ export async function getAllTelescopeISPSetting(
           count = 0;
           if (resultObject1.continueValue) {
             count = resultObject1.continueValue;
-            console.log("allFeatureParams-count:", resultObject1.continueValue);
           }
           // For id=2 : Astro Format
           const resultObject2 = result_data.data.allFeatureParams.find(
@@ -320,14 +325,13 @@ export async function getAllTelescopeISPSetting(
               !Object.prototype.hasOwnProperty.call(commonParam, "id") ||
               commonParam.id === undefined
           );
-          console.log("filteredArray:", filteredArray);
-          console.log("filteredArray:", filteredArray[0]);
-          console.log("filteredArray:", filteredArray[0].index);
           // id = 0 (no present)
           // autoMode == 0 => Auto not present
           if (!filteredArray[0].autoMode) exposureMode = modeAuto;
           else exposureMode = modeManual;
           if (filteredArray[0].index) exposure = filteredArray[0].index;
+          else if (exposureMode == modeAuto)
+            exposure = getExposureIndexDefault();
           // For id=1 : "Gain"
           const resultObject1 = result_data.data.allParams.find(
             (item) => item.id === 1
@@ -361,9 +365,11 @@ export async function getAllTelescopeISPSetting(
             previewQuality = resultObject4.continueValue;
           connectionCtx.astroSettings.gain = gain;
           saveAstroSettingsDb("gain", gain.toString());
+          connectionCtx.astroSettings.gainMode = modeManual;
           saveAstroSettingsDb("gainMode", modeManual.toString());
           connectionCtx.astroSettings.exposure = exposure;
           saveAstroSettingsDb("exposure", exposure.toString());
+          connectionCtx.astroSettings.exposureMode = exposureMode;
           saveAstroSettingsDb("exposureMode", exposureMode.toString());
           connectionCtx.astroSettings.IR = val_IRCut;
           saveAstroSettingsDb("IR", val_IRCut.toString());

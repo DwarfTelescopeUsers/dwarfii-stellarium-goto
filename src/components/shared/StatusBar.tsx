@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { IRCut } from "dwarfii_api";
+import { IRCut, modeAuto, modeManual } from "dwarfii_api";
 import { getExposureNameByIndex, getGainNameByIndex } from "@/lib/data_utils";
 import BatteryMeter from "@/components/BatteryMeter";
 
@@ -34,13 +34,29 @@ export default function StatusBar() {
       <i className="bi bi-x-circle" style={{ color: "red" }}></i>
     );
 
+  let exposureValue: string | undefined = undefined;
+  if (
+    connectionCtx.astroSettings.exposureMode !== undefined &&
+    connectionCtx.astroSettings.exposureMode == modeAuto
+  )
+    exposureValue = "Auto";
+  else if (
+    connectionCtx.astroSettings.exposureMode !== undefined &&
+    connectionCtx.astroSettings.exposureMode == modeManual &&
+    connectionCtx.astroSettings.exposure !== undefined
+  )
+    exposureValue = getExposureNameByIndex(
+      connectionCtx.astroSettings.exposure
+    );
+
   return (
     <div>
       <div className="row mb">
         <div className="col-sm align-self-center">
           <span className="me-3">Dwarf II: {connection}</span>
           <span className="me-3">Stellarium: {connectionStellarium}</span>
-          {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
+          {connectionCtx.connectionStatus &&
+            connectionCtx.availableSizeDwarf !== undefined &&
             connectionCtx.totalSizeDwarf !== undefined && (
               <span className="me-3">
                 SDCard:{" "}
@@ -61,11 +77,8 @@ export default function StatusBar() {
               Gain: {getGainNameByIndex(connectionCtx.astroSettings.gain)}
             </span>
           )}
-          {connectionCtx.astroSettings.exposure !== undefined && (
-            <span className="me-3">
-              Exp:{" "}
-              {getExposureNameByIndex(connectionCtx.astroSettings.exposure)}
-            </span>
+          {exposureValue !== undefined && (
+            <span className="me-3">Exp: {exposureValue}</span>
           )}
           {connectionCtx.astroSettings.IR !== undefined && (
             <span className="me-3">
@@ -104,13 +117,14 @@ export default function StatusBar() {
       </div>
       <div className="row mb">
         <div className="col-md-auto">
-          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
-            <BatteryMeter
-              batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
-              isCharging={connectionCtx.BatteryStatusDwarf > 0}
-              isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
-            />
-          )}
+          {connectionCtx.connectionStatus &&
+            connectionCtx.BatteryLevelDwarf !== undefined && (
+              <BatteryMeter
+                batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+                isCharging={connectionCtx.BatteryStatusDwarf > 0}
+                isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+              />
+            )}
         </div>
         <div className="col-sm align-self-center">
           {connectionCtx.astroSettings.target !== undefined && (
