@@ -140,7 +140,10 @@ export default class BatteryMeter extends React.Component<IBatteryMeterPropertie
           )}
         </svg>
         {batteryLevel < 6 && (
-          <div data-cy="low-battery-notice" className="low-battery-notice">
+          <div
+            data-cy="low-battery-notice"
+            className="battery-meter--low-battery low-battery-notice"
+          >
             &nbsp;LOW BATTERY
           </div>
         )}

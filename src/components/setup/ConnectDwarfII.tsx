@@ -201,11 +201,15 @@ export default function ConnectDwarfII() {
       return <></>;
     }
     if (connectionCtx.connectionStatus === false) {
-      return <span className="text-danger">Connection failed{errorTxt}.</span>;
+      return (
+        <span className="text-danger-connect">
+          Connection failed{errorTxt}.
+        </span>
+      );
     }
     if (connectionCtx.connectionStatusSlave || slavemode) {
       return (
-        <span className="text-warning">
+        <span className="text-warning-connect">
           Connection successful (Slave Mode) {goLiveMessage}
           {errorTxt}.
         </span>
@@ -213,7 +217,7 @@ export default function ConnectDwarfII() {
     }
 
     return (
-      <span className="text-success">
+      <span className="text-success-connect">
         Connection successful. {goLiveMessage}
         {errorTxt}
       </span>
@@ -221,7 +225,7 @@ export default function ConnectDwarfII() {
   }
 
   return (
-    <div className="float-right">
+    <div className="connect-dwarf">
       {renderConnectionStatus()}{" "}
       <button className="btn btn-primary me-3" onClick={checkConnection}>
         Connect
