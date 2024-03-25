@@ -55,19 +55,20 @@ export default function AstroPhoto() {
       console.error('No session selected.');
       return;
     }
-
+  
     try {
       const selectedFolder = await window.showDirectoryPicker();
+      const sessionFolderHandle = await selectedFolder.getDirectoryHandle(selectedSession, { create: true }); // Create folder with session name
       const folderResponse = await fetch(`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}`);
       const folderData = await folderResponse.text();
       const fitsFiles = folderData.match(/href="([^"]*\.fits)"/g).map(match => match.substring(6, match.length - 1));
       const totalFiles = fitsFiles.length;
       let downloadedFiles = 0;
-
+  
       for (const fitsFile of fitsFiles) {
         const fileResponse = await fetch(`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}/${fitsFile}`);
         const fileBlob = await fileResponse.blob();
-        const fileHandle = await selectedFolder.getFileHandle(fitsFile, { create: true });
+        const fileHandle = await sessionFolderHandle.getFileHandle(fitsFile, { create: true }); // Save file in session folder
         const writable = await fileHandle.createWritable();
         await writable.write(fileBlob);
         await writable.close();
@@ -83,7 +84,7 @@ export default function AstroPhoto() {
       }
     }
   };
-
+  
   const handleSessionChange = (event) => {
     setSelectedSession(event.target.value);
     setGetSessionDataDisabled(false);
