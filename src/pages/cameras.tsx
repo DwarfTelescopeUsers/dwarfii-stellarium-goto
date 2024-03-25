@@ -33,9 +33,12 @@ export default function AstroPhoto() {
   useEffect(() => {
     async function fetchSessions() {
       try {
-        const response = await fetch(`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/`);
+        const response = await fetch(
+          `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/`
+        );
         const data = await response.text();
-        const folderRegex = /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/g;
+        const folderRegex =
+          /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/g;
         let matches;
         let sessionList = [];
         while ((matches = folderRegex.exec(data)) !== null) {
@@ -43,7 +46,10 @@ export default function AstroPhoto() {
         }
         setSessions(sessionList);
       } catch (error) {
-        console.error('An error occurred while fetching sessions:', error.message);
+        console.error(
+          "An error occurred while fetching sessions:",
+          error.message
+        );
         setSessions([]);
       }
     }
@@ -52,23 +58,34 @@ export default function AstroPhoto() {
 
   const getSessionData = async () => {
     if (!selectedSession) {
-      console.error('No session selected.');
+      console.error("No session selected.");
       return;
     }
-  
+
     try {
       const selectedFolder = await window.showDirectoryPicker();
-      const sessionFolderHandle = await selectedFolder.getDirectoryHandle(selectedSession, { create: true }); // Create folder with session name
-      const folderResponse = await fetch(`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}`);
+      const sessionFolderHandle = await selectedFolder.getDirectoryHandle(
+        selectedSession,
+        { create: true }
+      ); // Create folder with session name
+      const folderResponse = await fetch(
+        `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}`
+      );
       const folderData = await folderResponse.text();
-      const fitsFiles = folderData.match(/href="([^"]*\.fits)"/g).map(match => match.substring(6, match.length - 1));
+      const fitsFiles = folderData
+        .match(/href="([^"]*\.fits)"/g)
+        .map((match) => match.substring(6, match.length - 1));
       const totalFiles = fitsFiles.length;
       let downloadedFiles = 0;
-  
+
       for (const fitsFile of fitsFiles) {
-        const fileResponse = await fetch(`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}/${fitsFile}`);
+        const fileResponse = await fetch(
+          `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}/${fitsFile}`
+        );
         const fileBlob = await fileResponse.blob();
-        const fileHandle = await sessionFolderHandle.getFileHandle(fitsFile, { create: true }); // Save file in session folder
+        const fileHandle = await sessionFolderHandle.getFileHandle(fitsFile, {
+          create: true,
+        }); // Save file in session folder
         const writable = await fileHandle.createWritable();
         await writable.write(fileBlob);
         await writable.close();
@@ -77,14 +94,14 @@ export default function AstroPhoto() {
       }
       console.log("Files downloaded successfully.");
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error('User aborted the operation.');
+      if (error.name === "AbortError") {
+        console.error("User aborted the operation.");
       } else {
-        console.error('An error occurred:', error.message);
+        console.error("An error occurred:", error.message);
       }
     }
   };
-  
+
   const handleSessionChange = (event) => {
     setSelectedSession(event.target.value);
     setGetSessionDataDisabled(false);
@@ -120,7 +137,8 @@ export default function AstroPhoto() {
       <StatusBar />
       <div className="container">
         <div className="row px-0">
-          <main className="col"><br/>
+          <main className="col">
+            <br />
             <DwarfCameras
               showWideangle={showWideangle}
               useRawPreviewURL={useRawPreviewURL}
@@ -140,10 +158,14 @@ export default function AstroPhoto() {
         <select value={selectedSession} onChange={handleSessionChange}>
           <option value="">Select a session...</option>
           {sessions.map((session, index) => (
-            <option key={index} value={session.name}>{session.name} - {session.date}</option>
+            <option key={index} value={session.name}>
+              {session.name} - {session.date}
+            </option>
           ))}
         </select>
-        <button onClick={getSessionData} disabled={getSessionDataDisabled}>Get Session Data</button>
+        <button onClick={getSessionData} disabled={getSessionDataDisabled}>
+          Get Session Data
+        </button>
         <div className="progress-container">
           <div className="progress" style={{ width: `${progress}%` }}></div>
           <span className="progress-text">{progress}%</span>
@@ -157,7 +179,7 @@ export default function AstroPhoto() {
           transform: translateX(-50%);
           text-align: center;
         }
-        
+
         .notification {
           background-color: #ffcccc;
           color: #ff0000;
@@ -195,6 +217,6 @@ export default function AstroPhoto() {
           font-weight: bold;
         }
       `}</style>
-      </>
+    </>
   );
 }
