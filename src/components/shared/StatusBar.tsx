@@ -58,13 +58,13 @@ export default function StatusBar() {
           <span className="me-3">Stellarium: {connectionStellarium}</span>
           </div>
           <div className="container-battery">
-          {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
-             <BatteryMeter
-                 batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
-                 isCharging={connectionCtx.BatteryStatusDwarf > 0}
-                 isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
-             />
-          )}
+            {connectionCtx.connectionStatus && connectionCtx.BatteryLevelDwarf !== undefined && (
+              <BatteryMeter
+                batteryLevel={connectionCtx.BatteryLevelDwarf ?? null}
+                isCharging={connectionCtx.BatteryStatusDwarf > 0}
+                isFastCharging={connectionCtx.BatteryStatusDwarf == 2}
+              />
+            )}
           </div>
           <div className="container-status">
           {connectionCtx.connectionStatus && connectionCtx.availableSizeDwarf !== undefined &&
