@@ -169,7 +169,7 @@ export default function AstroPhoto() {
           width: 200px; /* Set width to match dropdown */
         }
         .dropdown-wrapper {
-          width: 200px; /* Set width to match dropdown */
+          width: auto; /* Set width to match dropdown */
         }
         .progress-container {
           position: relative;
