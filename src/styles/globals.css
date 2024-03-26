@@ -35,7 +35,7 @@ body {
   flex-direction: row;
   margin-left: 16px;
   width: 180px;
-  margin: -33px 0px 1px 233px;
+  margin: -31px 0px 1px 233px; 
 }
 .container-battery {
     display: flex;
@@ -175,4 +175,9 @@ body {
     --bs-text-opacity: 1;
     color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
+}
+
+/*style cameras.tsx*/
+.camera-container {
+    height: fit-content;
 }

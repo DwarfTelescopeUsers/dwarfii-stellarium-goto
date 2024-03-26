@@ -149,7 +149,7 @@ export default function CalibrationDwarf() {
         <div className="col-sm-4">
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+                          connectionCtx.connectionStatus ? "btn-more02" : "btn-more02"
             } me-4 mb-2`}
             onClick={calibrateFn}
             disabled={!connectionCtx.connectionStatus}
@@ -158,7 +158,7 @@ export default function CalibrationDwarf() {
           </button>
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+                          connectionCtx.connectionStatus ? "btn-more02" : "btn-more02"
             } me-4 mb-2`}
             onClick={stopGotoFn}
             disabled={!connectionCtx.connectionStatus}
@@ -170,8 +170,8 @@ export default function CalibrationDwarf() {
           <button
             className={`btn ${
               connectionCtx.connectionStatus && connectionCtx.savePositionStatus
-                ? "btn-primary"
-                : "btn-secondary"
+                          ? "btn-more02"
+                          : "btn-more02"
             } me-4 mb-2`}
             onClick={savePositionFn}
             disabled={
@@ -184,8 +184,8 @@ export default function CalibrationDwarf() {
           <button
             className={`btn ${
               connectionCtx.connectionStatus && connectionCtx.isSavedPosition
-                ? "btn-primary"
-                : "btn-secondary"
+                          ? "btn-more02"
+                          : "btn-more02"
             }  me-4 mb-2`}
             onClick={resetPositionFn}
             disabled={
@@ -197,8 +197,8 @@ export default function CalibrationDwarf() {
           <button
             className={`btn ${
               connectionCtx.connectionStatus && connectionCtx.isSavedPosition
-                ? "btn-primary"
-                : "btn-secondary"
+                          ? "btn-more02"
+                          : "btn-more02"
             } mb-2`}
             onClick={gotoPositionFn}
             disabled={
@@ -211,7 +211,7 @@ export default function CalibrationDwarf() {
         <div className="col-sm-4 text-end">
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+                          connectionCtx.connectionStatus ? "btn-more03" : "btn-more03"
             } me-4 mb-2`}
             onClick={shutDownFn}
             disabled={!connectionCtx.connectionStatus}
@@ -220,7 +220,7 @@ export default function CalibrationDwarf() {
           </button>
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+                          connectionCtx.connectionStatus ? "btn-more03" : "btn-more03"
             } mb-2`}
             onClick={rebootFn}
             disabled={!connectionCtx.connectionStatus}

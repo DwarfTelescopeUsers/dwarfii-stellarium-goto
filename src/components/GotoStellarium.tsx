@@ -186,8 +186,8 @@ export default function ManualGoto() {
       <button
         className={`btn ${
           connectionCtx.connectionStatusStellarium
-            ? "btn-primary"
-            : "btn-secondary"
+                  ? "btn btn-more02"
+                  : "btn-more02"
         } mb-3`}
         onClick={fetchStellariumData}
         disabled={!connectionCtx.connectionStatusStellarium}
@@ -219,7 +219,7 @@ export default function ManualGoto() {
         <div className="col-sm-4">
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } me-4 mb-2`}
             onClick={gotoFn}
             disabled={RA === undefined}
@@ -230,7 +230,7 @@ export default function ManualGoto() {
         <div className="col-sm-8">
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } me-4 mb-4`}
             onClick={() =>
               centerCoordinatesHandler(
@@ -246,7 +246,7 @@ export default function ManualGoto() {
           </button>
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } me-2 mb-4`}
             onClick={() => changeCoordinate(+1 / 60, 0)}
             disabled={RA === undefined}
@@ -255,7 +255,7 @@ export default function ManualGoto() {
           </button>
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } me-2 mb-4`}
             onClick={() => changeCoordinate(-1 / 60, 0)}
             disabled={RA === undefined}
@@ -264,7 +264,7 @@ export default function ManualGoto() {
           </button>
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } me-2 mb-4`}
             onClick={() => changeCoordinate(0, +0.1)}
             disabled={RA === undefined}
@@ -273,7 +273,7 @@ export default function ManualGoto() {
           </button>
           <button
             className={`btn ${
-              RA !== undefined ? "btn-primary" : "btn-secondary"
+                          RA !== undefined ? "btn-more02" : "btn-more02"
             } mb-4`}
             onClick={() => changeCoordinate(0, -0.1)}
             disabled={RA === undefined}
