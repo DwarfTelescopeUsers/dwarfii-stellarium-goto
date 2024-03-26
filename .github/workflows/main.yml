@@ -25,6 +25,9 @@ jobs:
           cp -r dist DwarfStellariumGoto
           echo "python3 -m http.server" > DwarfStellariumGoto/start_server.bat
 
+      - name: Zip DwarfStellariumGoto
+        run: zip -r DwarfStellariumGoto.zip DwarfStellariumGoto
+
       - name: Get version number from package.json
         id: get_version
         run: echo "::set-output name=version::$(node -e 'console.log(require("./package.json").version)')"
@@ -33,13 +36,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: DwarfStellariumGoto-${{ steps.get_version.outputs.version }}
-          path: DwarfStellariumGoto
+          path: DwarfStellariumGoto.zip
     
       - name: Release with ncipollo/release-action
         id: release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: DwarfStellariumGoto
+          artifacts: DwarfStellariumGoto.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           generateReleaseNotes: true
           skipIfReleaseExists: true
