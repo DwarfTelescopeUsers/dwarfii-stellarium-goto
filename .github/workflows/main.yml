@@ -39,7 +39,7 @@ jobs:
         id: release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: DwarfStellariumGoto.tar.gz
+          artifacts: DwarfStellariumGoto
           token: ${{ secrets.GITHUB_TOKEN }}
           generateReleaseNotes: true
           skipIfReleaseExists: true
