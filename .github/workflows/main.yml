@@ -24,8 +24,6 @@ jobs:
           npm run build
           cp -r dist DwarfStellariumGoto
           echo "python3 -m http.server" > DwarfStellariumGoto/start_server.bat
-          tar -czvf DwarfStellariumGoto.tar.gz DwarfStellariumGoto
-          rm -rf DwarfStellariumGoto
 
       - name: Get version number from version.txt
         id: get_version
@@ -35,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: DwarfStellariumGoto-${{ steps.get_version.outputs.version }}
-          path: DwarfStellariumGoto.tar.gz
+          path: DwarfStellariumGoto
     
       - name: Release with ncipollo/release-action
         id: release
