@@ -25,9 +25,9 @@ jobs:
           cp -r dist DwarfStellariumGoto
           echo "python3 -m http.server" > DwarfStellariumGoto/start_server.bat
 
-      - name: Get version number from version.txt
+      - name: Get version number from package.json
         id: get_version
-        run: echo "::set-output name=version::$(cat version.txt)"
+        run: echo "::set-output name=version::$(node -e 'console.log(require("./package.json").version)')"
 
       - name: Create artifact
         uses: actions/upload-artifact@v3
@@ -44,4 +44,3 @@ jobs:
           generateReleaseNotes: true
           skipIfReleaseExists: true
           tag: v${{ steps.get_version.outputs.version }}
-    
