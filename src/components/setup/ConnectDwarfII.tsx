@@ -34,7 +34,7 @@ export default function ConnectDwarfII() {
     await sleep(100);
 
     setConnecting(true);
-
+    setErrorTxt("");
     console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
     const webSocketHandler = connectionCtx.socketIPDwarf
       ? connectionCtx.socketIPDwarf
@@ -103,6 +103,14 @@ export default function ConnectDwarfII() {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setBatteryStatusDwarf(result_data.data.value);
         }
+      } else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF) {
+        setErrorTxt(" The DwarfII is powering Off!");
+        console.error("The DwarfII is powering Off!");
+        setConnecting(false);
+        connectionCtx.setConnectionStatus(false);
+        saveConnectionStatusDB(false);
+        // force stop webSocketHandler
+        webSocketHandler.cleanup(true);
       } else {
         logger("", result_data, connectionCtx);
       }
@@ -195,21 +203,21 @@ export default function ConnectDwarfII() {
       goLiveMessage = "Need Go Live";
     }
     if (connecting) {
-      return <span>Connecting...</span>;
+      return <span className="text-connect right-align">Connecting...</span>;
     }
     if (connectionCtx.connectionStatus === undefined) {
       return <></>;
     }
     if (connectionCtx.connectionStatus === false) {
       return (
-        <span className="text-danger-connect">
-          Connection failed{errorTxt}.
+        <span className="text-danger-connect right-align">
+          Connection failed {errorTxt}.
         </span>
       );
     }
     if (connectionCtx.connectionStatusSlave || slavemode) {
       return (
-        <span className="text-warning-connect">
+        <span className="text-warning-connect right-align">
           Connection successful (Slave Mode) {goLiveMessage}
           {errorTxt}.
         </span>
@@ -217,7 +225,7 @@ export default function ConnectDwarfII() {
     }
 
     return (
-      <span className="text-success-connect">
+      <span className="text-success-connect right-align">
         Connection successful. {goLiveMessage}
         {errorTxt}
       </span>
@@ -225,7 +233,7 @@ export default function ConnectDwarfII() {
   }
 
   return (
-    <div className="connect-dwarf">
+    <div className="connect-dwarf right-align">
       {renderConnectionStatus()}{" "}
           <button className="btn btn-more02" onClick={checkConnection}>
                Connect

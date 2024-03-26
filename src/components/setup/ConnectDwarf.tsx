@@ -113,6 +113,14 @@ export default function ConnectDwarf() {
         if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
           connectionCtx.setBatteryStatusDwarf(result_data.data.value);
         }
+      } else if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF) {
+        setErrorTxt(" The DwarfII is powering Off!");
+        console.error("The DwarfII is powering Off!");
+        setConnecting(false);
+        connectionCtx.setConnectionStatus(false);
+        saveConnectionStatusDB(false);
+        // force stop webSocketHandler
+        webSocketHandler.cleanup(true);
       } else {
         logger("", result_data, connectionCtx);
       }

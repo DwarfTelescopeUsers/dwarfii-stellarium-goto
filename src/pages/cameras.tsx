@@ -16,8 +16,8 @@ export default function AstroPhoto() {
 
   const [showWideangle, setShowWideangle] = useState(true);
   const [useRawPreviewURL, setUseRawPreviewURL] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const [sessions, setSessions] = useState([]);
+  const [notification, setNotification] = useState(null as string | null);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState("");
   const [getSessionDataDisabled, setGetSessionDataDisabled] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -30,6 +30,11 @@ export default function AstroPhoto() {
     connectionCtx.longitude === undefined;
   let hasErrors = notConnected || noCoordinates;
 
+  interface Session {
+    name: string;
+    date: string;
+  }
+
   useEffect(() => {
     async function fetchSessions() {
       try {
@@ -40,12 +45,13 @@ export default function AstroPhoto() {
         const folderRegex =
           /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/g;
         let matches;
-        let sessionList = [];
+        let sessionList: Session[] = [];
         while ((matches = folderRegex.exec(data)) !== null) {
           sessionList.push({ name: matches[1], date: matches[3] });
         }
+        if (sessionList.length > 0) setNotification("Find Files");
         setSessions(sessionList);
-      } catch (error) {
+      } catch (error: any) {
         console.error(
           "An error occurred while fetching sessions:",
           error.message
@@ -63,37 +69,54 @@ export default function AstroPhoto() {
     }
 
     try {
-      const selectedFolder = await window.showDirectoryPicker();
-      const sessionFolderHandle = await selectedFolder.getDirectoryHandle(
-        selectedSession,
-        { create: true }
-      ); // Create folder with session name
-      const folderResponse = await fetch(
-        `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}`
-      );
-      const folderData = await folderResponse.text();
-      const fitsFiles = folderData
-        .match(/href="([^"]*\.fits)"/g)
-        .map((match) => match.substring(6, match.length - 1));
-      const totalFiles = fitsFiles.length;
-      let downloadedFiles = 0;
-
-      for (const fitsFile of fitsFiles) {
-        const fileResponse = await fetch(
-          `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}/${fitsFile}`
+      if ("showDirectoryPicker" in window) {
+        const selectedFolder = await (window as any).showDirectoryPicker();
+        const sessionFolderHandle = await selectedFolder.getDirectoryHandle(
+          selectedSession,
+          { create: true }
+        ); // Create folder with session name
+        const folderResponse = await fetch(
+          `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}`
         );
-        const fileBlob = await fileResponse.blob();
-        const fileHandle = await sessionFolderHandle.getFileHandle(fitsFile, {
-          create: true,
-        }); // Save file in session folder
-        const writable = await fileHandle.createWritable();
-        await writable.write(fileBlob);
-        await writable.close();
-        downloadedFiles++;
-        setProgress(Math.floor((downloadedFiles / totalFiles) * 100)); // Round down to the nearest integer
+        const folderData = await folderResponse.text();
+        if (folderData !== null) {
+          // Access properties and perform operations on folderData safely
+          const fitsFilesMatch = folderData.match(/href="([^"]*\.fits)"/g);
+          if (fitsFilesMatch !== null) {
+            const fitsFiles = fitsFilesMatch.map((match) =>
+              match.substring(6, match.length - 1)
+            );
+            const totalFiles = fitsFiles.length;
+            let downloadedFiles = 0;
+            for (const fitsFile of fitsFiles) {
+              const fileResponse = await fetch(
+                `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${selectedSession}/${fitsFile}`
+              );
+              const fileBlob = await fileResponse.blob();
+              const fileHandle = await sessionFolderHandle.getFileHandle(
+                fitsFile,
+                {
+                  create: true,
+                }
+              ); // Save file in session folder
+              const writable = await fileHandle.createWritable();
+              await writable.write(fileBlob);
+              await writable.close();
+              downloadedFiles++;
+              setProgress(Math.floor((downloadedFiles / totalFiles) * 100)); // Round down to the nearest integer
+            }
+            console.log("Files downloaded successfully.");
+          } else {
+            console.log("No Files found.");
+          }
+        }
+      } else {
+        console.error(
+          "File System Access API is not supported in this browser."
+        );
+        // Fallback or alternative logic if the API is not supported
       }
-      console.log("Files downloaded successfully.");
-    } catch (error) {
+    } catch (error: any) {
       if (error.name === "AbortError") {
         console.error("User aborted the operation.");
       } else {
