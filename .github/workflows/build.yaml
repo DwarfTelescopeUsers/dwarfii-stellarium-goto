@@ -1,0 +1,48 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: |
+          npm run build
+          cp -r dist DwarfStellariumGoto
+          echo "python3 -m http.server" > DwarfStellariumGoto/start_server.bat
+          tar -czvf DwarfStellariumGoto.tar.gz DwarfStellariumGoto
+          rm -rf DwarfStellariumGoto
+
+      - name: Get version number from version.txt
+        id: get_version
+        run: echo "::set-output name=version::$(cat version.txt)"
+
+      - name: Create artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: DwarfStellariumGoto-${{ steps.get_version.outputs.version }}
+          path: DwarfStellariumGoto.tar.gz
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
