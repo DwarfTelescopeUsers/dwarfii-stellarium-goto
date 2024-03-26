@@ -354,12 +354,12 @@ export default function ConnectDwarfSTA() {
         <form onSubmit={checkConnection} className="mb-3">
           <div className="row mb-3">
             <div className="row mb-3">
-              <div className="col-md-1">
+              <div className="col-md-2">
                 <label htmlFor="pwd" className="form-label">
                   Bluetooth PASSWORD
                 </label>
               </div>
-              <div className="col-md-11">
+              <div className="col-md-2">
                 <input
                   className="form-control"
                   id="pwd"
@@ -371,8 +371,8 @@ export default function ConnectDwarfSTA() {
               </div>
             </div>
           </div>
-          <button type="submit" className="btn btn-primary me-3">
-            Connect
+                  <button type="submit" className="btn btn-more02 me-3">
+                      <i className="icon-bluetooth" /> Connect
           </button>{" "}
           {renderConnectionStatus()}
         </form>

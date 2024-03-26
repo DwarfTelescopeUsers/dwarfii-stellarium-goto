@@ -227,8 +227,8 @@ export default function ConnectDwarfII() {
   return (
     <div className="connect-dwarf">
       {renderConnectionStatus()}{" "}
-      <button className="btn btn-primary me-3" onClick={checkConnection}>
-        Connect
+          <button className="btn btn-more02" onClick={checkConnection}>
+               Connect
       </button>
     </div>
   );

@@ -276,7 +276,7 @@ export default function ConnectDwarf() {
                 IP
               </label>
             </div>
-            <div className="col-md-11">
+            <div className="col-md-2">
               <input
                 className="form-control"
                 id="ip"
@@ -288,10 +288,10 @@ export default function ConnectDwarf() {
               />
             </div>
           </div>
-          <button type="submit" className="btn btn-primary me-3">
-            Connect
-          </button>{" "}
-          {renderConnectionStatus()}
+                  <button type="submit" className="btn btn-more02 me-3">
+                      <i className="icon-wifi" /> Connect
+          </button> {" "}
+           {renderConnectionStatus()}
         </form>
       </ol>
     </div>

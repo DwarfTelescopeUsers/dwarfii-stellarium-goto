@@ -110,7 +110,8 @@ export default function AstroPhoto() {
 
   if (hasErrors) {
     return (
-      <>
+      <><section className="daily-horp d-inline-block w-100">
+            <div className="container">
         <Head>
           <title>Astro Photos</title>
         </Head>
@@ -124,13 +125,15 @@ export default function AstroPhoto() {
 
         {noCoordinates && (
           <p className="text-danger">You must set your location.</p>
-        )}
+                )}
+       </div></section>
       </>
     );
   }
 
   return (
-    <>
+    <> <section className="daily-horp d-inline-block w-100">
+          <div className="container"><br /><br /><br /><br />
       <Head>
         <title>Astro Photos</title>
       </Head>
@@ -152,7 +155,8 @@ export default function AstroPhoto() {
             />
           </div>
         </div>
-      </div>
+              </div>
+          </div></section>
       <div className="bottom-container">
         {notification && <div className="notification">{notification}</div>}
         <select value={selectedSession} onChange={handleSessionChange}>
@@ -216,6 +220,7 @@ export default function AstroPhoto() {
           font-weight: bold;
         }
       `}</style>
+          
     </>
   );
 }

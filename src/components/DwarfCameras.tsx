@@ -199,7 +199,7 @@ export default function DwarfCameras(props: PropType) {
   function renderMainCamera() {
     // TODO: use rawPreviewURL vs   telephotoURL,
     return (
-      <div>
+      <div className="camera-container">
         <img
           onLoad={() => setTelephotoCameraStatus("on")}
           src={

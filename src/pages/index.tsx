@@ -1,6 +1,8 @@
 export default function Home() {
   return (
-    <div>
+      <div>
+          <section className="daily-horp d-inline-block w-100">
+              <div className="container"> <br /><br /><br /><br /><br />
       <h1>Dwarf II App</h1>
       <p>
         This website allows you to control parts of the Dwarf II using the Dwarf
@@ -36,7 +38,10 @@ export default function Home() {
           Restriction : as this website use only http mode to communicate with
           the dwarf, it can not detect your location.
         </li>
-      </ul>
+                  </ul>
+              </div>
+              <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+          </section>
     </div>
   );
 }
