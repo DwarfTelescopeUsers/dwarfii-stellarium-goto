@@ -8,7 +8,8 @@ export default function About() {
   useLoadIntialValues();
 
   return (
-    <div>
+      <div><section className="daily-horp d-inline-block w-100">
+          <div className="container"> <br /><br /><br /><br /><br />
       <StatusBar />
       <h1>About</h1>
       <p>
@@ -82,7 +83,10 @@ export default function About() {
         users of the site will not be able to access your data. This also means
         if a user uses multiple browsers or devices, the data can not be synced
         between the different browsers or devices.
-      </p>
+              </p>
+              <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+         </div> </section>
+    
     </div>
   );
 }

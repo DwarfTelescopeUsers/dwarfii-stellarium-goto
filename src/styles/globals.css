@@ -12,11 +12,13 @@ body {
   -moz-background-size: cover;
   background-size: cover;
   -o-background-size: cover;
+
 }
 
-#__next div{
-  background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
-}
+/*#__next div {
+    background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
+   
+}*/
 
 .container-connection {
     align-items: center;
@@ -33,7 +35,7 @@ body {
   flex-direction: row;
   margin-left: 16px;
   width: 180px;
-  margin: -36px 0px 1px 200px;
+  margin: -33px 0px 1px 233px;
 }
 .container-battery {
     display: flex;
@@ -173,5 +175,4 @@ body {
     --bs-text-opacity: 1;
     color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
-    text-align: right;
 }

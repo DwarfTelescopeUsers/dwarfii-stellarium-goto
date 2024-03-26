@@ -76,7 +76,7 @@ export default function StatusBar() {
               connectionCtx.totalSizeDwarf !== undefined && (
                 <span className="me-3">
                   <div className="hover-text">
-                    <i className="icon-drive" />
+                    <i className="icon-micro-sd" />
                     <span className="tooltip-text" id="top">
                       Sd-Card
                     </span>

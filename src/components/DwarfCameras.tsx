@@ -206,7 +206,7 @@ export default function DwarfCameras(props: PropType) {
     console.info("useRawPreviewURL : ", useRawPreviewURL);
     // TODO: use rawPreviewURL vs   telephotoURL,
     return (
-      <div>
+      <div className="camera-container">
         <img
           onLoad={() => setTelephotoCameraStatus("on")}
           src={
