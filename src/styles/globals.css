@@ -23,8 +23,8 @@ body {
     display: flex;
     margin-left: 0px;
     margin-top: 10px;
-    margin-bottom: -6px;
     height: 34px;
+    margin-bottom: 6px;
 }
 
 .battery-meter {
@@ -143,26 +143,35 @@ body {
 .connect-dwarf {
     display: flex;
     justify-content: space-between;
-    width: 17rem;
+    width: 30rem;
     float: right !important;
     height: fit-content;
     margin-top: -30px;
 }
+.right-align { margin-left: auto; margin-right: 10px;}
 .con {
     margin-right: 1rem !important;
+}
+.text-connect {
+    --bs-text-opacity: 1;
+    margin-top: 5px;
+    text-align: right;
 }
 .text-success-connect {
     --bs-text-opacity: 1;
     color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
+    text-align: right;
 }
 .text-warning-connect {
     --bs-text-opacity: 1;
-    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+    color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
+    text-align: right;
 }
 .text-danger-connect {
     --bs-text-opacity: 1;
-    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+    color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
+    text-align: right;
 }

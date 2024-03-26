@@ -68,7 +68,7 @@ export default function DwarfCameras(props: PropType) {
       setWideangleCameraStatus("off");
     }
     setTimeout(() => {
-      checkCameraStatusLater(camera, connectionCtx);
+      checkCameraStatusLater(camera, connectionCtx, true);
     }, 2000);
   }
 
@@ -135,10 +135,15 @@ export default function DwarfCameras(props: PropType) {
 
   function checkCameraStatusLater(
     camera: number,
-    connectionCtx: ConnectionContextType
+    connectionCtx: ConnectionContextType,
+    type: boolean
   ) {
     if (connectionCtx.IPDwarf === undefined) {
       return;
+    }
+    if (type) {
+      setTelephotoCameraStatus("on");
+      setWideangleCameraStatus("on");
     }
     console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
     const webSocketHandler = connectionCtx.socketIPDwarf
@@ -184,6 +189,7 @@ export default function DwarfCameras(props: PropType) {
   }
 
   function renderWideAngle() {
+    console.info("showWideangle : ", showWideangle);
     return (
       <div className={`${showWideangle ? "" : "d-none"}`}>
         <img
@@ -197,6 +203,7 @@ export default function DwarfCameras(props: PropType) {
   }
 
   function renderMainCamera() {
+    console.info("useRawPreviewURL : ", useRawPreviewURL);
     // TODO: use rawPreviewURL vs   telephotoURL,
     return (
       <div>

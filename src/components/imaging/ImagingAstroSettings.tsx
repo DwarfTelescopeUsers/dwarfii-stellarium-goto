@@ -115,6 +115,19 @@ export default function TakeAstroPhoto(props: PropTypes) {
     saveAstroSettingsDb("exposureMode", modeValue.toString());
     updateTelescopeISPSetting("exposureMode", modeValue, connectionCtx);
 
+    // modify Gain to 0 if Old Exposure was Auto and now set to Manual
+    if (
+      connectionCtx.astroSettings.exposureMode == modeAuto &&
+      modeValue == modeManual
+    ) {
+      connectionCtx.setAstroSettings((prev) => {
+        prev["gain"] = 0;
+        return { ...prev };
+      });
+      saveAstroSettingsDb("gain", "0");
+      updateTelescopeISPSetting("gain", 0, connectionCtx);
+    }
+
     setTimeout(() => {
       connectionCtx.setAstroSettings((prev) => {
         if (targetValue === "auto") {

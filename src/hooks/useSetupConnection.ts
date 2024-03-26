@@ -13,27 +13,34 @@ export function useSetupConnection() {
   let connectionCtx = useContext(ConnectionContext);
 
   useEffect(() => {
-    let timerDwarf: any;
-    let timerStellarium: any;
+    let timerDwarf: any = undefined;
+    let timerStellarium: any = undefined;
 
     if (connectionCtx.connectionStatus) {
-      checkDwarfConnection(connectionCtx, timerDwarf, false);
+      timerDwarf = checkDwarfConnection(connectionCtx, timerDwarf, false);
 
       // continously check connection status
-      timerDwarf = setInterval(() => {
-        checkDwarfConnection(connectionCtx, timerDwarf, true);
-      }, 90 * 1000);
+      if (timerDwarf === undefined) {
+        timerDwarf = setInterval(() => {
+          checkDwarfConnection(connectionCtx, timerDwarf, true);
+        }, 90 * 1000);
+      }
     }
 
     if (connectionCtx.connectionStatusStellarium) {
-      checkStellariumConnection(connectionCtx, timerStellarium, false);
+      timerStellarium = checkStellariumConnection(
+        connectionCtx,
+        timerStellarium,
+        false
+      );
 
       // continously check connection status
-      timerStellarium = setInterval(() => {
-        checkStellariumConnection(connectionCtx, timerStellarium, true);
-      }, 90 * 1000);
+      if (timerStellarium === undefined) {
+        timerStellarium = setInterval(() => {
+          checkStellariumConnection(connectionCtx, timerStellarium, true);
+        }, 90 * 1000);
+      }
     }
-
     return () => {
       if (connectionCtx.connectionStatus === false) {
         console.log("unmount: delete checkDwarfConnection timer");
@@ -53,7 +60,7 @@ function checkDwarfConnection(
   loop: boolean
 ) {
   if (connectionCtx.IPDwarf === undefined) {
-    return;
+    return timer;
   }
   // if we can't connect to camera in 2 seconds, reset connection data
   fetch(firmwareVersion(connectionCtx.IPDwarf), {
@@ -82,7 +89,7 @@ function checkDwarfConnection(
           console.log("Dwarf connection ok");
         } else {
           console.log("Dwarf connection error");
-          clearInterval(timer);
+          if (timer) clearInterval(timer);
           connectionCtx.setConnectionStatus(false);
           saveConnectionStatusDB(false);
           webSocketHandler.close();
@@ -91,6 +98,7 @@ function checkDwarfConnection(
         console.log("checkDwarfConnection err ???", err.name, err.message);
       }
     });
+  return timer;
 }
 
 function checkStellariumConnection(
@@ -99,7 +107,7 @@ function checkStellariumConnection(
   loop: boolean
 ) {
   if (connectionCtx.IPStellarium === undefined) {
-    return;
+    return timer;
   }
 
   // if we can't connect to camera in 2 seconds, reset connection data
@@ -121,7 +129,7 @@ function checkStellariumConnection(
         err.message === "Failed to fetch"
       ) {
         console.log("Stellarium connection error");
-        clearInterval(timer);
+        if (timer) clearInterval(timer);
 
         connectionCtx.setConnectionStatusStellarium(false);
         saveConnectionStatusStellariumDB(false);
@@ -129,4 +137,5 @@ function checkStellariumConnection(
         console.log("checkStellariumConnection err >>>", err.name, err.message);
       }
     });
+  return timer;
 }
