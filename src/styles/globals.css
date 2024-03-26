@@ -176,3 +176,8 @@ body {
     color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
     margin-top: 5px;
 }
+
+/*style cameras.tsx*/
+.camera-container {
+    height: fit-content;
+}
