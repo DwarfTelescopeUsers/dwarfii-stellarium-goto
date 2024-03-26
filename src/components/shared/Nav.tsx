@@ -5,7 +5,7 @@ export default function Nav() {
         <nav className="navbar navbar-expand-lg navbar-light">
             <div className="container">
                 <a className="navbar-brand">
-                    <img alt="logo" src="../DWARFLAB_LOGO.png" />
+                    <img alt="logo" src="/DWARFLAB_LOGO_Green.png" />
                 </a>
                 <button className="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobile-menu">
                     <span> <i className="fas fa-bars" /> </span>
