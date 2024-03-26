@@ -13,44 +13,48 @@ export default function Goto() {
   useSetupConnection();
   useLoadIntialValues();
 
-    return (
-        <section className="daily-horp d-inline-block w-100">
-            <div className="container"><br /><br /><br /><br />
-      <StatusBar />
-      <hr></hr>
-      <CalibrationDwarf />
-      <hr />
-      <ul className="nav nav-tabs mb-2">
-        <li
-          className={`nav-item nav-link ${
-            gotoType === "lists" ? "active" : ""
-          }`}
-          onClick={() => setGotoType("lists")}
-        >
-          Lists
-        </li>
-        <li
-          className={`nav-item nav-link ${
-            gotoType === "userLists" ? "active" : ""
-          }`}
-          onClick={() => setGotoType("userLists")}
-        >
-          Custom Lists
-        </li>
-        <li
-          className={`nav-item nav-link ${
-            gotoType === "stellarium" ? "active" : ""
-          }`}
-          onClick={() => setGotoType("stellarium")}
-        >
-          Stellarium
-        </li>
-      </ul>
-      <hr />
-      {gotoType === "lists" && <GotoLists />}
-      {gotoType === "stellarium" && <GotoStellarium />}
-      {gotoType === "userLists" && <GotoUserLists />}
-            </div>
-        </section>
+  return (
+    <section className="daily-horp d-inline-block w-100">
+      <div className="container">
+        <br />
+        <br />
+        <br />
+        <br />
+        <StatusBar />
+        <hr></hr>
+        <CalibrationDwarf />
+        <hr />
+        <ul className="nav nav-tabs mb-2">
+          <li
+            className={`nav-item nav-link ${
+              gotoType === "lists" ? "active" : ""
+            }`}
+            onClick={() => setGotoType("lists")}
+          >
+            Lists
+          </li>
+          <li
+            className={`nav-item nav-link ${
+              gotoType === "userLists" ? "active" : ""
+            }`}
+            onClick={() => setGotoType("userLists")}
+          >
+            Custom Lists
+          </li>
+          <li
+            className={`nav-item nav-link ${
+              gotoType === "stellarium" ? "active" : ""
+            }`}
+            onClick={() => setGotoType("stellarium")}
+          >
+            Stellarium
+          </li>
+        </ul>
+        <hr />
+        {gotoType === "lists" && <GotoLists />}
+        {gotoType === "stellarium" && <GotoStellarium />}
+        {gotoType === "userLists" && <GotoUserLists />}
+      </div>
+    </section>
   );
 }

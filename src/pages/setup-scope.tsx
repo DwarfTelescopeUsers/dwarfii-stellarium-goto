@@ -11,24 +11,24 @@ export default function SetupScope() {
   useLoadIntialValues();
 
   return (
-      <section className="daily-horp d-inline-block w-100">
-          <div className="container">
-              <br /> <br /> <br /> <br /><StatusBar />
-      
-      <h2>First Steps</h2>
-      <p>
-        Use the Dwarf II mobile app from Dwarf Labs to take dark frames, focus
-        the scope, and calibrate goto.
-      </p>
-      <hr></hr>
-      <SetLocation />
-      <hr />
-      <ConnectDwarfSTA />
-      <hr />
-      <ConnectDwarf />
-      <hr />
-      <ConnectStellarium />
-          </div>
-      </section>
+    <section className="daily-horp d-inline-block w-100">
+      <div className="container">
+        <br /> <br /> <br /> <br />
+        <StatusBar />
+        <h2>First Steps</h2>
+        <p>
+          Use the Dwarf II mobile app from Dwarf Labs to take dark frames, focus
+          the scope, and calibrate goto.
+        </p>
+        <hr></hr>
+        <SetLocation />
+        <hr />
+        <ConnectDwarfSTA />
+        <hr />
+        <ConnectDwarf />
+        <hr />
+        <ConnectStellarium />
+      </div>
+    </section>
   );
 }

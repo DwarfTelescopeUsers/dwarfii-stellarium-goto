@@ -125,9 +125,9 @@ export default function ConnectStellarium() {
             />
           </div>
         </div>
-              <button type="submit" className="btn btn-more02 me-3">
-                  <i className=" icon-connectdevelop" /> Connect
-        </button> {" "}
+        <button type="submit" className="btn btn-more02 me-3">
+          <i className=" icon-connectdevelop" /> Connect
+        </button>{" "}
         {renderConnectionStatus()}
       </form>
     </div>

@@ -12,7 +12,7 @@ export default function AstroPhoto() {
   useLoadIntialValues();
   let connectionCtx = useContext(ConnectionContext);
 
-  const [notification, setNotification] = useState(null as string | null);
+  const [notification] = useState(null as string | null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState("");
   const [getSessionDataDisabled, setGetSessionDataDisabled] = useState(true);
@@ -45,8 +45,7 @@ export default function AstroPhoto() {
         while ((matches = folderRegex.exec(data)) !== null) {
           sessionList.push({ name: matches[1], date: matches[3] });
         }
-        if (sessionList.length > 0) 
-        setSessions(sessionList);
+        if (sessionList.length > 0) setSessions(sessionList);
       } catch (error: any) {
         console.error(
           "An error occurred while fetching sessions:",
@@ -128,50 +127,58 @@ export default function AstroPhoto() {
 
   if (hasErrors) {
     return (
-      <><section className="daily-horp d-inline-block w-100">
-            <div className="container">
-        <Head>
-          <title>Session Data</title>
-        </Head>
-        <StatusBar />
+      <>
+        <section className="daily-horp d-inline-block w-100">
+          <div className="container">
+            <Head>
+              <title>Session Data</title>
+            </Head>
+            <StatusBar />
 
-        <h1>Session Data</h1>
+            <h1>Session Data</h1>
 
-        {notConnected && (
-          <p className="text-danger">You must connect to Dwarf II.</p>
-        )}
-       </div></section>
+            {notConnected && (
+              <p className="text-danger">You must connect to Dwarf II.</p>
+            )}
+          </div>
+        </section>
       </>
     );
   }
 
   return (
-    <> <section className="daily-horp d-inline-block w-100">
-          <div className="container"><br /><br /><br /><br />
-      <Head>
-        <title>Session Data</title>
-      </Head>
-      <StatusBar />
-      <div className="container">
-      {notification && <div className="notification">{notification}</div>}
-        <select value={selectedSession} onChange={handleSessionChange}>
-          <option value="">Select a session...</option>
-          {sessions.map((session, index) => (
-            <option key={index} value={session.name}>
-              {session.name} - {session.date}
-            </option>
-          ))}
-        </select>
-        <button onClick={getSessionData} disabled={getSessionDataDisabled}>
-          Get Session Data
-        </button>
-        <div className="progress-container">
-          <div className="progress" style={{ width: `${progress}%` }}></div>
-          <span className="progress-text">{progress}%</span>
+    <>
+      {" "}
+      <section className="daily-horp d-inline-block w-100">
+        <div className="container">
+          <br />
+          <br />
+          <br />
+          <br />
+          <Head>
+            <title>Session Data</title>
+          </Head>
+          <StatusBar />
+          <div className="container">
+            {notification && <div className="notification">{notification}</div>}
+            <select value={selectedSession} onChange={handleSessionChange}>
+              <option value="">Select a session...</option>
+              {sessions.map((session, index) => (
+                <option key={index} value={session.name}>
+                  {session.name} - {session.date}
+                </option>
+              ))}
+            </select>
+            <button onClick={getSessionData} disabled={getSessionDataDisabled}>
+              Get Session Data
+            </button>
+            <div className="progress-container">
+              <div className="progress" style={{ width: `${progress}%` }}></div>
+              <span className="progress-text">{progress}%</span>
+            </div>
+          </div>
         </div>
-      
-              </div>
-          </div></section>
+      </section>
       <style jsx>{`
         .container {
           position: fixed;
@@ -216,7 +223,6 @@ export default function AstroPhoto() {
           font-weight: bold;
         }
       `}</style>
-          
     </>
   );
 }

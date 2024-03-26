@@ -84,13 +84,13 @@ export default function GotoUserLists() {
 
         <div className="col-md-4">
           <button
-                      className="btn btn-more02 me-2 mb-2"
+            className="btn btn-more02 me-2 mb-2"
             onClick={importListModalHandle}
           >
             Add new list
           </button>
           <button
-                      className="btn btn-more03 me-2 mb-2"
+            className="btn btn-more03 me-2 mb-2"
             onClick={deleteListModalHandle}
           >
             Delete list

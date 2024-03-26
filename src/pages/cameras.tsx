@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import Head from "next/head";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
@@ -27,53 +27,62 @@ export default function AstroPhoto() {
 
   if (hasErrors) {
     return (
-      <><section className="daily-horp d-inline-block w-100">
-            <div className="container">
-        <Head>
-          <title>Astro Photos</title>
-        </Head>
-        <StatusBar />
+      <>
+        <section className="daily-horp d-inline-block w-100">
+          <div className="container">
+            <Head>
+              <title>Astro Photos</title>
+            </Head>
+            <StatusBar />
 
-        <h1>Astro Photos</h1>
+            <h1>Astro Photos</h1>
 
-        {notConnected && (
-          <p className="text-danger">You must connect to Dwarf II.</p>
-        )}
+            {notConnected && (
+              <p className="text-danger">You must connect to Dwarf II.</p>
+            )}
 
-        {noCoordinates && (
-          <p className="text-danger">You must set your location.</p>
-                )}
-       </div></section>
+            {noCoordinates && (
+              <p className="text-danger">You must set your location.</p>
+            )}
+          </div>
+        </section>
       </>
     );
   }
 
   return (
-    <> <section className="daily-horp d-inline-block w-100">
-          <div className="container"><br /><br /><br /><br />
-      <Head>
-        <title>Astro Photos</title>
-      </Head>
-      <StatusBar />
-      <div className="container">
-        <div className="row px-0">
-          <main className="col">
-            <br />
-            <DwarfCameras
-              showWideangle={showWideangle}
-              useRawPreviewURL={useRawPreviewURL}
-            />
-          </main>
+    <>
+      {" "}
+      <section className="daily-horp d-inline-block w-100">
+        <div className="container">
+          <br />
+          <br />
+          <br />
+          <br />
+          <Head>
+            <title>Astro Photos</title>
+          </Head>
+          <StatusBar />
+          <div className="container">
+            <div className="row px-0">
+              <main className="col">
+                <br />
+                <DwarfCameras
+                  showWideangle={showWideangle}
+                  useRawPreviewURL={useRawPreviewURL}
+                />
+              </main>
 
-          <div className="dropdown-wrapper px-0">
-            <ImagingMenu
-              setShowWideangle={setShowWideangle}
-              setUseRawPreviewURL={setUseRawPreviewURL}
-            />
+              <div className="dropdown-wrapper px-0">
+                <ImagingMenu
+                  setShowWideangle={setShowWideangle}
+                  setUseRawPreviewURL={setUseRawPreviewURL}
+                />
+              </div>
+            </div>
           </div>
         </div>
-        </div>
-          </div></section>
+      </section>
       <style jsx>{`
         select {
           margin-right: 10px;
@@ -83,7 +92,6 @@ export default function AstroPhoto() {
           width: auto; /* Set width to match dropdown */
         }
       `}</style>
-          
     </>
   );
 }
