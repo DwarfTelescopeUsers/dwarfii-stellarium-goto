@@ -36,7 +36,7 @@ export default function AutoGoto() {
       )}
 
       <select
-        className="form-select"
+        className="form-select-dso"
         value={connectionCtx.currentObjectListName || "default"}
         onChange={selectListHandler}
       >

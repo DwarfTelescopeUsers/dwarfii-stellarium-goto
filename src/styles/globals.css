@@ -12,18 +12,21 @@ body {
   -moz-background-size: cover;
   background-size: cover;
   -o-background-size: cover;
+
 }
 
-#__next div{
-  background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
-}
+/*#__next div {
+    background: linear-gradient(rgb(0 0 0 / 20%), rgb(0 0 0 / 40%));
+   
+}*/
 
 .container-connection {
-  align-items: center;
-  display: flex;
-  margin-left: 0px;
-  margin-top: 10px;
-  margin-bottom: -6px;
+    align-items: center;
+    display: flex;
+    margin-left: 0px;
+    margin-top: 10px;
+    height: 34px;
+    margin-bottom: 6px;
 }
 
 .battery-meter {
@@ -32,12 +35,13 @@ body {
   flex-direction: row;
   margin-left: 16px;
   width: 180px;
-  margin: -36px 0px 1px 200px;
+  margin: -31px 0px 1px 233px; 
 }
 .container-battery {
     display: flex;
     margin-left: 0px;
-    margin-top: 6px;
+    margin-top: -10px;
+    height: auto;
 }
 .container-status {
     display: flex;
@@ -77,7 +81,7 @@ body {
 }
 
 .lightning-bolt-fast {
-  animation: lightning-bold-reveal 0.3s forwards infinite;
+  animation: lightning-bold-reveal 5s forwards infinite;
   transform-origin: center center;
 }
 
@@ -87,11 +91,11 @@ body {
   }
 
   90% {
-    transform: scale(1.05);
+    transform: scale(0.8);
   }
 
   100% {
-    transform: scale(1);
+    transform: scale(0.7);
   }
 }
 /*Tooltip*/
@@ -137,4 +141,43 @@ body {
     /*margin: 40px;*/
     font-family: Arial;
     text-align: center;
+}
+.connect-dwarf {
+    display: flex;
+    justify-content: space-between;
+    width: 30rem;
+    float: right !important;
+    height: fit-content;
+    margin-top: -30px;
+}
+.right-align { margin-left: auto; margin-right: 10px;}
+.con {
+    margin-right: 1rem !important;
+}
+.text-connect {
+    --bs-text-opacity: 1;
+    margin-top: 5px;
+    text-align: right;
+}
+.text-success-connect {
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-success-rgb), var(--bs-text-opacity)) !important;
+    margin-top: 5px;
+    text-align: right;
+}
+.text-warning-connect {
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-warning-rgb), var(--bs-text-opacity)) !important;
+    margin-top: 5px;
+    text-align: right;
+}
+.text-danger-connect {
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
+    margin-top: 5px;
+}
+
+/*style cameras.tsx*/
+.camera-container {
+    height: fit-content;
 }

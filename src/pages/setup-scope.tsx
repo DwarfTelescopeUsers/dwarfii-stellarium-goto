@@ -11,8 +11,10 @@ export default function SetupScope() {
   useLoadIntialValues();
 
   return (
-    <div>
-      <StatusBar />
+      <section className="daily-horp d-inline-block w-100">
+          <div className="container">
+              <br /> <br /> <br /> <br /><StatusBar />
+      
       <h2>First Steps</h2>
       <p>
         Use the Dwarf II mobile app from Dwarf Labs to take dark frames, focus
@@ -26,6 +28,7 @@ export default function SetupScope() {
       <ConnectDwarf />
       <hr />
       <ConnectStellarium />
-    </div>
+          </div>
+      </section>
   );
 }

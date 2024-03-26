@@ -89,7 +89,7 @@ export default function SetLocation() {
               Latitude
             </label>
           </div>
-          <div className="col-lg-11 col-md-10">
+          <div className="col-lg-2 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
@@ -108,7 +108,7 @@ export default function SetLocation() {
               Longitude
             </label>
           </div>
-          <div className="col-lg-11 col-md-10">
+          <div className="col-lg-2 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
@@ -127,7 +127,7 @@ export default function SetLocation() {
               Timezone
             </label>
           </div>
-          <div className="col-lg-11 col-md-10">
+          <div className="col-lg-2 col-md-10">
             <input
               pattern="^[a-z]*(\*/[a-z]+)$/i"
               className="form-control"
@@ -142,8 +142,8 @@ export default function SetLocation() {
         </div>
       </form>
 
-      <button className="btn btn-primary" onClick={browserCoordinatesHandler}>
-        Use Current Location
+          <button className="btn btn-more02" onClick={browserCoordinatesHandler}>
+              <i className="icon-location" /> Use Current Location
       </button>
       {errors && <p className="text-danger">{errors}</p>}
     </>

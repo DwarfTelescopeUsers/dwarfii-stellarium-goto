@@ -53,11 +53,10 @@ export default function StatusBar() {
   return (
     <div>
       <div className="row mb ">
-        <ConnectDwarfII />
         <div className="col-sm align-center">
           <div className="container-connection">
-            <span className="me-3">Dwarf II: {connection}</span>
-            <span className="me-3">Stellarium: {connectionStellarium}</span>
+            <span className="con">Dwarf II: {connection}</span>
+            <span className="con">Stellarium: {connectionStellarium}</span>
           </div>
           <div className="container-battery">
             {connectionCtx.connectionStatus &&
@@ -69,13 +68,15 @@ export default function StatusBar() {
                 />
               )}
           </div>
+          <ConnectDwarfII />
+
           <div className="container-status">
             {connectionCtx.connectionStatus &&
               connectionCtx.availableSizeDwarf !== undefined &&
               connectionCtx.totalSizeDwarf !== undefined && (
                 <span className="me-3">
                   <div className="hover-text">
-                    <i className="icon-drive" />
+                    <i className="icon-micro-sd" />
                     <span className="tooltip-text" id="top">
                       Sd-Card
                     </span>

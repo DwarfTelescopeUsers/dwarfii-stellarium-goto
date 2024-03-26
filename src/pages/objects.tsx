@@ -13,8 +13,9 @@ export default function Goto() {
   useSetupConnection();
   useLoadIntialValues();
 
-  return (
-    <div>
+    return (
+        <section className="daily-horp d-inline-block w-100">
+            <div className="container"><br /><br /><br /><br />
       <StatusBar />
       <hr></hr>
       <CalibrationDwarf />
@@ -49,6 +50,7 @@ export default function Goto() {
       {gotoType === "lists" && <GotoLists />}
       {gotoType === "stellarium" && <GotoStellarium />}
       {gotoType === "userLists" && <GotoUserLists />}
-    </div>
+            </div>
+        </section>
   );
 }
