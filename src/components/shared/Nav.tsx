@@ -35,6 +35,7 @@ export default function Nav() {
                                 <Link className="nav-link active drop" aria-current="page" href="/setup-scope">Setup</Link>
                                 <Link className="nav-link active drop" aria-current="page" href="/objects">Objects</Link>
                                 <Link className="nav-link active drop" aria-current="page" href="/cameras">Camera</Link>
+                                <Link className="nav-link active drop" aria-current="page" href="/image-session">Session-Data</Link>
                             </div>
                         </div>
 
