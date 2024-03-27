@@ -296,10 +296,10 @@ export default function ConnectDwarf() {
               />
             </div>
           </div>
-                  <button type="submit" className="btn btn-more02 me-3">
-                      <i className="icon-wifi" /> Connect
-          </button> {" "}
-           {renderConnectionStatus()}
+          <button type="submit" className="btn btn-more02 me-3">
+            <i className="icon-wifi" /> Connect
+          </button>{" "}
+          {renderConnectionStatus()}
         </form>
       </ol>
     </div>
