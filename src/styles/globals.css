@@ -228,7 +228,7 @@ body {
 }
 .container-construction {
     position: absolute;
-    background: url(/_next/static/media/bg-bannerpic.jpg) no-repeat;
+    
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -311,4 +311,15 @@ select {
     margin-top: 10px;
     font-size: 20px;
     font-weight: bold;
+}
+/*scrollbar*/
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, .5);
+    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
 }
