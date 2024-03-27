@@ -1,15 +1,9 @@
 import Link from "next/link";
-import StatusBar from "@/components/shared/StatusBar";
-import { useSetupConnection } from "@/hooks/useSetupConnection";
-import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
 export default function About() {
-  useSetupConnection();
-  useLoadIntialValues();
-
   return (
     <div>
-      <section className="daily-horp d-inline-block w-100">
+      <section className="daily-horp-userlist d-inline-block w-100">
         <div className="container">
           {" "}
           <br />
@@ -17,7 +11,6 @@ export default function About() {
           <br />
           <br />
           <br />
-          <StatusBar />
           <h1>About</h1>
           <p>
             The project is made by Wai-Yin Kwan with the help of JC LESAINT This

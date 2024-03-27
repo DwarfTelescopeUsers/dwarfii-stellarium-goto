@@ -73,7 +73,7 @@ export default function Nav() {
               </div>
             </div>
 
-            <div className="dropdownmega">
+            {/* <div className="dropdownmega">
               <button className="dropbtnmega">
                 Stellarium <i className="fa fa-caret-down"></i>
               </button>
@@ -153,7 +153,7 @@ export default function Nav() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="dropdown">
               <button className="dropbtn">
@@ -163,23 +163,16 @@ export default function Nav() {
                 <Link
                   className="nav-link active drop"
                   aria-current="page"
-                  href="/Forecast"
+                  href="/construction"
                 >
                   Forecast
                 </Link>
                 <Link
                   className="nav-link active drop"
                   aria-current="page"
-                  href="/Clouds"
+                  href="/construction"
                 >
                   Clouds
-                </Link>
-                <Link
-                  className="nav-link active drop"
-                  aria-current="page"
-                  href="/"
-                >
-                  Link1
                 </Link>
               </div>
             </div>
@@ -196,7 +189,7 @@ export default function Nav() {
         </div>
         <div className="d-none d-lg-block">
           <div className="right-menu">
-            <ul>
+            {/*<ul>
               <li>
                 <a
                   data-bs-toggle="modal"
@@ -207,7 +200,7 @@ export default function Nav() {
                   Modal popup{" "}
                 </a>
               </li>
-            </ul>
+            </ul>*/}
           </div>
         </div>
       </div>

@@ -30,11 +30,11 @@ export default function DSOSearch() {
     <div>
       <div className="row mb-3">
         <div className="col-lg-1 col-md-2">
-          <button className="btn btn-primary" onClick={searchHandler}>
+          <button className="btn btn-more02" onClick={searchHandler}>
             Search
           </button>
         </div>
-        <div className="col-lg-11 col-md-10">
+        <div className="col-lg-4 col-md-10">
           <input
             pattern="^[\w\s]{0,255}$/i"
             className="form-control"

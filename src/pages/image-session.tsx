@@ -159,7 +159,7 @@ export default function AstroPhoto() {
             <title>Session Data</title>
           </Head>
           <StatusBar />
-          <div className="container">
+          <div className="container-image-session">
             {notification && <div className="notification">{notification}</div>}
             <select value={selectedSession} onChange={handleSessionChange}>
               <option value="">Select a session...</option>
@@ -169,7 +169,13 @@ export default function AstroPhoto() {
                 </option>
               ))}
             </select>
-            <button onClick={getSessionData} disabled={getSessionDataDisabled}>
+            <br />
+            <br />
+            <button
+              className=" btn btn-more02"
+              onClick={getSessionData}
+              disabled={getSessionDataDisabled}
+            >
               Get Session Data
             </button>
             <div className="progress-container">
@@ -177,52 +183,33 @@ export default function AstroPhoto() {
               <span className="progress-text">{progress}%</span>
             </div>
           </div>
+          {""}
+          <br />
+          <br />
+          <br />
+          Thumbnails maybe?
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
         </div>
       </section>
-      <style jsx>{`
-        .container {
-          position: fixed;
-          left: 50%;
-          transform: translateX(-50%);
-          text-align: left;
-        }
-
-        .notification {
-          background-color: #ffcccc;
-          color: #ff0000;
-          padding: 10px;
-          border-radius: 5px;
-          margin-bottom: 10px;
-        }
-        select {
-          margin-right: 10px;
-        }
-        .dropdown-wrapper {
-          width: auto; /* Set width to match dropdown */
-        }
-        .progress-container {
-          position: relative;
-          margin-top: 10px;
-          width: 200px; /* Set width to match dropdown */
-          height: 20px;
-          background-color: #ccc;
-          border-radius: 10px;
-          overflow: hidden;
-        }
-        .progress {
-          height: 100%;
-          background-color: #4caf50 !important;
-          transition: width 0.5s ease;
-        }
-        .progress-text {
-          position: absolute;
-          top: 50%;
-          right: 5px;
-          transform: translateY(-50%);
-          color: white;
-          font-weight: bold;
-        }
-      `}</style>
     </>
   );
 }
