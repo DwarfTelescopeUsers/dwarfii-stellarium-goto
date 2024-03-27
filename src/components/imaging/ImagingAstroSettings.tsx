@@ -416,7 +416,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
             </div>
             <div className="row mb-md-2 mb-sm-1">
               <div className="col-4">
-                              <label htmlFor="count" className="form-label">
+                <label htmlFor="count" className="form-label">
                   Count
                 </label>
               </div>
@@ -424,8 +424,8 @@ export default function TakeAstroPhoto(props: PropTypes) {
                 <input
                   type="number"
                   className="form-control"
-                                  name="count"
-                                  max="999"
+                  name="count"
+                  max="999"
                   placeholder="1"
                   min="1"
                   onChange={(e) => {
@@ -484,7 +484,7 @@ export default function TakeAstroPhoto(props: PropTypes) {
               <div className="col-md text-end">
                 <button
                   onClick={() => getAllTelescopeISPSetting(connectionCtx)}
-                                  className="btn btn-more02"
+                  className="btn btn-more02"
                 >
                   Read Values
                 </button>

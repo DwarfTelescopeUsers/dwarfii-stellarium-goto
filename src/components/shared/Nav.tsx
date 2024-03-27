@@ -73,7 +73,7 @@ export default function Nav() {
               </div>
             </div>
 
-                      {/* <div className="dropdownmega">
+            {/* <div className="dropdownmega">
               <button className="dropbtnmega">
                 Stellarium <i className="fa fa-caret-down"></i>
               </button>
@@ -174,7 +174,6 @@ export default function Nav() {
                 >
                   Clouds
                 </Link>
-                
               </div>
             </div>
             <li className="nav-item">
@@ -190,7 +189,7 @@ export default function Nav() {
         </div>
         <div className="d-none d-lg-block">
           <div className="right-menu">
-                      {/*<ul>
+            {/*<ul>
               <li>
                 <a
                   data-bs-toggle="modal"

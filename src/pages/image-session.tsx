@@ -168,43 +168,48 @@ export default function AstroPhoto() {
                   {session.name} - {session.date}
                 </option>
               ))}
-                      </select><br /><br />
-                      <button className=" btn btn-more02" onClick={getSessionData} disabled={getSessionDataDisabled}>
+            </select>
+            <br />
+            <br />
+            <button
+              className=" btn btn-more02"
+              onClick={getSessionData}
+              disabled={getSessionDataDisabled}
+            >
               Get Session Data
             </button>
             <div className="progress-container">
               <div className="progress" style={{ width: `${progress}%` }}></div>
               <span className="progress-text">{progress}%</span>
             </div>
-            </div>
-                  {""}
-                  <br />
-                  <br />
-                  <br />Thumbnails maybe? 
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  
+          </div>
+          {""}
+          <br />
+          <br />
+          <br />
+          Thumbnails maybe?
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
         </div>
       </section>
-      
     </>
   );
 }
