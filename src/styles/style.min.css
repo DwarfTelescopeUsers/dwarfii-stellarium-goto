@@ -775,4 +775,8 @@ footer .colm-footer h5 {
     -moz-appearance: none;
     appearance: none;
 }
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #00AE83;
+}
 /*# sourceMappingURL=style.min.css.map */

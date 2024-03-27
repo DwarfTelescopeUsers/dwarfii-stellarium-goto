@@ -155,7 +155,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           <button
             className={`btn ${
               connectionCtx.connectionStatusStellarium
-                ? "btn-primary"
+                          ? "btn-more02"
                 : "btn-secondary"
             } me-2 mb-2`}
             onClick={() => centerHandler(object, connectionCtx, setErrors)}
@@ -165,7 +165,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
           </button>
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+                          connectionCtx.connectionStatus ? "btn-more02" : "btn-secondary"
             } me-2 mb-2`}
             onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}

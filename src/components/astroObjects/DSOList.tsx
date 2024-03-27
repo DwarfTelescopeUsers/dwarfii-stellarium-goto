@@ -150,7 +150,7 @@ export default function DSOList(props: PropType) {
         {objectTypesMenu.map((type) => (
           <li
             key={type.value}
-            className={`nav-item nav-link rounded-pill ${
+                className={`daily-horp nav-item nav-link rounded-pill ${
               selectedCategories.includes(type.value) ? "active" : ""
             }`}
             onClick={() => selectCategoryHandler(type.value)}

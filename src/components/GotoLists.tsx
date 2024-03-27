@@ -23,7 +23,7 @@ export default function AutoGoto() {
     connectionCtx.currentObjectListName === undefined;
 
   return (
-    <div>
+      <div>
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Center to work.

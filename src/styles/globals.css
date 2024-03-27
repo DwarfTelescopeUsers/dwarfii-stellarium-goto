@@ -181,3 +181,38 @@ body {
 .camera-container {
     height: fit-content;
 }
+.popover-body {
+    padding: 1rem 1rem;
+    color: #212529;
+    font-size: 14px;
+}
+.btn-outline-primary {
+    border: solid 2px #fff !important;
+    color: #fff;
+    padding: 14px 26px 10px 26px;
+    border-radius: 5px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    margin-right: 10px;
+    transition: all .5s linear
+}
+
+.btn-outline-primary:hover {
+    background: #fff !important;
+    color: #d3a417
+}
+.daily-horp-camera {
+    padding: 0px 0 0 0;
+    background: url(/_next/static/media/bg-bannerpic.772b4a9c.jpg) no-repeat;
+    background-size: cover;
+    background-position: top left;
+    height: 900px;
+}
+.daily-horp-object {
+    padding: 0px 0 0 0;
+    background: url(/_next/static/media/bg-bannerpic.772b4a9c.jpg) no-repeat;
+    /* background-size: cover; */
+    background-position: top left;
+}
