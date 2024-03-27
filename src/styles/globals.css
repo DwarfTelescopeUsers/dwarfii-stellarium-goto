@@ -294,3 +294,21 @@ select {
     color: white;
     font-weight: bold;
 }
+.text-success-connect {
+    color: #198754 !important;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+.text-warning-connect {
+    color: #C57721 !important;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+.text-danger-connect {
+    color: #A62508 !important;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
