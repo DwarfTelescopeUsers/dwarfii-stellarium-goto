@@ -212,7 +212,35 @@ body {
 }
 .daily-horp-object {
     padding: 0px 0 0 0;
-    background: url(/_next/static/media/bg-bannerpic.772b4a9c.jpg) no-repeat;
-    /* background-size: cover; */
-    background-position: top left;
+    background: url(/_next/static/media/bg-bannerpic.772b4a9c.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+.daily-horp-userlist {
+    padding: 0px 0 0 0;
+    background: url(/_next/static/media/bg-bannerpic.772b4a9c.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+.container-construction {
+    position: absolute;
+    background: url(/_next/static/media/bg-bannerpic.jpg) no-repeat;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 10px;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 1.2em;
 }

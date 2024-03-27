@@ -145,7 +145,8 @@ export default function DSOList(props: PropType) {
   }
 
   return (
-    <div>
+      <div>
+          <div className="container">
       <ul className="nav nav-pills mt-3">
         {objectTypesMenu.map((type) => (
           <li
@@ -168,6 +169,8 @@ export default function DSOList(props: PropType) {
       {objects.map((object, i) => (
         <DSOObject key={i} object={object} />
       ))}
+    </div>
+    
     </div>
   );
 }

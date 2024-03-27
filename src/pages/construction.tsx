@@ -9,34 +9,45 @@ export default function About() {
 
   return (
       <div><section className="daily-horp d-inline-block w-100">
-          <div className="container"> <br /><br /><br /><br /><br />
+           <br /><br /><br /><br /><br />
       
-              <div className="container">
+              <div className="container-construction">
                   <h1>This page is under construction</h1>
                   <p>We'll be here soon with our new awesome site.</p>
               </div>
-              <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
-         </div> </section>
-          <style jsx>{`
-        .container {
-  
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  padding: 10px;
-}
-
-h1 {
-  font-size: 2em;
-  margin-bottom: 10px;
-}
-
-p {
-  font-size: 1.2em;
-}
-      `}</style>
+          {""}
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          </section>
+          
     </div>
   );
 }

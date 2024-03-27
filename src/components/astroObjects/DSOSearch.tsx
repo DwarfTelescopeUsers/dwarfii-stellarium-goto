@@ -34,7 +34,7 @@ export default function DSOSearch() {
             Search
           </button>
         </div>
-        <div className="col-lg-11 col-md-10">
+        <div className="col-lg-4 col-md-10">
           <input
             pattern="^[\w\s]{0,255}$/i"
             className="form-control"

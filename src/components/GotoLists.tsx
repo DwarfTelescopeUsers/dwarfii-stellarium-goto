@@ -24,6 +24,7 @@ export default function AutoGoto() {
 
   return (
       <div>
+          <div className="container">
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Center to work.
@@ -76,6 +77,13 @@ export default function AutoGoto() {
             &quot;Center&quot; will show the selected object in Stellarium.
             &quot;Goto&quot; will move Dwarf II to the selected object.
           </p>
+                  {""}
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
         </>
       )}
       {connectionCtx.currentObjectListName === "dso" && (
@@ -84,6 +92,9 @@ export default function AutoGoto() {
       {connectionCtx.currentObjectListName === "planets" && (
         <PlanetsList></PlanetsList>
       )}
-    </div>
+          </div>
+          
+      
+      </div>
   );
 }
