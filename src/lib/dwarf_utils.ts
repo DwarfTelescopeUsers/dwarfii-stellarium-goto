@@ -67,7 +67,7 @@ export async function turnOnTeleCameraFn(
     : new WebSocketHandler(connectionCtx.IPDwarf);
 
   // Send Command : messageCameraTeleOpenCamera
-  let WS_Packet = messageCameraTeleOpenCamera(binning == binning2x2);
+  let WS_Packet = messageCameraTeleOpenCamera(binning);
   let txtInfoCommand = "turnOnTeleCamera";
 
   webSocketHandler.prepare(

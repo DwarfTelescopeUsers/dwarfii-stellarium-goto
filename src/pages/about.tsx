@@ -1,10 +1,6 @@
 import Link from "next/link";
 
-
-
 export default function About() {
-  
-
   return (
     <div>
       <section className="daily-horp-userlist d-inline-block w-100">
@@ -15,7 +11,6 @@ export default function About() {
           <br />
           <br />
           <br />
-          
           <h1>About</h1>
           <p>
             The project is made by Wai-Yin Kwan with the help of JC LESAINT This
