@@ -10,7 +10,7 @@ export default function AstroPhoto() {
   useLoadIntialValues();
   const connectionCtx = useContext(ConnectionContext);
 
-  const [notification, setNotification] = useState<string | null>(null);
+  const [notification] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [progress, setProgress] = useState(0);
   const [downloadClicked, setDownloadClicked] = useState(false);
@@ -142,8 +142,7 @@ export default function AstroPhoto() {
                         alt="Thumbnail"
                       />
                     </td>
-                    <td style={{ paddingLeft: "10px" }}>{session.name}</td>{" "}
-                    {/* Add padding to create space */}
+                    <td className="session-name">{session.name}</td>
                     <td>{session.date}</td>
                     <td>
                       <button
@@ -167,9 +166,7 @@ export default function AstroPhoto() {
                 <span className="progress-text">{progress}%</span>
               </div>
             )}
-            <br />
           </div>
-          <br />
         </div>
       </section>
     </>
