@@ -218,7 +218,7 @@ export default function ConnectDwarfII() {
     if (connectionCtx.connectionStatusSlave || slavemode) {
       return (
         <span className="text-warning-connect right-align">
-          Connection successful (Slave Mode) {goLiveMessage}
+          Connection successfull (Slave Mode) {goLiveMessage}
           {errorTxt}.
         </span>
       );
@@ -226,7 +226,7 @@ export default function ConnectDwarfII() {
 
     return (
       <span className="text-success-connect right-align">
-        Connection successful. {goLiveMessage}
+        Connection successfull. {goLiveMessage}
         {errorTxt}
       </span>
     );

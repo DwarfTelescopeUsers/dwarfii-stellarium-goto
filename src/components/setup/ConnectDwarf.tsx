@@ -238,8 +238,8 @@ export default function ConnectDwarf() {
     }
 
     return (
-      <span className="text-success">
-        Connection successful. {goLiveMessage}
+      <span className="text-success-connect">
+        Connection successfull. {goLiveMessage}
         {errorTxt}
       </span>
     );
