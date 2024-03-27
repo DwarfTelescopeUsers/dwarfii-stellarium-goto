@@ -300,11 +300,11 @@ export default function ConnectDwarfSTA() {
       return <></>;
     }
     if (connectionStatus === false) {
-      return <span className="text-danger">Connection failed {errorTxt}.</span>;
+      return <span className="text-danger-connect">Connection failed {errorTxt}.</span>;
     }
     if (findDwarfBluetooth && !connectionStatus) {
       return (
-        <span className="text-warning">
+        <span className="text-warning-connect">
           Found Dwarf II
           {errorTxt}.
         </span>
@@ -312,7 +312,7 @@ export default function ConnectDwarfSTA() {
     }
     if (etatBluetooth && !connectionStatus) {
       return (
-        <span className="text-warning">
+        <span className="text-warning-connect">
           Connected to Dwarf II
           {errorTxt}.
         </span>
@@ -320,7 +320,7 @@ export default function ConnectDwarfSTA() {
     }
 
     return (
-      <span className="text-success">
+      <span className="text-success-connect">
         Connection successful.
         {errorTxt}
       </span>
