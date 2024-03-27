@@ -54,7 +54,8 @@ export default function GotoUserLists() {
   }
 
   return (
-    <div>
+      <div><div className="container">
+          
       {!connectionCtx.connectionStatusStellarium && (
         <p className="text-danger">
           You must connect to Stellarium for Center to work.
@@ -121,6 +122,16 @@ export default function GotoUserLists() {
             If you want to share your list with other people, you can send other
             people the csv from Telescopius.
           </p>
+                  {""}
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
+                  <br />
         </>
       )}
       <ImportObjectListModal
@@ -139,6 +150,8 @@ export default function GotoUserLists() {
         objectLists={objectLists}
         setObjectLists={setObjectLists}
       />
-    </div>
+          </div></div>
+          
+          
   );
 }

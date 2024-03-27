@@ -145,12 +145,13 @@ export default function DSOList(props: PropType) {
   }
 
   return (
-    <div>
+      <div>
+          <div className="container">
       <ul className="nav nav-pills mt-3">
         {objectTypesMenu.map((type) => (
           <li
             key={type.value}
-            className={`nav-item nav-link rounded-pill ${
+                className={`daily-horp nav-item nav-link rounded-pill ${
               selectedCategories.includes(type.value) ? "active" : ""
             }`}
             onClick={() => selectCategoryHandler(type.value)}
@@ -168,6 +169,8 @@ export default function DSOList(props: PropType) {
       {objects.map((object, i) => (
         <DSOObject key={i} object={object} />
       ))}
+    </div>
+    
     </div>
   );
 }

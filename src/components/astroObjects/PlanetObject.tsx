@@ -105,7 +105,7 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
           <button
             className={`btn ${
               connectionCtx.connectionStatusStellarium
-                ? "btn-primary"
+                          ? "btn btn-more02"
                 : "btn-secondary"
             } me-2 mb-2`}
             onClick={() => centerHandler(object, connectionCtx, setErrors)}
@@ -115,7 +115,7 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
           </button>
           <button
             className={`btn ${
-              connectionCtx.connectionStatus ? "btn-primary" : "btn-secondary"
+              connectionCtx.connectionStatus ? "btn btn-more02" : "btn-secondary"
             } mb-2`}
             onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
