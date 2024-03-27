@@ -295,7 +295,7 @@ select {
     transform: translateY(-50%);
     color: white;
     font-weight: bold;
-  }
+}
 .text-success-connect {
     color: #198754 !important;
     margin-top: 10px;
