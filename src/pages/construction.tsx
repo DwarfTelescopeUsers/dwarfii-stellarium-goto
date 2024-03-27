@@ -1,5 +1,4 @@
-import Link from "next/link";
-import StatusBar from "@/components/shared/StatusBar";
+
 import { useSetupConnection } from "@/hooks/useSetupConnection";
 import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
