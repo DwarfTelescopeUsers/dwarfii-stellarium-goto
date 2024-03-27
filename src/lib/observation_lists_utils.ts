@@ -219,5 +219,8 @@ function formatObjectMosaicTelescopius(object: ObjectTelescopius) {
     object["Catalogue Entry"] = object["Familiar Name"];
     object["Familiar Name"] = "";
     object.Type = "Mosaic";
+  } else if (name && name.includes("- pane")) {
+    object.Type = "Mosaic";
+    if (name == object["Familiar Name"]) object["Familiar Name"] = "";
   }
 }

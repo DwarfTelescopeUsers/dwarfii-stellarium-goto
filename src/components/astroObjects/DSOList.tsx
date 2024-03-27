@@ -146,28 +146,30 @@ export default function DSOList(props: PropType) {
 
   return (
     <div>
-      <ul className="nav nav-pills mt-3">
-        {objectTypesMenu.map((type) => (
-          <li
-            key={type.value}
-            className={`nav-item nav-link rounded-pill ${
-              selectedCategories.includes(type.value) ? "active" : ""
-            }`}
-            onClick={() => selectCategoryHandler(type.value)}
-          >
-            {type.label}
-          </li>
+      <div className="container">
+        <ul className="nav nav-pills mt-3">
+          {objectTypesMenu.map((type) => (
+            <li
+              key={type.value}
+              className={`daily-horp nav-item nav-link rounded-pill ${
+                selectedCategories.includes(type.value) ? "active" : ""
+              }`}
+              onClick={() => selectCategoryHandler(type.value)}
+            >
+              {type.label}
+            </li>
+          ))}
+        </ul>
+        <hr />
+        <DSOSearch />
+        <hr />
+        <h4 className="mt-3">
+          {objects.length} {pluralize(objects.length, "Object", "Objects")}
+        </h4>
+        {objects.map((object, i) => (
+          <DSOObject key={i} object={object} />
         ))}
-      </ul>
-      <hr />
-      <DSOSearch />
-      <hr />
-      <h4 className="mt-3">
-        {objects.length} {pluralize(objects.length, "Object", "Objects")}
-      </h4>
-      {objects.map((object, i) => (
-        <DSOObject key={i} object={object} />
-      ))}
+      </div>
     </div>
   );
 }

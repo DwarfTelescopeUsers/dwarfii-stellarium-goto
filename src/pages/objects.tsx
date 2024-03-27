@@ -14,7 +14,7 @@ export default function Goto() {
   useLoadIntialValues();
 
   return (
-    <section className="daily-horp d-inline-block w-100">
+    <section className="daily-horp-object d-inline-block w-100">
       <div className="container">
         <br />
         <br />
@@ -24,7 +24,7 @@ export default function Goto() {
         <hr></hr>
         <CalibrationDwarf />
         <hr />
-        <ul className="nav nav-tabs mb-2">
+        <ul className=" nav nav-tabs mb-2">
           <li
             className={`nav-item nav-link ${
               gotoType === "lists" ? "active" : ""
