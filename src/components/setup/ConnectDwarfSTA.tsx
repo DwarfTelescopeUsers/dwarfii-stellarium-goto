@@ -300,7 +300,11 @@ export default function ConnectDwarfSTA() {
       return <></>;
     }
     if (connectionStatus === false) {
-      return <span className="text-danger-connect">Connection failed {errorTxt}.</span>;
+      return (
+        <span className="text-danger-connect">
+          Connection failed {errorTxt}.
+        </span>
+      );
     }
     if (findDwarfBluetooth && !connectionStatus) {
       return (
