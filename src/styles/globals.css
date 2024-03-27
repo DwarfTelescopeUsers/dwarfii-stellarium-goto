@@ -282,20 +282,29 @@ select {
     overflow: hidden;
   }
   
-  .progress-bar {
-    height: 100%;
-    background-color: #4caf50 !important;
-    transition: width 0.5s ease;
+.progress-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+ }
+  
+.progress-bar {
+    height: 20px;
+    background-color: #4caf50;
+    margin-bottom: 10px;
   }
   
-  .progress-text {
-    position: absolute;
-    top: 50%;
-    right: 5px;
-    transform: translateY(-50%);
-    color: white;
-    font-weight: bold;
-}
+.progress-text {
+    display: block;
+    text-align: center;
+  }
+
 .text-success-connect {
     color: #198754 !important;
     margin-top: 10px;

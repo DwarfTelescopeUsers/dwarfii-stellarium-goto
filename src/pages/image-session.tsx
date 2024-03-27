@@ -19,7 +19,7 @@ export default function AstroPhoto() {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
-
+    
     try {
       const response = await fetch(
         `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/`
@@ -38,10 +38,7 @@ export default function AstroPhoto() {
       }
       if (sessionList.length > 0) setSessions(sessionList);
     } catch (error: any) {
-      console.error(
-        "An error occurred while fetching sessions:",
-        error.message
-      );
+      console.error("An error occurred while fetching sessions:", error.message);
       setSessions([]);
     }
   };
@@ -137,12 +134,12 @@ export default function AstroPhoto() {
                 {sessions.map((session, index) => (
                   <tr key={index}>
                     <td>
-                      <img
-                        src={`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${session.name}/stacked_thumbnail.jpg`}
-                        alt="Thumbnail"
-                      />
+                        <img
+                          src={`http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${session.name}/stacked_thumbnail.jpg`}
+                          alt="Thumbnail"
+                        />
                     </td>
-                    <td>{session.name}</td>
+                    <td style={{ paddingLeft: '10px' }}>{session.name}</td> {/* Add padding to create space */}
                     <td>{session.date}</td>
                     <td>
                       <button
@@ -158,11 +155,8 @@ export default function AstroPhoto() {
               </tbody>
             </table>
             {downloadClicked && (
-              <div className="progress-container">
-                <div
-                  className="progress-bar"
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div className="progress-overlay">
+                <div className="progress-bar" style={{ width: `${progress}%` }}></div>
                 <span className="progress-text">{progress}%</span>
               </div>
             )}
