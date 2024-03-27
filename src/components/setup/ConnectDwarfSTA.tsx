@@ -371,8 +371,8 @@ export default function ConnectDwarfSTA() {
               </div>
             </div>
           </div>
-                  <button type="submit" className="btn btn-more02 me-3">
-                      <i className="icon-bluetooth" /> Connect
+          <button type="submit" className="btn btn-more02 me-3">
+            <i className="icon-bluetooth" /> Connect
           </button>{" "}
           {renderConnectionStatus()}
         </form>

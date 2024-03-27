@@ -62,7 +62,9 @@ export default class BatteryMeter extends React.Component<IBatteryMeterPropertie
 
     return (
       <div className="battery-meter" data-cy="battery-meter">
-        <svg width="50px" height="30px" viewBox="0 0 144 144"> s
+        <svg width="50px" height="30px" viewBox="0 0 144 144">
+          {" "}
+          s
           <g>
             <path
               fill={grey}

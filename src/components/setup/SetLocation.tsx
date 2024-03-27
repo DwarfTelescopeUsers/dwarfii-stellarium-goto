@@ -142,8 +142,8 @@ export default function SetLocation() {
         </div>
       </form>
 
-          <button className="btn btn-more02" onClick={browserCoordinatesHandler}>
-              <i className="icon-location" /> Use Current Location
+      <button className="btn btn-more02" onClick={browserCoordinatesHandler}>
+        <i className="icon-location" /> Use Current Location
       </button>
       {errors && <p className="text-danger">{errors}</p>}
     </>
