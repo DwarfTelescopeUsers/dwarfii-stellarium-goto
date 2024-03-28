@@ -27,7 +27,7 @@ export default function AstroPhoto() {
       );
       const data = await response.text();
       const folderRegex =
-        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/gi; // Adding 'i' flag for case-insensitive matching
+        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/gi;
       let matches;
       let sessionList: Session[] = [];
       while ((matches = folderRegex.exec(data)) !== null) {
@@ -39,7 +39,6 @@ export default function AstroPhoto() {
       }
       if (sessionList.length > 0) {
         setSessions(sessionList);
-        // Fetch session info for each session
         sessionList.forEach((session) => fetchSessionInfo(session.name));
       }
     } catch (error: any) {
@@ -75,10 +74,6 @@ export default function AstroPhoto() {
   useEffect(() => {
     fetchSessions();
   }, [connectionCtx.IPDwarf]);
-
-  useEffect(() => {
-    console.log("Session info:", sessionInfo);
-  }, [sessionInfo]);
 
   const getSessionData = async (sessionName: string) => {
     setDownloadClicked(true);
@@ -135,7 +130,6 @@ export default function AstroPhoto() {
         console.error("An error occurred:", error.message);
       }
     } finally {
-      // Reset downloadClicked state after download completes
       setDownloadClicked(false);
     }
   };
@@ -145,7 +139,7 @@ export default function AstroPhoto() {
     if (sessionData && sessionData.target) {
       return sessionData.target;
     } else {
-      return sessionName; // Fallback to session name if target is not available
+      return sessionName;
     }
   };
 
@@ -216,7 +210,7 @@ export default function AstroPhoto() {
                       <button
                         className="btn btn-more02"
                         onClick={() => getSessionData(session.name)}
-                        disabled={downloadClicked} // Disable button when download is in progress
+                        disabled={downloadClicked}
                       >
                         Download
                       </button>
