@@ -19,20 +19,20 @@ export default function AstroPhoto() {
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
-
+  
     try {
       const response = await fetch(
         `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/`
       );
       const data = await response.text();
       const folderRegex =
-        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/g;
+        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/gi; // Adding 'i' flag for case-insensitive matching
       let matches;
       let sessionList: Session[] = [];
       while ((matches = folderRegex.exec(data)) !== null) {
         const folderName = matches[1];
         const folderDate = matches[3];
-        if (folderName !== "DWARF_DARK" && folderName !== "Solving_Failed") {
+        if (!/dwarf_dark|solving_failed/i.test(folderName)) {
           sessionList.push({ name: folderName, date: folderDate });
         }
       }
