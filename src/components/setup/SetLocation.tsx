@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 
 import { getCoordinates } from "@/lib/geolocation";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveLatitudeDB, saveLongitudeDB } from "@/db/db_utils";
+import { saveLatitudeDB, saveLongitudeDB, saveTimezoneDB } from "@/db/db_utils";
 import { logger } from "@/lib/logger";
 
 export default function SetLocation() {
@@ -13,6 +13,10 @@ export default function SetLocation() {
   function browserCoordinatesHandler() {
     logger("start getCoordinates...", {}, connectionCtx);
     setErrors(undefined);
+
+    let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    saveTimezoneDB(timezone);
+    connectionCtx.setTimezone(timezone);
 
     getCoordinates(
       (position) => {
@@ -54,11 +58,28 @@ export default function SetLocation() {
     }
   }
 
+  function timezoneHandler(e: ChangeEvent<HTMLInputElement>) {
+    setErrors(undefined);
+
+    let value = e.target.value.trim();
+    if (value === "") {
+      let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      saveTimezoneDB(timezone);
+      connectionCtx.setTimezone(timezone);
+    }
+
+    if (/^[a-z]*(\/*[a-z]*)$/i.test(value)) {
+      saveTimezoneDB(value);
+      connectionCtx.setTimezone(value);
+    }
+  }
+
   return (
     <>
       <h2>Set Location</h2>
       <p>
-        In order for goto to work, this site needs your latitude and longitude.
+        In order for goto to work, this site needs your latitude, longitude and
+        time zone. The longitude is negative west of Greenwich.
       </p>
 
       <form>
@@ -68,7 +89,7 @@ export default function SetLocation() {
               Latitude
             </label>
           </div>
-          <div className="col-lg-11 col-md-10">
+          <div className="col-lg-2 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
@@ -87,7 +108,7 @@ export default function SetLocation() {
               Longitude
             </label>
           </div>
-          <div className="col-lg-11 col-md-10">
+          <div className="col-lg-2 col-md-10">
             <input
               pattern="^-?\d*(\.\d+)?$"
               className="form-control"
@@ -100,10 +121,29 @@ export default function SetLocation() {
             />
           </div>
         </div>
+        <div className="row mb-3">
+          <div className="col-lg-1 col-md-2">
+            <label htmlFor="timezone" className="form-label">
+              Timezone
+            </label>
+          </div>
+          <div className="col-lg-2 col-md-10">
+            <input
+              pattern="^[a-z]*(\*/[a-z]+)$/i"
+              className="form-control"
+              id="timezone"
+              name="timezone"
+              placeholder="?"
+              required
+              value={connectionCtx.timezone || ""}
+              onChange={(e) => timezoneHandler(e)}
+            />
+          </div>
+        </div>
       </form>
 
-      <button className="btn btn-primary" onClick={browserCoordinatesHandler}>
-        Use Current Location
+      <button className="btn btn-more02" onClick={browserCoordinatesHandler}>
+        <i className="icon-location" /> Use Current Location
       </button>
       {errors && <p className="text-danger">{errors}</p>}
     </>

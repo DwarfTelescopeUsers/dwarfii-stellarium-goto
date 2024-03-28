@@ -4,9 +4,11 @@ import Nav from "@/components/shared/Nav";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="container">
-      <Nav />
-      <main>{children}</main>
+    <div className="App">
+      <header className="float-start w-100">
+        <Nav />
+      </header>
+      <main className="float-start w-100 body-main ">{children}</main>
     </div>
   );
 }

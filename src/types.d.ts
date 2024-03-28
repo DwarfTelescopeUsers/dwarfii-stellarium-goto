@@ -3,6 +3,8 @@ import type { Dispatch, SetStateAction } from "react";
 export type ConnectionContextType = {
   connectionStatus: boolean | undefined;
   setConnectionStatus: Dispatch<SetStateAction<boolean | undefined>>;
+  connectionStatusSlave: boolean | undefined;
+  setConnectionStatusSlave: Dispatch<SetStateAction<boolean | undefined>>;
   initialConnectionTime: number | undefined;
   setInitialConnectionTime: Dispatch<SetStateAction<number | undefined>>;
 
@@ -10,6 +12,22 @@ export type ConnectionContextType = {
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
   IPDwarf: string | undefined;
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
+  socketIPDwarf: any | undefined;
+  setSocketIPDwarf: Dispatch<SetStateAction<any | undefined>>;
+  BlePWDDwarf: string | undefined;
+  setBlePWDDwarf: Dispatch<SetStateAction<string | undefined>>;
+  BleSTASSIDDwarf: string | undefined;
+  setBleSTASSIDDwarf: Dispatch<SetStateAction<string | undefined>>;
+  BleSTAPWDDwarf: string | undefined;
+  setBleSTAPWDDwarf: Dispatch<SetStateAction<string | undefined>>;
+  BatteryLevelDwarf: number | undefined;
+  setBatteryLevelDwarf: Dispatch<SetStateAction<number | undefined>>;
+  BatteryStatusDwarf: number;
+  setBatteryStatusDwarf: Dispatch<SetStateAction<number>>;
+  availableSizeDwarf: number | undefined;
+  setAvailableSizeDwarf: Dispatch<SetStateAction<number | undefined>>;
+  totalSizeDwarf: number | undefined;
+  setTotalSizeDwarf: Dispatch<SetStateAction<number | undefined>>;
 
   connectionStatusStellarium: boolean | undefined;
   setConnectionStatusStellarium: Dispatch<SetStateAction<boolean | undefined>>;
@@ -24,6 +42,16 @@ export type ConnectionContextType = {
   setLatitude: Dispatch<SetStateAction<number | undefined>>;
   longitude: number | undefined;
   setLongitude: Dispatch<SetStateAction<number | undefined>>;
+  timezone: string | undefined;
+  setTimezone: Dispatch<SetStateAction<string | undefined>>;
+
+  searchTxt: string | undefined;
+  setSearchTxt: Dispatch<SetStateAction<string | undefined>>;
+
+  savePositionStatus: boolean | undefined;
+  setSavePositionStatus: Dispatch<SetStateAction<boolean | undefined>>;
+  isSavedPosition: boolean | undefined;
+  setIsSavedPosition: Dispatch<SetStateAction<boolean | undefined>>;
 
   currentObjectListName: string | undefined;
   setCurrentObjectListName: Dispatch<SetStateAction<string | undefined>>;
@@ -34,6 +62,9 @@ export type ConnectionContextType = {
   setAstroSettings: Dispatch<SetStateAction<AstroSettings>>;
   imagingSession: ImagingSession;
   setImagingSession: Dispatch<SetStateAction<ImagingSession>>;
+
+  astroSavePosition: AstroSavePosition;
+  setAstroSavePosition: Dispatch<SetStateAction<AstroSavePosition>>;
 
   logger: { [k: string]: any }[] | undefined;
   setLogger: Dispatch<SetStateAction<{ [k: string]: any }[] | undefined>>;
@@ -89,6 +120,7 @@ export type AstroObject = {
   objectNumber: number;
   size?: string;
   constellation: string | null | undefined;
+  visible?: boolean | undefined;
 };
 
 export type ObjectStellariumInfo = {
@@ -195,10 +227,24 @@ export type AstroSettings = {
   binning?: number;
   fileFormat?: number;
   count?: number;
+  quality?: number;
+  target?: string;
+  status?: number;
 };
 
-type ImagingSession = {
+export type ImagingSession = {
   startTime: number;
   sessionElaspsedTime: string;
   imagesTaken: number;
+  imagesStacked: number;
+};
+
+export type AstroSavePosition = {
+  displayName: string;
+  rightAcension: number;
+  declination: number;
+  altitude: number;
+  azimuth: number;
+  lst: number;
+  strLocalTime: string;
 };

@@ -16,6 +16,7 @@ export default function RecordingButton(props: PropType) {
       width="100%"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <title>Stop Recording</title>
       <g className={styles.outerring}>
         <path
           d="M2 32C2 15.4317 15.4317 2 32 2C48.5683 2 62 15.4317 62 32C62 48.5683 48.5683 62 32 62C15.4317 62 2 48.5683 2 32Z"

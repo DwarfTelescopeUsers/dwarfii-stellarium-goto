@@ -9,6 +9,9 @@ import {
   fetchUrlStellariumDB,
   fetchConnectionStatusStellariumDB,
   fetchIPDwarfDB,
+  fetchBlePWDDwarfDB,
+  fetchBleSTASSIDDwarfDB,
+  fetchBleSTAPWDDwarfDB,
   fetchUserCurrentObjectListNameDb,
   fetchCurrentObjectListNameDb,
   fetchConnectionStatusDB,
@@ -16,6 +19,7 @@ import {
   fetchLoggerStatusDb,
   fetchLogMessagesDb,
   fetchImagingSessionDb,
+  fetchTimezoneDB,
 } from "@/db/db_utils";
 
 export function useLoadIntialValues() {
@@ -37,6 +41,16 @@ export function useLoadIntialValues() {
         connectionCtx.setLongitude(data.longitude);
       }
     }
+    if (connectionCtx.timezone === undefined || connectionCtx.timezone == "?") {
+      let data = fetchTimezoneDB();
+
+      if (data == "" || data == "?")
+        data = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      if (data) {
+        connectionCtx.setTimezone(data);
+      }
+    }
     if (connectionCtx.initialConnectionTime === undefined) {
       let data = fetchInitialConnectionTimeDB();
       if (data !== undefined) connectionCtx.setInitialConnectionTime(data);
@@ -44,6 +58,18 @@ export function useLoadIntialValues() {
     if (connectionCtx.IPDwarf === undefined) {
       let data = fetchIPDwarfDB();
       if (data !== undefined) connectionCtx.setIPDwarf(data);
+    }
+    if (connectionCtx.BlePWDDwarf === undefined) {
+      let data = fetchBlePWDDwarfDB();
+      if (data !== undefined) connectionCtx.setBlePWDDwarf(data);
+    }
+    if (connectionCtx.BleSTASSIDDwarf === undefined) {
+      let data = fetchBleSTASSIDDwarfDB();
+      if (data !== undefined) connectionCtx.setBleSTASSIDDwarf(data);
+    }
+    if (connectionCtx.BleSTAPWDDwarf === undefined) {
+      let data = fetchBleSTAPWDDwarfDB();
+      if (data !== undefined) connectionCtx.setBleSTAPWDDwarf(data);
     }
     if (connectionCtx.connectionStatusStellarium === undefined) {
       let data = fetchConnectionStatusStellariumDB();
@@ -62,6 +88,16 @@ export function useLoadIntialValues() {
       if (data !== undefined) connectionCtx.setUrlStellarium(data);
     }
 
+    if (connectionCtx.searchTxt === undefined) {
+      connectionCtx.setSearchTxt("Search");
+    }
+
+    if (connectionCtx.savePositionStatus === undefined) {
+      connectionCtx.setSavePositionStatus(false);
+    }
+    if (connectionCtx.isSavedPosition === undefined) {
+      connectionCtx.setIsSavedPosition(false);
+    }
     if (connectionCtx.currentObjectListName === undefined) {
       let data = fetchCurrentObjectListNameDb();
       if (data !== undefined) {

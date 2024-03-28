@@ -55,90 +55,102 @@ export default function GotoUserLists() {
 
   return (
     <div>
-      {!connectionCtx.connectionStatusStellarium && (
-        <p className="text-danger">
-          You must connect to Stellarium for Center to work.
-        </p>
-      )}
-      {!connectionCtx.connectionStatus && (
-        <p className="text-danger">
-          You must connect to Dwarf II for Goto to work.
-        </p>
-      )}
-
-      <div className="row">
-        <div className="col-md-8">
-          <select
-            className="form-select mb-2"
-            value={connectionCtx.currentUserObjectListName || "default"}
-            onChange={selectListHandler}
-          >
-            <option value="default">Select object lists</option>
-            {objectListsNames.map((list, index) => (
-              <option key={index} value={list}>
-                {list}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="col-md-4">
-          <button
-            className="btn btn-primary me-2 mb-2"
-            onClick={importListModalHandle}
-          >
-            Add new list
-          </button>
-          <button
-            className="btn btn-outline-primary  mb-2"
-            onClick={deleteListModalHandle}
-          >
-            Delete list
-          </button>
-        </div>
-      </div>
-
-      {connectionCtx.currentUserObjectListName &&
-        objectLists[connectionCtx.currentUserObjectListName] && (
-          <DSOList
-            objects={objectLists[connectionCtx.currentUserObjectListName]}
-          ></DSOList>
+      <div className="container">
+        {!connectionCtx.connectionStatusStellarium && (
+          <p className="text-danger">
+            You must connect to Stellarium for Center to work.
+          </p>
+        )}
+        {!connectionCtx.connectionStatus && (
+          <p className="text-danger">
+            You must connect to Dwarf II for Goto to work.
+          </p>
         )}
 
-      {showInstructions && (
-        <>
-          <p className="mt-4">
-            To add custom objects lists, create an objects list at{" "}
-            <Link href="https://telescopius.com">Telescopius</Link>, download
-            the CSV, and click &quot;Add new list&quot;.
-          </p>
-          <p>
-            The lists are stored in the browser&apos;s database (localStorage).
-            Since the data is stored in your browser, other users of the site
-            will not be able to access your lists.
-          </p>
-          <p>
-            If you want to share your list with other people, you can send other
-            people the csv from Telescopius.
-          </p>
-        </>
-      )}
-      <ImportObjectListModal
-        showModal={showImportModal}
-        setShowModal={setShowImportModal}
-        objectListsNames={objectListsNames}
-        setObjectListsNames={setObjectListsNames}
-        objectLists={objectLists}
-        setObjectLists={setObjectLists}
-      />
-      <DeleteObjectListModal
-        showModal={showDeleteModal}
-        setShowModal={setShowDeleteModal}
-        objectListsNames={objectListsNames}
-        setObjectListsNames={setObjectListsNames}
-        objectLists={objectLists}
-        setObjectLists={setObjectLists}
-      />
+        <div className="row">
+          <div className="col-md-4">
+            <select
+              className="form-select mb-2"
+              value={connectionCtx.currentUserObjectListName || "default"}
+              onChange={selectListHandler}
+            >
+              <option value="default">Select object lists</option>
+              {objectListsNames.map((list, index) => (
+                <option key={index} value={list}>
+                  {list}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-md-4">
+            <button
+              className="btn btn-more02 me-2 mb-2"
+              onClick={importListModalHandle}
+            >
+              Add new list
+            </button>
+            <button
+              className="btn btn-more03 me-2 mb-2"
+              onClick={deleteListModalHandle}
+            >
+              Delete list
+            </button>
+          </div>
+        </div>
+
+        {connectionCtx.currentUserObjectListName &&
+          objectLists[connectionCtx.currentUserObjectListName] && (
+            <DSOList
+              objects={objectLists[connectionCtx.currentUserObjectListName]}
+            ></DSOList>
+          )}
+
+        {showInstructions && (
+          <>
+            <p className="mt-4">
+              To add custom objects lists, create an objects list at{" "}
+              <Link href="https://telescopius.com">Telescopius</Link>, download
+              the CSV, and click &quot;Add new list&quot;.
+            </p>
+            <p>
+              The lists are stored in the browser&apos;s database
+              (localStorage). Since the data is stored in your browser, other
+              users of the site will not be able to access your lists.
+            </p>
+            <p>
+              If you want to share your list with other people, you can send
+              other people the csv from Telescopius.
+            </p>
+            {""}
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+          </>
+        )}
+        <ImportObjectListModal
+          showModal={showImportModal}
+          setShowModal={setShowImportModal}
+          objectListsNames={objectListsNames}
+          setObjectListsNames={setObjectListsNames}
+          objectLists={objectLists}
+          setObjectLists={setObjectLists}
+        />
+        <DeleteObjectListModal
+          showModal={showDeleteModal}
+          setShowModal={setShowDeleteModal}
+          objectListsNames={objectListsNames}
+          setObjectListsNames={setObjectListsNames}
+          objectLists={objectLists}
+          setObjectLists={setObjectLists}
+        />
+      </div>
     </div>
   );
 }

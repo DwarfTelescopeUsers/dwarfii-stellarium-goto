@@ -114,7 +114,7 @@ export default function ImportObjectListModal(props: PropTypes) {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-more02 me-2 mb-2">
             Import List
           </button>
         </form>

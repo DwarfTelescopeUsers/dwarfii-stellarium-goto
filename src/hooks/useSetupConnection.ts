@@ -6,34 +6,41 @@ import {
   saveInitialConnectionTimeDB,
   saveConnectionStatusStellariumDB,
 } from "@/db/db_utils";
-import { utcURL } from "dwarfii_api";
+import { firmwareVersion, WebSocketHandler } from "dwarfii_api";
 import { ConnectionContextType } from "@/types";
 
 export function useSetupConnection() {
   let connectionCtx = useContext(ConnectionContext);
 
   useEffect(() => {
-    let timerDwarf: any;
-    let timerStellarium: any;
+    let timerDwarf: any = undefined;
+    let timerStellarium: any = undefined;
 
     if (connectionCtx.connectionStatus) {
-      checkDwarfConnection(connectionCtx, timerDwarf, false);
+      timerDwarf = checkDwarfConnection(connectionCtx, timerDwarf, false);
 
       // continously check connection status
-      timerDwarf = setInterval(() => {
-        checkDwarfConnection(connectionCtx, timerDwarf, true);
-      }, 90 * 1000);
+      if (timerDwarf === undefined) {
+        timerDwarf = setInterval(() => {
+          checkDwarfConnection(connectionCtx, timerDwarf, true);
+        }, 90 * 1000);
+      }
     }
 
     if (connectionCtx.connectionStatusStellarium) {
-      checkStellariumConnection(connectionCtx, timerStellarium, false);
+      timerStellarium = checkStellariumConnection(
+        connectionCtx,
+        timerStellarium,
+        false
+      );
 
       // continously check connection status
-      timerStellarium = setInterval(() => {
-        checkStellariumConnection(connectionCtx, timerStellarium, true);
-      }, 90 * 1000);
+      if (timerStellarium === undefined) {
+        timerStellarium = setInterval(() => {
+          checkStellariumConnection(connectionCtx, timerStellarium, true);
+        }, 90 * 1000);
+      }
     }
-
     return () => {
       if (connectionCtx.connectionStatus === false) {
         console.log("unmount: delete checkDwarfConnection timer");
@@ -53,12 +60,13 @@ function checkDwarfConnection(
   loop: boolean
 ) {
   if (connectionCtx.IPDwarf === undefined) {
-    return;
+    return timer;
   }
   // if we can't connect to camera in 2 seconds, reset connection data
-  fetch(utcURL(connectionCtx.IPDwarf), {
-    signal: AbortSignal.timeout(2000),
+  fetch(firmwareVersion(connectionCtx.IPDwarf), {
+    signal: AbortSignal.timeout(5000),
     mode: "no-cors",
+    method: "POST",
   })
     .then(() => {
       console.log("Dwarf connection ok.", loop ? " (loop)" : "");
@@ -70,15 +78,27 @@ function checkDwarfConnection(
     })
     .catch((err) => {
       if (err.name === "AbortError" || err.message == "Failed to fetch") {
-        console.log("Dwarf connection error");
-        clearInterval(timer);
+        console.log("Dwarf verification connection");
 
-        connectionCtx.setConnectionStatus(false);
-        saveConnectionStatusDB(false);
+        console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
+        const webSocketHandler = connectionCtx.socketIPDwarf
+          ? connectionCtx.socketIPDwarf
+          : new WebSocketHandler(connectionCtx.IPDwarf);
+
+        if (webSocketHandler.isConnected()) {
+          console.log("Dwarf connection ok");
+        } else {
+          console.log("Dwarf connection error");
+          if (timer) clearInterval(timer);
+          connectionCtx.setConnectionStatus(false);
+          saveConnectionStatusDB(false);
+          webSocketHandler.close();
+        }
       } else {
         console.log("checkDwarfConnection err ???", err.name, err.message);
       }
     });
+  return timer;
 }
 
 function checkStellariumConnection(
@@ -87,7 +107,7 @@ function checkStellariumConnection(
   loop: boolean
 ) {
   if (connectionCtx.IPStellarium === undefined) {
-    return;
+    return timer;
   }
 
   // if we can't connect to camera in 2 seconds, reset connection data
@@ -109,7 +129,7 @@ function checkStellariumConnection(
         err.message === "Failed to fetch"
       ) {
         console.log("Stellarium connection error");
-        clearInterval(timer);
+        if (timer) clearInterval(timer);
 
         connectionCtx.setConnectionStatusStellarium(false);
         saveConnectionStatusStellariumDB(false);
@@ -117,4 +137,5 @@ function checkStellariumConnection(
         console.log("checkStellariumConnection err >>>", err.name, err.message);
       }
     });
+  return timer;
 }

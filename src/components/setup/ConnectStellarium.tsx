@@ -59,10 +59,10 @@ export default function ConnectStellarium() {
       return <></>;
     }
     if (connectionCtx.connectionStatusStellarium === false) {
-      return <span className="text-danger">Connection failed.</span>;
+      return <span className="text-danger-connect">Connection failed.</span>;
     }
 
-    return <span className="text-success">Connection successful.</span>;
+    return <span className="text-success-connect">Connection successful.</span>;
   }
 
   return (
@@ -97,7 +97,7 @@ export default function ConnectStellarium() {
               IP
             </label>
           </div>
-          <div className="col-md-11">
+          <div className="col-md-2">
             <input
               className="form-control"
               id="ip"
@@ -114,7 +114,7 @@ export default function ConnectStellarium() {
               Port
             </label>
           </div>
-          <div className="col-md-11">
+          <div className="col-md-2">
             <input
               className="form-control"
               id="port"
@@ -125,8 +125,8 @@ export default function ConnectStellarium() {
             />
           </div>
         </div>
-        <button type="submit" className="btn btn-primary me-3">
-          Connect
+        <button type="submit" className="btn btn-more02 me-3">
+          <i className=" icon-connectdevelop" /> Connect
         </button>{" "}
         {renderConnectionStatus()}
       </form>

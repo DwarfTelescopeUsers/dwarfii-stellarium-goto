@@ -65,7 +65,7 @@ export default function DeleteObjectListModal(props: PropTypes) {
         <form onSubmit={deleteListHandler}>
           <p className="mb-3">Are you sure you want to delete {}?</p>
 
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-more03 me-2 mb-2">
             Delete List
           </button>
         </form>
