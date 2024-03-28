@@ -271,21 +271,36 @@ select {
 }
 
 .progress-container {
-    position: relative;
-    margin-top: -37px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 200px;
     height: 29px;
     background-color: #00AE83;
     border-radius: 10px;
     overflow: hidden;
-    margin-left: 150px;
-}
-.progress {
+  }
+  
+.progress-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 29px;
+    background-color: #00ae83;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 9999;
+  }
+  
+.progress-bar {
     height: 100%;
     background-color: #4caf50 !important;
     transition: width 0.5s ease;
-}
-
+  }
+  
 .progress-text {
     position: absolute;
     top: 50%;
@@ -293,7 +308,8 @@ select {
     transform: translateY(-50%);
     color: white;
     font-weight: bold;
-}
+  }
+
 .text-success-connect {
     color: #198754 !important;
     margin-top: 10px;
