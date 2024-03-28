@@ -40,7 +40,7 @@ export default function AstroPhoto() {
       if (sessionList.length > 0) {
         setSessions(sessionList);
         // Fetch session info for each session
-        sessionList.forEach(session => fetchSessionInfo(session.name));
+        sessionList.forEach((session) => fetchSessionInfo(session.name));
       }
     } catch (error: any) {
       console.error(
@@ -65,7 +65,10 @@ export default function AstroPhoto() {
         [sessionName]: data,
       }));
     } catch (error: any) {
-      console.error("An error occurred while fetching session info:", error.message);
+      console.error(
+        "An error occurred while fetching session info:",
+        error.message
+      );
     }
   };
 
@@ -162,8 +165,9 @@ export default function AstroPhoto() {
       <span>
         DEC: {sessionInfo[sessionName].DEC}, RA: {sessionInfo[sessionName].RA},
         Binning: {sessionInfo[sessionName].binning}, Exp:{" "}
-        {sessionInfo[sessionName].exp}, Format: {sessionInfo[sessionName].format},
-        Gain: {sessionInfo[sessionName].gain}, IR: {sessionInfo[sessionName].ir}
+        {sessionInfo[sessionName].exp}, Format:{" "}
+        {sessionInfo[sessionName].format}, Gain: {sessionInfo[sessionName].gain}
+        , IR: {sessionInfo[sessionName].ir}
       </span>
     ) : (
       <span>No additional info available</span>
