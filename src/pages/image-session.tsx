@@ -14,6 +14,7 @@ export default function AstroPhoto() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [progress, setProgress] = useState(0);
   const [downloadClicked, setDownloadClicked] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState<Record<string, any>>({});
 
   const fetchSessions = async () => {
     if (connectionCtx.IPDwarf === undefined) {
@@ -26,23 +27,47 @@ export default function AstroPhoto() {
       );
       const data = await response.text();
       const folderRegex =
-        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/g;
+        /href="([^"]*?)\/"[^>]*?>([^<]+)<\/a>\s+(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2})/gi;
       let matches;
       let sessionList: Session[] = [];
       while ((matches = folderRegex.exec(data)) !== null) {
         const folderName = matches[1];
         const folderDate = matches[3];
-        if (folderName !== "DWARF_DARK" && folderName !== "Solving_Failed") {
+        if (!/dwarf_dark|solving_failed/i.test(folderName)) {
           sessionList.push({ name: folderName, date: folderDate });
         }
       }
-      if (sessionList.length > 0) setSessions(sessionList);
+      if (sessionList.length > 0) {
+        setSessions(sessionList);
+        sessionList.forEach((session) => fetchSessionInfo(session.name));
+      }
     } catch (error: any) {
       console.error(
         "An error occurred while fetching sessions:",
         error.message
       );
       setSessions([]);
+    }
+  };
+
+  const fetchSessionInfo = async (sessionName: string) => {
+    try {
+      const response = await fetch(
+        `http://${connectionCtx.IPDwarf}/sdcard/DWARF_II/Astronomy/${sessionName}/shotsInfo.json`
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch session info: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setSessionInfo((prevState) => ({
+        ...prevState,
+        [sessionName]: data,
+      }));
+    } catch (error: any) {
+      console.error(
+        "An error occurred while fetching session info:",
+        error.message
+      );
     }
   };
 
@@ -105,9 +130,42 @@ export default function AstroPhoto() {
         console.error("An error occurred:", error.message);
       }
     } finally {
-      // Reset downloadClicked state after download completes
       setDownloadClicked(false);
     }
+  };
+
+  const getTarget = (sessionName: string) => {
+    const sessionData = sessionInfo[sessionName];
+    if (sessionData && sessionData.target) {
+      return sessionData.target;
+    } else {
+      return sessionName;
+    }
+  };
+
+  const getShootingInfo = (sessionName: string) => {
+    return sessionInfo[sessionName] ? (
+      <span>
+        Shots Stacked: {sessionInfo[sessionName].shotsStacked}, Shots Taken:{" "}
+        {sessionInfo[sessionName].shotsTaken}
+      </span>
+    ) : (
+      <span>No shooting info available</span>
+    );
+  };
+
+  const getAdditionalInfo = (sessionName: string) => {
+    return sessionInfo[sessionName] ? (
+      <span>
+        DEC: {sessionInfo[sessionName].DEC}, RA: {sessionInfo[sessionName].RA},
+        Binning: {sessionInfo[sessionName].binning}, Exp:{" "}
+        {sessionInfo[sessionName].exp}, Format:{" "}
+        {sessionInfo[sessionName].format}, Gain: {sessionInfo[sessionName].gain}
+        , IR: {sessionInfo[sessionName].ir}
+      </span>
+    ) : (
+      <span>No additional info available</span>
+    );
   };
 
   return (
@@ -128,8 +186,10 @@ export default function AstroPhoto() {
               <thead>
                 <tr>
                   <th>Preview</th>
-                  <th>Session Name</th>
+                  <th>Target</th>
                   <th>Date</th>
+                  <th>Shooting Info</th>
+                  <th>Additional Info</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -142,13 +202,15 @@ export default function AstroPhoto() {
                         alt="Thumbnail"
                       />
                     </td>
-                    <td className="session-name">{session.name}</td>
+                    <td className="session-name">{getTarget(session.name)}</td>
                     <td>{session.date}</td>
+                    <td>{getShootingInfo(session.name)}</td>
+                    <td>{getAdditionalInfo(session.name)}</td>
                     <td>
                       <button
                         className="btn btn-more02"
                         onClick={() => getSessionData(session.name)}
-                        disabled={downloadClicked} // Disable button when download is in progress
+                        disabled={downloadClicked}
                       >
                         Download
                       </button>
