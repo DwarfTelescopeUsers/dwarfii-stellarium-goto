@@ -1,12 +1,6 @@
 import React from "react";
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { Formik } from "formik";
-import { useContext } from "react";
-import { ConnectionContext } from "@/stores/ConnectionContext";
-import {
-  allowedIntervalTimeLapse,
-  allowedTotalTimeTimeLapse,
-} from "@/lib/data_utils";
+import { usePhotoMediaCatalog } from "./usePhotoMediaCatalog";
+import type { Dispatch, SetStateAction } from "react";
 
 type PropTypes = {
   intervalIndexValue: number;
@@ -16,113 +10,64 @@ type PropTypes = {
   setShowSettingsMenu: Dispatch<SetStateAction<boolean>>;
 };
 
-export default function CameraPanoSettings(props: PropTypes) {
-  let connectionCtx = useContext(ConnectionContext);
-  const {
-    intervalIndexValue,
-    setIntervalIndexValue,
-    totalTimeIndexValue,
-    setTotalTimeIndexValue,
-    setShowSettingsMenu,
-  } = props;
-
-  function changeIntervalHandler(e: ChangeEvent<HTMLSelectElement>) {
-    let targetValue = e.target.value;
-    setIntervalIndexValue(parseInt(targetValue, 10));
-  }
-  function changeTotalTimeHandler(e: ChangeEvent<HTMLSelectElement>) {
-    let targetValue = e.target.value;
-    setTotalTimeIndexValue(parseInt(targetValue, 10));
-  }
-
-  // Function to generate options for a specific Dwarf model
-  const generateIntervalTimeLapseOptions = (DwarfModelId = 1) => {
-    const intervalTimeLapse = allowedIntervalTimeLapse[DwarfModelId];
-    return intervalTimeLapse.values.map(({ index, name }) => (
-      <option key={index} value={index}>
-        {name}
-      </option>
-    ));
-  };
-  const allowedIntervalTimeLapseOptions = generateIntervalTimeLapseOptions(
-    connectionCtx.typeIdDwarf,
-  ); //DwarfModelId
-
-  // Function to generate options for a specific Dwarf model
-  const generateTotalTimeTimeLapseOptions = (DwarfModelId = 1) => {
-    const totalTimeTimeLapse = allowedTotalTimeTimeLapse[DwarfModelId];
-    return totalTimeTimeLapse.values.map(({ index, name }) => (
-      <option key={index} value={index}>
-        {name}
-      </option>
-    ));
-  };
-  const allowedTotalTimeTimeLapseOptions = generateTotalTimeTimeLapseOptions(
-    connectionCtx.typeIdDwarf,
-  ); //DwarfModelId
-
+export default function CameraTimeLapseSettings({
+  intervalIndexValue,
+  setIntervalIndexValue,
+  totalTimeIndexValue,
+  setTotalTimeIndexValue,
+  setShowSettingsMenu,
+}: PropTypes) {
+  const { catalog, error } = usePhotoMediaCatalog();
+  const interval = catalog?.sharedParameters?.find(
+    (parameter) => parameter.key === "timelapseIntervalTime",
+  );
+  const duration = catalog?.sharedParameters?.find(
+    (parameter) => parameter.key === "timelapseTotalTime",
+  );
   return (
     <div>
-      <Formik
-        enableReinitialize
-        initialValues={{
-          interval: String(intervalIndexValue),
-          totalTime: String(totalTimeIndexValue),
-        }}
-        onSubmit={() => {}}
+      {error && <p role="alert">{error}</p>}
+      {!catalog && !error && (
+        <p role="status">Loading device capture settings?</p>
+      )}
+      <label htmlFor="timelapse-interval">Interval (seconds)</label>
+      <select
+        id="timelapse-interval"
+        value={intervalIndexValue}
+        onChange={(event) => setIntervalIndexValue(Number(event.target.value))}
+        disabled={!interval?.options?.length}
       >
-        {({ values, handleChange, handleBlur, handleSubmit }) => (
-          <form onSubmit={handleSubmit}>
-            <div className="row mb-md-2 mb-sm-1">
-              <div className="col-6">
-                <label htmlFor="interval">Interval</label>
-              </div>
-              <div className="col-4 me-2">
-                <select
-                  id="interval"
-                  name="interval"
-                  onBlur={handleBlur}
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeIntervalHandler(e);
-                  }}
-                  value={values.interval}
-                >
-                  {allowedIntervalTimeLapseOptions}
-                </select>
-              </div>
-            </div>
-            <div className="row mb-md-2 mb-sm-1">
-              <div className="col-6">
-                <label htmlFor="totalTime">Total Time</label>
-              </div>
-              <div className="col-4 me-2">
-                <select
-                  id="totalTime"
-                  name="totalTime"
-                  onBlur={handleBlur}
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeTotalTimeHandler(e);
-                  }}
-                  value={values.totalTime}
-                >
-                  {allowedTotalTimeTimeLapseOptions}
-                </select>
-              </div>
-            </div>
-            <div>
-              <button
-                onClick={() => setShowSettingsMenu(false)}
-                className="btn btn-more02"
-              >
-                Close
-              </button>
-            </div>
-            {/* {JSON.stringify(values)} */}
-          </form>
-        )}
-      </Formik>
+        {interval?.options?.map((option) => (
+          <option key={String(option.value)} value={Number(option.value)}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <label htmlFor="timelapse-duration">Duration (seconds)</label>
+      <select
+        id="timelapse-duration"
+        value={totalTimeIndexValue}
+        onChange={(event) => setTotalTimeIndexValue(Number(event.target.value))}
+        disabled={!duration?.options?.length}
+      >
+        {duration?.options?.map((option) => (
+          <option key={String(option.value)} value={Number(option.value)}>
+            {option.value === 0 ? "Device default (0)" : option.label}
+          </option>
+        ))}
+      </select>
+      {catalog && (!interval || !duration) && (
+        <p role="status">
+          The device did not advertise time-lapse configuration.
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={() => setShowSettingsMenu(false)}
+        className="btn btn-more02"
+      >
+        Close
+      </button>
     </div>
   );
 }

@@ -44,6 +44,13 @@ function DeviceScope({
 }) {
   const local = useContext(ConnectionContext);
   const { device, controller, runtime } = useSelectedFleetDevice();
+  const { pathname } = useRouter();
+  const [operationScope, setOperationScope] = useState<AbortController>();
+  useEffect(() => {
+    const abort = new AbortController();
+    setOperationScope(abort);
+    return () => abort.abort();
+  }, [controller, runtime.generation, pathname]);
   const profile = controller?.getProfile();
   const [socket, setSocket] = useState<WebSocketHandler>();
   useEffect(() => {
@@ -53,6 +60,7 @@ function DeviceScope({
   const telemetry = runtime.telemetry;
   const value: ConnectionContextType = {
     ...local,
+    deviceOperationSignal: operationScope?.signal,
     latitude: shared.latitude,
     longitude: shared.longitude,
     timezone: shared.timezone,
@@ -64,13 +72,15 @@ function DeviceScope({
     portStellarium: shared.portStellarium,
     urlStellarium: shared.urlStellarium,
     connectionStatusStellarium: shared.connectionStatusStellarium,
-    IPDwarf: device?.lastKnownHost,
+    IPDwarf: controller?.getConnectionHost() ?? device?.lastKnownHost,
     socketIPDwarf: socket,
     typeIdDwarf: profile?.hardwareId ?? 0,
     typeNameDwarf: profile ? getDwarfDeviceName(profile.hardwareId) : "DWARF",
     typeUidDwarf: device?.id ?? "",
     connectionStatus: runtime.connection === "connected",
     connectionStatusSlave: runtime.ownership !== "control",
+    streamTypeTeleDwarf: runtime.streamTypeTele,
+    streamTypeWideDwarf: runtime.streamTypeWide,
     BatteryLevelDwarf: telemetry.batteryPercentage,
     BatteryStatusDwarf: telemetry.chargingState ?? 0,
     statusTemperatureDwarf: telemetry.temperature,

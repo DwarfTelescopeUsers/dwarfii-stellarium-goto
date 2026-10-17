@@ -22,12 +22,6 @@ import styles from "@/components/imaging/CameraAddOn.module.css";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
-  messageV3MotorServiceJoystick,
-  messageV3MotorServiceJoystickStop,
-  messageStepMotorServiceJoystickFixedAngle,
-  WebSocketHandler,
-} from "@/services/dwarf";
-import {
   startPhoto,
   startVideo,
   stopVideo,
@@ -59,8 +53,8 @@ export default function CameraAddOn(props: PropTypes) {
   const [joystickId, setJoystickId] = useState<JoystickController | undefined>(
     undefined,
   );
-  const joystickSpeed = useRef(2.2);
-  const [joystickSpeedValue, setJoystickSpeedValue] = useState(2.2);
+  const joystickSpeed = useRef(0.5);
+  const [joystickSpeedValue, setJoystickSpeedValue] = useState(0.5);
 
   const [activeAction, setActiveAction] = useState<string | undefined>(
     undefined,
@@ -82,10 +76,10 @@ export default function CameraAddOn(props: PropTypes) {
 
   const [rowValue, setRowValue] = useState<number>(3);
   const [colValue, setColValue] = useState<number>(3);
-  const [countValue, setCountValue] = useState<number>(0);
+  const [countValue, setCountValue] = useState<number>(3);
   const [intervalBurstValue, setIntervalBurstValue] = useState<number>(0);
-  const [intervalIndexValue, setIntervalIndexValue] = useState<number>(0);
-  const [totalTimeIndexValue, setTotalTimeIndexValue] = useState<number>(3);
+  const [intervalIndexValue, setIntervalIndexValue] = useState<number>(1);
+  const [totalTimeIndexValue, setTotalTimeIndexValue] = useState<number>(120);
 
   const [wideExposureAuto, setWideExposureAuto] = useState<number | undefined>(
     connectionCtx.cameraWideSettings.exp_mode,
@@ -201,36 +195,60 @@ export default function CameraAddOn(props: PropTypes) {
   const mediaSession = connectionCtx.socketIPDwarf?.session;
   useEffect(() => {
     const apply = (media: MediaState) => {
-      const selected =
-        media.operation === "photo" ? activeBtnPhoto : activeBtnVideo;
+      const actions = {
+        photo: { selected: activeBtnPhoto, action: "Photo", id: "TakePhoto" },
+        video: { selected: activeBtnVideo, action: "Video", id: "TakeVideo" },
+        burst: {
+          selected: activeBtnBurst,
+          action: "Burst",
+          id: "TakeBurstPhoto",
+        },
+        timelapse: {
+          selected: activeBtnTimeLapse,
+          action: "Time Lapse",
+          id: "TakeTimeLapse",
+        },
+        panorama: {
+          selected: activeBtnPano,
+          action: "Panorama",
+          id: "TakePano",
+        },
+      };
+      const { selected, action, id } = actions[media.operation];
       if (media.cameraId !== (selected === "wide" ? 1 : 0)) return;
-      const action = media.operation === "photo" ? "Photo" : "Video";
       const active = media.state === "running" || media.state === "stopping";
       setActiveAction((current) =>
         active ? action : current === action ? undefined : current,
       );
       setErrorTxt(`${action}: ${media.state}.`);
-      setMediaButtonState(
-        media.operation === "photo" ? "TakePhoto" : "TakeVideo",
-        active,
-      );
+      setMediaButtonState(id, active);
     };
     if (!mediaSession) return;
     snapshotMediaStates(mediaSession.state).forEach(apply);
     return mediaSession.subscribe((state, packet) => {
       if (state.phase !== "ready") {
-        setActiveAction((current) =>
-          current === "Photo" || current === "Video" ? undefined : current,
-        );
-        setMediaButtonState("TakePhoto", false);
-        setMediaButtonState("TakeVideo", false);
+        setActiveAction(undefined);
+        [
+          "TakePhoto",
+          "TakeVideo",
+          "TakeBurstPhoto",
+          "TakeTimeLapse",
+          "TakePano",
+        ].forEach((id) => setMediaButtonState(id, false));
         return;
       }
       const media = decodeMediaState(packet);
       if (media) apply(media);
       else if (packet?.cmd === 16405) snapshotMediaStates(state).forEach(apply);
     });
-  }, [mediaSession, activeBtnPhoto, activeBtnVideo]);
+  }, [
+    mediaSession,
+    activeBtnPhoto,
+    activeBtnVideo,
+    activeBtnBurst,
+    activeBtnTimeLapse,
+    activeBtnPano,
+  ]);
 
   useEffect(() => {
     setShowModal((prev) => prev && PhotoMode);
@@ -298,21 +316,26 @@ export default function CameraAddOn(props: PropTypes) {
   }
 
   const handleBtnPhotoClick = (buttonName) => {
+    if (activeAction !== undefined || mediaRequestPending.current) return;
     setActiveBtnPhoto(buttonName);
   };
 
   const handleBtnVideoClick = (buttonName) => {
+    if (activeAction !== undefined || mediaRequestPending.current) return;
     // Update state to set the active button
     setActiveBtnVideo(buttonName);
   };
   const handleBtnPanoClick = (buttonName) => {
+    if (activeAction !== undefined || mediaRequestPending.current) return;
     // Update state to set the active button
     setActiveBtnPano(buttonName);
   };
   const handleBtnBurstClick = (buttonName) => {
+    if (activeAction !== undefined || mediaRequestPending.current) return;
     setActiveBtnBurst(buttonName);
   };
   const handleBtnTimeLapseClick = (buttonName) => {
+    if (activeAction !== undefined || mediaRequestPending.current) return;
     setActiveBtnTimeLapse(buttonName);
   };
   const handleBtnSettingsClick = (buttonName) => {
@@ -320,6 +343,7 @@ export default function CameraAddOn(props: PropTypes) {
   };
 
   const closeCameraPanel = () => {
+    stop_motor();
     setShowModal(false);
     setShowSettingsPanoMenu(false);
     setShowSettingsBurstMenu(false);
@@ -385,159 +409,66 @@ export default function CameraAddOn(props: PropTypes) {
     HTMLImageElement
   > = async () => requestMedia("stopVideo");
 
-  // action Click   Start Pano
-  const handleClickActionStartPano: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Starting panorama…");
-    // Update state to set the active button
-    setActiveAction(PhotosModeActions[2].toString());
-
-    // Wait for startPano() to finish before continuing
-    await startPano(
-      CameraType[activeBtnPano],
-      rowValue,
-      colValue,
-      connectionCtx,
-      setErrorTxt,
-      setActiveAction,
-      stopPanoAuto,
-    );
-    // Change the image source using the ID
-    changeColorButton("TakePano", true);
-    intervalTimer.current = setInterval(changeColorButton, 2000, "TakePano");
+  // Requests never change the active operation. Device notifications and the
+  // full state snapshot below own running/stopping/stopped UI state.
+  const requestSequenceMedia = async (
+    action:
+      | "startPano"
+      | "stopPano"
+      | "startBurst"
+      | "stopBurst"
+      | "startTimeLapse"
+      | "stopTimeLapse",
+  ) => {
+    if (!canSendCameraCommand() || mediaRequestPending.current) return;
+    mediaRequestPending.current = true;
+    try {
+      if (action === "startPano")
+        await startPano(
+          CameraType[activeBtnPano],
+          rowValue,
+          colValue,
+          connectionCtx,
+          setErrorTxt,
+        );
+      else if (action === "stopPano")
+        await stopPano(CameraType[activeBtnPano], connectionCtx, setErrorTxt);
+      else if (action === "startBurst")
+        await startBurst(
+          CameraType[activeBtnBurst],
+          countValue,
+          intervalBurstValue,
+          connectionCtx,
+          setErrorTxt,
+        );
+      else if (action === "stopBurst")
+        await stopBurst(CameraType[activeBtnBurst], connectionCtx, setErrorTxt);
+      else if (action === "startTimeLapse")
+        await startTimeLapse(
+          CameraType[activeBtnTimeLapse],
+          intervalIndexValue,
+          totalTimeIndexValue,
+          connectionCtx,
+          setErrorTxt,
+        );
+      else
+        await stopTimeLapse(
+          CameraType[activeBtnTimeLapse],
+          connectionCtx,
+          setErrorTxt,
+        );
+    } finally {
+      mediaRequestPending.current = false;
+    }
   };
-
-  // action Click   Stop Pano
-  const handleClickActionStopPano: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Stopping panorama…");
-    // Wait for stopPano() to finish before continuing
-    await stopPano(CameraType[activeBtnPano], connectionCtx, setErrorTxt);
-    // Change the image source using the ID
-    clearInterval(intervalTimer.current);
-    changeColorButton("TakePano", true);
-    setTimeout(changeColorButton, 2000, "TakePano");
-    // Reset the active action after the photo is taken
-    setActiveAction(undefined);
-  };
-
-  const stopPanoAuto = () => {
-    // Change the image source using the ID
-    clearInterval(intervalTimer.current);
-    changeColorButton("TakePano", true);
-    setTimeout(changeColorButton, 2000, "TakePano");
-    // Reset the active action after the photo is taken
-    setActiveAction(undefined);
-  };
-
-  // action Click   Start Burst
-  const handleClickActionStartBurst: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Starting burst capture…");
-    // Update state to set the active button
-    setActiveAction(PhotosModeActions[3].toString());
-
-    // Wait for startBurst() to finish before continuing
-    await startBurst(
-      CameraType[activeBtnBurst],
-      countValue,
-      intervalBurstValue,
-      connectionCtx,
-      setErrorTxt,
-      setActiveAction,
-      stopBurstAuto,
-    );
-    // Change the image source using the ID
-    changeColorButton("TakeBurstPhoto", true);
-    intervalTimer.current = setInterval(
-      changeColorButton,
-      2000,
-      "TakeBurstPhoto",
-    );
-  };
-
-  // action Click   Stop Burst
-  const handleClickActionStopBurst: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Stopping burst capture…");
-    // Wait for stopBurst() to finish before continuing
-    await stopBurst(CameraType[activeBtnBurst], connectionCtx, setErrorTxt);
-    // Change the image source using the ID
-    clearInterval(intervalTimer.current);
-    changeColorButton("TakeBurstPhoto", true);
-    setTimeout(changeColorButton, 2000, "TakeBurstPhoto");
-    // Reset the active action after the photo is taken
-    setActiveAction(undefined);
-  };
-
-  const stopBurstAuto = () => {
-    // Change the image source using the ID
-    clearInterval(intervalTimer.current);
-    changeColorButton("TakeBurstPhoto", true);
-    setTimeout(changeColorButton, 2000, "TakeBurstPhoto");
-    // Reset the active action after the photo is taken
-    setActiveAction(undefined);
-  };
-
-  // action Click   Start Time Lapse
-  const handleClickActionStartTimeLapse: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Starting time-lapse capture…");
-    // Update state to set the active button
-    setActiveAction(PhotosModeActions[4].toString());
-
-    // Wait for startTimeLapse() to finish before continuing
-    await startTimeLapse(
-      CameraType[activeBtnTimeLapse],
-      intervalIndexValue,
-      totalTimeIndexValue,
-      connectionCtx,
-      setErrorTxt,
-      setActiveAction,
-      stopTimeLapseAuto,
-    );
-    // Change the image source using the ID
-    changeColorButton("TakeTimeLapse", true);
-    intervalTimer.current = setInterval(
-      changeColorButton,
-      2000,
-      "TakeTimeLapse",
-    );
-  };
-
-  // action Click   Stop Time Lapse
-  const handleClickActionStopTimeLapse: GenericMouseEventHandler<
-    HTMLImageElement
-  > = async () => {
-    if (!canSendCameraCommand()) return;
-    setErrorTxt("Stopping time-lapse capture…");
-    // Wait for stopTimeLapse() to finish before continuing
-    await stopTimeLapse(
-      CameraType[activeBtnTimeLapse],
-      connectionCtx,
-      setErrorTxt,
-    );
-    // stopTimeLapseAuto is called
-  };
-
-  const stopTimeLapseAuto = () => {
-    // Change the image source using the ID
-    clearInterval(intervalTimer.current);
-    changeColorButton("TakeTimeLapse", true);
-    setTimeout(changeColorButton, 2000, "TakeTimeLapse");
-    // Reset the active action after the photo is taken
-    setActiveAction(undefined);
-  };
+  const handleClickActionStartPano = () => requestSequenceMedia("startPano");
+  const handleClickActionStopPano = () => requestSequenceMedia("stopPano");
+  const handleClickActionStartBurst = () => requestSequenceMedia("startBurst");
+  const handleClickActionStopBurst = () => requestSequenceMedia("stopBurst");
+  const handleClickActionStartTimeLapse = () =>
+    requestSequenceMedia("startTimeLapse");
+  const handleClickActionStopTimeLapse = () =>
+    requestSequenceMedia("stopTimeLapse");
 
   // Set Active Column in Small Screen in no current action
   const handleBtnViewClick = (buttonName) => {
@@ -561,20 +492,51 @@ export default function CameraAddOn(props: PropTypes) {
     yValue.current = "50%";
   }
 
-  function stop_motor() {
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
+  const currentSocket = useRef(connectionCtx.socketIPDwarf);
+  currentSocket.current = connectionCtx.socketIPDwarf;
+  const movingSocket = useRef<typeof connectionCtx.socketIPDwarf>(undefined);
+  const joystickRequestPending =
+    useRef<typeof connectionCtx.socketIPDwarf>(undefined);
+  const joystickController = useRef<JoystickController | undefined>(undefined);
+  const joystickSocket = useRef(connectionCtx.socketIPDwarf);
+  const modalOpen = useRef(showModal);
+  modalOpen.current = showModal;
 
-    if (webSocketHandler.isConnected()) {
-      let txtInfoCommand = "";
-      let WS_Packet = messageV3MotorServiceJoystickStop();
-      txtInfoCommand = "Joystick";
-      webSocketHandler.prepare(WS_Packet, txtInfoCommand);
-    }
+  function stop_motor() {
+    const socket = movingSocket.current;
+    movingSocket.current = undefined;
+    if (socket?.isConnected())
+      void socket
+        .request("stopJoystick", {})
+        .catch((error) =>
+          setErrorTxt(error instanceof Error ? error.message : String(error)),
+        );
   }
 
+  useEffect(() => {
+    const socket = connectionCtx.socketIPDwarf;
+    if (joystickSocket.current !== socket) {
+      joystickSocket.current = socket;
+      setJoystickId(undefined);
+      setShowModal(false);
+    }
+    return () => {
+      joystickController.current?.destroy();
+      joystickController.current = undefined;
+      if (movingSocket.current === socket) {
+        movingSocket.current = undefined;
+        if (socket?.isConnected())
+          void socket.request("stopJoystick", {}).catch(() => {});
+      }
+    };
+  }, [connectionCtx.socketIPDwarf]);
+
   function init_joystick() {
+    if (
+      !modalOpen.current ||
+      currentSocket.current !== connectionCtx.socketIPDwarf
+    )
+      return;
     if (!joystickId) {
       const staticJoystick = new JoystickController(
         {
@@ -601,11 +563,7 @@ export default function CameraAddOn(props: PropTypes) {
           let elapsedTime = newTimeMotorCmd - gLastTimeMotorCmd;
           let newMotorState = distance > 0;
           // Stop ?
-          if (
-            newMotorState === false &&
-            gMotorState != newMotorState &&
-            elapsedTime > 50
-          ) {
+          if (newMotorState === false && gMotorState != newMotorState) {
             gMotorState = newMotorState;
             gLastTimeMotorCmd = newTimeMotorCmd;
             // Send Stop command
@@ -628,6 +586,7 @@ export default function CameraAddOn(props: PropTypes) {
           }
         },
       );
+      joystickController.current = staticJoystick;
       setJoystickId(staticJoystick);
 
       // Define the idString variable
@@ -738,35 +697,43 @@ export default function CameraAddOn(props: PropTypes) {
     divJoystickContainer.appendChild(newDiv);
   }
 
-  function move_joystick(angle_dec, vector, motorspeed, fixed = false) {
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    if (webSocketHandler.isConnected()) {
-      let txtInfoCommand = "";
-      console.debug("actual motorspeed: ", motorspeed);
-
-      let speed_dwarf = ((motorspeed - 1) * 30) / 4;
-      console.debug("new speed: ", speed_dwarf);
-      let WS_Packet;
-      if (!fixed) {
-        WS_Packet = messageV3MotorServiceJoystick(angle_dec, vector);
-      } else {
-        WS_Packet = messageStepMotorServiceJoystickFixedAngle(
-          angle_dec,
-          vector,
-          speed_dwarf,
-        );
-      }
-      txtInfoCommand = "Joystick";
-      webSocketHandler.prepare(WS_Packet, txtInfoCommand);
-    }
+  function move_joystick(
+    angle: number,
+    vector: number,
+    motorspeed: number,
+    fixed = false,
+  ) {
+    const socket = connectionCtx.socketIPDwarf;
+    // Joystick event closures can survive changing the selected fleet device.
+    // Only the socket captured by the current render may issue a new movement.
+    if (
+      !socket?.isConnected() ||
+      currentSocket.current !== socket ||
+      joystickRequestPending.current === socket
+    )
+      return;
+    joystickRequestPending.current = socket;
+    movingSocket.current = socket;
+    void socket
+      .request(fixed ? "joystickStep" : "joystick", {
+        vectorAngle: angle,
+        vectorLength: Math.min(1, Math.max(0, vector * motorspeed)),
+      })
+      .catch((error) =>
+        setErrorTxt(error instanceof Error ? error.message : String(error)),
+      )
+      .finally(() => {
+        if (joystickRequestPending.current === socket)
+          joystickRequestPending.current = undefined;
+      });
   }
 
   function close_joystick(joystick_id) {
     if (joystick_id) {
+      stop_motor();
       joystick_id.destroy();
+      if (joystickController.current === joystick_id)
+        joystickController.current = undefined;
       setJoystickId(undefined);
     }
   }
@@ -828,20 +795,22 @@ export default function CameraAddOn(props: PropTypes) {
                   <span>Mount</span>
                   <h3>Movement</h3>
                 </div>
-                <strong>{joystickSpeedValue.toFixed(1)}&times;</strong>
+                <strong>{Math.round(joystickSpeedValue * 100)}%</strong>
               </div>
               <div className="speed-meter">
                 <label className="speed-control" htmlFor="camera-motor-speed">
-                  <span className="speed-control__label">Motor speed</span>
+                  <span className="speed-control__label">
+                    Movement strength
+                  </span>
                   <input
                     id="camera-motor-speed"
                     className="speed-control__range"
                     type="range"
-                    min="1.1"
-                    max="5"
-                    step="0.1"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
                     value={joystickSpeedValue}
-                    aria-label={`Motor speed ${joystickSpeedValue.toFixed(1)} times`}
+                    aria-label={`Movement strength ${Math.round(joystickSpeedValue * 100)} percent`}
                     onChange={(event) =>
                       updateNewSpeed(Number(event.currentTarget.value))
                     }
@@ -1063,6 +1032,7 @@ export default function CameraAddOn(props: PropTypes) {
                         src={imgSrc}
                         className="cameraAddon-image"
                         alt="Take Panoramas"
+                        title="Panorama grid configuration is unavailable for this connection."
                         onClick={
                           activeAction === undefined
                             ? handleClickActionStartPano
@@ -1288,6 +1258,7 @@ export default function CameraAddOn(props: PropTypes) {
                         src={imgSrc}
                         className="cameraAddon-image"
                         alt="Take Time Lapse"
+                        title="Configure the device interval and duration before starting."
                         onClick={
                           activeAction === undefined
                             ? handleClickActionStartTimeLapse

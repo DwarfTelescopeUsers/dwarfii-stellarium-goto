@@ -1,8 +1,4 @@
-import {
-  executeCurrentCapture,
-  getCurrentProfile,
-  findCurrentCameraParameter,
-} from "dwarfii_api";
+import { getCurrentProfile, findCurrentCameraParameter } from "dwarfii_api";
 import type { ConnectionContextType } from "@/types";
 import { resolveCurrentCameraGainValue } from "@/lib/dwarf_utils";
 import {
@@ -10,6 +6,7 @@ import {
   getV3NormalizedCameraCatalog,
   resolveScienceFilterIndex,
 } from "./cameraParams";
+import { executeCurrentCaptureWithRuntime } from "./captureRuntime";
 
 /** Translate the existing settings form at one boundary. The SDK validates all
  * runtime capabilities and submits the verified sequence; ACK is not completion.
@@ -89,7 +86,13 @@ async function submitCurrentAstroCapture(context: ConnectionContextType) {
       return socket.request(operation, values);
     },
   };
-  return executeCurrentCapture(
+  const client = socket.currentClient;
+  if (!client)
+    throw new Error(
+      "The DWARF connection changed. Reconnect before capturing.",
+    );
+  return executeCurrentCaptureWithRuntime(
+    client,
     transport,
     getCurrentProfile(hardwareId),
     catalog,
@@ -106,6 +109,13 @@ async function submitCurrentAstroCapture(context: ConnectionContextType) {
             ),
           }
         : {}),
+    },
+    async () => {
+      await loadV3AstroParameterCatalog(context.IPDwarf!, context);
+      const current = getV3NormalizedCameraCatalog(2, context);
+      if (!current)
+        throw new Error("Camera capabilities are no longer available.");
+      return current;
     },
   );
 }

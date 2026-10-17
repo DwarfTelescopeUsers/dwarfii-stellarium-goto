@@ -23,6 +23,7 @@ import type { V3DeviceTelemetry } from "@/services/dwarf/telemetry";
 import type { FleetRegistration } from "./registry";
 import { createFleetSessionProfile } from "@/services/dwarf/sessionProfile";
 import { WebSocketHandler } from "@/services/dwarf/connection";
+import { reducePreviewTypes } from "@/services/dwarf/previewState";
 import { decodeV3TelemetryPacket } from "@/services/dwarf/telemetry";
 import type { DwarfModel } from "@/services/dwarf/deviceProfile";
 import {
@@ -42,6 +43,8 @@ export type FleetRuntime = Readonly<{
   ownership: "unknown" | "control" | "slave";
   telemetry: Readonly<V3DeviceTelemetry>;
   frames?: number;
+  streamTypeTele?: number;
+  streamTypeWide?: number;
   lastSeen?: number;
   error?: string;
 }>;
@@ -57,7 +60,9 @@ export function validFleetHost(value: string): string {
   const host = value.trim();
   if (
     !/^(?:\d{1,3}\.){3}\d{1,3}$/.test(host) ||
-    host.split(".").some((part) => Number(part) > 255)
+    host
+      .split(".")
+      .some((part) => Number(part) > 255 || part !== String(Number(part)))
   )
     throw new Error(
       "Enter the telescope's IPv4 address, without a port or URL.",
@@ -104,6 +109,8 @@ export class FleetDeviceController {
   ) {}
 
   getSnapshot = () => this.snapshot;
+  /** Actual transport destination, independent of editable registry metadata. */
+  getConnectionHost = () => this.host;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => {
@@ -113,6 +120,7 @@ export class FleetDeviceController {
   /** Wait for the SDK handshake before issuing commands after an explicit Connect. */
   waitUntilConnected(timeoutMs = 20_000): Promise<void> {
     if (this.snapshot.connection === "connected") return Promise.resolve();
+    const epoch = this.epoch;
     return new Promise((resolve, reject) => {
       let finished = false;
       let unsubscribe = () => {};
@@ -125,7 +133,9 @@ export class FleetDeviceController {
         else resolve();
       };
       const check = () => {
-        if (this.snapshot.connection === "connected") finish();
+        if (epoch !== this.epoch || this.snapshot.connection === "disconnected")
+          finish(new Error("Telescope connection was cancelled."));
+        else if (this.snapshot.connection === "connected") finish();
         else if (this.snapshot.connection === "error")
           finish(
             new Error(this.snapshot.error || "Telescope connection failed."),
@@ -250,8 +260,19 @@ export class FleetDeviceController {
       update.activity = "unknown";
       update.telemetry = Object.freeze({});
       update.frames = undefined;
+      update.streamTypeTele = undefined;
+      update.streamTypeWide = undefined;
     }
     if (ready && packet?.known && packet.type !== 0) {
+      const preview = reducePreviewTypes(
+        {
+          tele: this.snapshot.streamTypeTele,
+          wide: this.snapshot.streamTypeWide,
+        },
+        packet,
+      );
+      update.streamTypeTele = preview.tele;
+      update.streamTypeWide = preview.wide;
       if (
         [11005, 11016, 11050].includes(packet.cmd) &&
         captureWarning(packet.data.code)
@@ -290,6 +311,8 @@ export class FleetDeviceController {
         "getDeviceState",
         "getQuickSets",
         "getSavedInfinityPosition",
+        "getAllShootingSchedule",
+        "getShootingScheduleById",
         "setMasterLock",
       ].includes(operation) &&
       client.session.state.ownership !== "control"
@@ -305,18 +328,18 @@ export class FleetDeviceController {
     try {
       const result = await requestCaptureCommand(client, operation, values);
       if (
-        operation === "continueCapture" ||
-        operation === "stopTeleCapture" ||
-        operation === "stopWideCapture"
-      )
-        this.publish({ captureWarning: undefined });
-      if (
         epoch !== this.epoch ||
         client !== this.client ||
         generation !== client.session.state.generation ||
         !client.ready
       )
         throw new Error("Command result belongs to a previous connection.");
+      if (
+        operation === "continueCapture" ||
+        operation === "stopTeleCapture" ||
+        operation === "stopWideCapture"
+      )
+        this.publish({ captureWarning: undefined });
       return result;
     } catch (error) {
       if (
@@ -376,7 +399,7 @@ export class FleetDeviceController {
           return this.request(operation, values);
         },
       };
-      return await executeCurrentCaptureWithRuntime(
+      const result = await executeCurrentCaptureWithRuntime(
         client,
         transport,
         profile,
@@ -384,8 +407,16 @@ export class FleetDeviceController {
         settings,
         () => this.loadCatalog(2),
       );
+      if (
+        epoch !== this.epoch ||
+        client !== this.client ||
+        generation !== client.session.state.generation ||
+        !client.ready
+      )
+        throw new Error("Capture result belongs to a previous connection.");
+      return result;
     } finally {
-      this.capturePending = false;
+      if (epoch === this.epoch) this.capturePending = false;
     }
   }
 
@@ -452,6 +483,9 @@ export class FleetDeviceController {
     this.workspaceSocket?.disposeBorrowed();
     this.workspaceSocket = undefined;
     this.polling = false;
+    this.capturePending = false;
+    this.captureRevision++;
+    this.host = undefined;
     this.profile = undefined;
     this.activity = {};
     this.epoch++;
@@ -469,6 +503,8 @@ export class FleetDeviceController {
       ...offlineRuntime,
       lastSeen: this.snapshot.lastSeen,
       frames: undefined,
+      streamTypeTele: undefined,
+      streamTypeWide: undefined,
       error: undefined,
     });
   }

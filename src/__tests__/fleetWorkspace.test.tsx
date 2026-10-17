@@ -79,6 +79,19 @@ test("top bar shows connected telescopes only and routes the selected workspace"
   expect(screen.getByRole("button", { name: /Mini connected/ })).toBeVisible();
   expect(screen.queryByRole("button", { name: /D3/ })).not.toBeInTheDocument();
 
+  // Opening an offline telescope must not silently reroute back to the other
+  // connected device while the selected telescope is still connecting.
+  act(() => managerRef.current!.registry.select(b));
+  expect(screen.getByTestId("host")).toHaveTextContent("192.0.2.2");
+  expect(screen.getByTestId("state")).toHaveTextContent("false");
+  act(() => managerRef.current!.registry.select(a));
+
+  jest
+    .spyOn(managerRef.current!.getDevice(a), "getConnectionHost")
+    .mockReturnValue("192.0.2.1");
+  act(() => managerRef.current!.registry.updateHost(a, "192.0.2.99"));
+  expect(screen.getByTestId("host")).toHaveTextContent("192.0.2.1");
+
   setConnection(b, "connected");
   fireEvent.click(screen.getByRole("button", { name: /D3 connected/ }));
   expect(screen.getByTestId("host")).toHaveTextContent("192.0.2.2");
@@ -86,6 +99,7 @@ test("top bar shows connected telescopes only and routes the selected workspace"
   expect(
     screen.queryByRole("button", { name: /D3 connected/ }),
   ).not.toBeInTheDocument();
-  expect(screen.getByTestId("host")).toHaveTextContent("192.0.2.1");
+  expect(screen.getByTestId("host")).toHaveTextContent("192.0.2.2");
+  expect(screen.getByTestId("state")).toHaveTextContent("false");
   localStorage.clear();
 });

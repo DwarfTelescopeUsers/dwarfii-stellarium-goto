@@ -1,6 +1,7 @@
 import { ConnectionContextType } from "@/types";
 import { deviceInfo, normalizeCurrentDeviceInfo } from "@/services/dwarf";
-import { getProxyUrl, getIpServerMTX } from "@/lib/get_proxy_url";
+import { getProxyUrl } from "@/lib/get_proxy_url";
+import { ensureDevicePreviewPaths } from "@/services/dwarf/previewPaths";
 
 /** Device identity must come from successful current deviceInfo discovery.
  * Media folder existence and old parameter configurations cannot identify the
@@ -55,151 +56,17 @@ export async function findDeviceInfo(
   }
 }
 
+/** Setup and Fleet configure the same per-device paths. Never retarget a
+ * singleton path that another telescope's preview may still be reading. */
 export async function checkMediaMtxStreamWithUpdate(
   IPDwarf: string | undefined,
   connectionCtx: ConnectionContextType,
 ) {
-  if ((await verifyMediaMtxStreamUrls(IPDwarf, connectionCtx)) === false) {
-    if (await editMediaMtxStreamD3(IPDwarf, "dwarf_wide", connectionCtx))
-      if (await editMediaMtxStreamD3(IPDwarf, "dwarf_tele", connectionCtx))
-        return true;
-      else return false;
-    else return false;
-  } else {
-    console.log("Streams are already OK");
-  }
-}
-
-async function verifyMediaMtxStreamUrls(
-  inputIP: string | undefined,
-  connectionCtx: ConnectionContextType,
-) {
-  const url1 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_wide`;
-  const url2 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_tele`;
-
   try {
-    const proxyUrl1 = `${getProxyUrl(
-      connectionCtx,
-    )}?target=${encodeURIComponent(url1)}`;
-    const response1 = await fetch(proxyUrl1, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      redirect: "follow",
-    });
-
-    if (!response1.ok) {
-      throw new Error(`HTTP error! Status: ${response1.status}`);
-    }
-
-    const proxyUrl2 = `${getProxyUrl(
-      connectionCtx,
-    )}?target=${encodeURIComponent(url2)}`;
-    const response2 = await fetch(proxyUrl2, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      redirect: "follow",
-    });
-
-    if (!response2.ok) {
-      throw new Error(`HTTP error! Status: ${response2.status}`);
-    }
-
-    const result1 = await response1.json();
-    console.log(result1);
-    const result2 = await response2.json();
-    console.log(result2);
-    let result = true;
-
-    try {
-      const channelWideUrl = new URL(result1.source);
-      result = result && channelWideUrl.hostname === inputIP;
-    } catch (error) {
-      console.error("Invalid URL format:", result1.source);
-      return false;
-    }
-    try {
-      const channelTeleUrl = new URL(result2.source);
-      result = result && channelTeleUrl.hostname === inputIP;
-    } catch (error) {
-      console.error("Invalid URL format:", result2.source);
-      return false;
-    }
-
-    if (result) {
-      console.log(`The source in MediaMTX are well configured`);
-      return true;
-    } else {
-      console.log(`Need to configure the source in MediaMTX`);
-      return false;
-    }
+    await ensureDevicePreviewPaths({ ...connectionCtx, IPDwarf });
+    return true;
   } catch (error) {
-    if (error instanceof Error) {
-      console.error("Error verifying stream info:", error.message);
-    } else {
-      console.error("Error verifying stream info:", error);
-    }
+    console.warn("MediaMTX device preview unavailable:", error);
     return false;
   }
 }
-
-const editMediaMtxStreamD3 = async (
-  IPDwarf: string | undefined,
-  name: string | undefined,
-  connectionCtx: ConnectionContextType,
-) => {
-  const url = `http://${getIpServerMTX()}:9997/v3/config/paths/replace/${name}`;
-  let data;
-  if (name == "dwarf_wide") {
-    data = {
-      source: `rtsp://${IPDwarf}:554/ch1/stream0`,
-      sourceOnDemand: true,
-      sourceOnDemandCloseAfter: "10s",
-      record: false,
-    };
-  }
-  if (name == "dwarf_tele") {
-    data = {
-      source: `rtsp://${IPDwarf}:554/ch0/stream0`,
-      sourceOnDemand: true,
-      sourceOnDemandCloseAfter: "10s",
-      record: false,
-    };
-  }
-  try {
-    const proxyUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-      url,
-    )}`;
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    console.log(data);
-    console.log(JSON.stringify(data));
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    // Check the response structure
-    if (response.status === 200) {
-      console.log("editMediaMtxStreamD3 Success:");
-      return true;
-    } else {
-      console.error("Failed:", response.status);
-      return false;
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("Error editing stream info:", error.message);
-    } else {
-      console.error("Error editing stream info:", error);
-    }
-    return false;
-  }
-};

@@ -1,5 +1,6 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { scheduleDeviceAction } from "@/services/dwarf/operationScope";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { getExposureIndexByName, getGainIndexByName } from "@/lib/data_utils";
 import { saveLoggerViewDb, savePiPViewDb } from "@/db/db_utils";
@@ -39,6 +40,13 @@ export default function CalibrationDwarf(props: CalibrationDwarfPropType) {
   const { setModule, setErrors, setSuccess } = props;
 
   let connectionCtx = useContext(ConnectionContext);
+  const operationAbort = useRef(new AbortController());
+  const generation = connectionCtx.socketIPDwarf?.session?.state.generation;
+  useEffect(() => {
+    operationAbort.current = new AbortController();
+    return () => operationAbort.current.abort();
+  }, [connectionCtx.socketIPDwarf, generation]);
+
   //const [errors, setErrors] = useState<string | undefined>();
   //const [success, setSuccess] = useState<string | undefined>();
   const [position, setPosition] = useState<string | undefined>();
@@ -72,15 +80,23 @@ export default function CalibrationDwarf(props: CalibrationDwarfPropType) {
   function calibrateFn() {
     setModule(t("cCalibrationDwarfLogProcessCalibration"));
     setShowModal(connectionCtx.loggerView);
-    initCamera();
-    setTimeout(() => {
-      calibrationHandler(connectionCtx, setErrors, setSuccess, (options) => {
-        setGotoMessages((prev) => prev.concat(options));
-      });
-    }, 7000);
+    operationAbort.current.abort();
+    operationAbort.current = new AbortController();
+    const signal = operationAbort.current.signal;
+    initCamera(signal);
+    scheduleDeviceAction(
+      connectionCtx,
+      7000,
+      (scoped) =>
+        calibrationHandler(scoped, setErrors, setSuccess, (options) => {
+          setGotoMessages((prev) => prev.concat(options));
+        }),
+      signal,
+    );
   }
 
   function stopGotoFn() {
+    operationAbort.current.abort();
     setModule(t("cCalibrationDwarfLogProcessStopGoto"));
     setShowModal(connectionCtx.loggerView);
     stopGotoHandler(connectionCtx, setErrors, setSuccess, (options) => {
@@ -249,34 +265,64 @@ export default function CalibrationDwarf(props: CalibrationDwarfPropType) {
     connectionCtx.setPiPView((prev) => !prev);
   }
 
-  function initCamera() {
+  function initCamera(signal: AbortSignal) {
     {
-      setTimeout(() => {
-        turnOnTeleCameraFn(connectionCtx);
-      }, 1000);
-      setTimeout(() => {
-        updateTelescopeISPSetting("gainMode", 1, connectionCtx);
-      }, 1500);
-      setTimeout(() => {
-        updateTelescopeISPSetting("exposureMode", 1, connectionCtx);
-      }, 2000);
-      setTimeout(() => {
-        updateTelescopeISPSetting(
-          "gain",
-          getGainIndexByName("80", connectionCtx.typeIdDwarf),
-          connectionCtx,
-        );
-      }, 2500);
-      setTimeout(() => {
-        updateTelescopeISPSetting(
-          "exposure",
-          getExposureIndexByName("1", connectionCtx.typeIdDwarf),
-          connectionCtx,
-        );
-      }, 3500);
-      setTimeout(() => {
-        updateTelescopeISPSetting("IR", 0, connectionCtx);
-      }, 4500);
+      scheduleDeviceAction(
+        connectionCtx,
+        1000,
+        (scoped) => {
+          turnOnTeleCameraFn(scoped);
+        },
+        signal,
+      );
+      scheduleDeviceAction(
+        connectionCtx,
+        1500,
+        (scoped) => {
+          updateTelescopeISPSetting("gainMode", 1, scoped);
+        },
+        signal,
+      );
+      scheduleDeviceAction(
+        connectionCtx,
+        2000,
+        (scoped) => {
+          updateTelescopeISPSetting("exposureMode", 1, scoped);
+        },
+        signal,
+      );
+      scheduleDeviceAction(
+        connectionCtx,
+        2500,
+        (scoped) => {
+          updateTelescopeISPSetting(
+            "gain",
+            getGainIndexByName("80", scoped.typeIdDwarf),
+            scoped,
+          );
+        },
+        signal,
+      );
+      scheduleDeviceAction(
+        connectionCtx,
+        3500,
+        (scoped) => {
+          updateTelescopeISPSetting(
+            "exposure",
+            getExposureIndexByName("1", scoped.typeIdDwarf),
+            scoped,
+          );
+        },
+        signal,
+      );
+      scheduleDeviceAction(
+        connectionCtx,
+        4500,
+        (scoped) => {
+          updateTelescopeISPSetting("IR", 0, scoped);
+        },
+        signal,
+      );
     }
   }
 

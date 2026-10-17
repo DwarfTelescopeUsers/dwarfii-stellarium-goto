@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { ConnectionContext } from "@/stores/ConnectionContext";
+import DeviceSchedulePanel from "./DeviceSchedulePanel";
+import TimedPlanSubmit from "./TimedPlanSubmit";
 import {
   PLANNER_SELECTION_KEY,
   isPlannerSkySelection,
@@ -353,6 +355,7 @@ export default function AstroScheduler() {
 
   return (
     <div className="dw-planner">
+      <DeviceSchedulePanel />
       <nav
         className="dw-planner-tabs"
         aria-label="Observation planner sections"
@@ -574,6 +577,7 @@ export default function AstroScheduler() {
                     {plan.autofocus && <span>Autofocus</span>}
                     {plan.captureDarks && <span>Dark frames</span>}
                   </div>
+                  <TimedPlanSubmit plan={plan} />
                   <div className="dw-action-row">
                     <button
                       className="dw-button dw-button-primary"

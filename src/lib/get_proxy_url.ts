@@ -173,7 +173,9 @@ export function getIpServerMTX() {
   if (isTauri()) {
     return process.env.NEXT_PUBLIC_IP_MEDIAMTX || "localhost";
   }
-  return "0.0.0.0";
+  // This address is reached by the proxy process. A listener's wildcard bind
+  // address is not a portable destination, particularly on Windows.
+  return "127.0.0.1";
 }
 
 export async function checkMediaMtxStreamUrls(
@@ -181,68 +183,23 @@ export async function checkMediaMtxStreamUrls(
   timeout = 5000,
   externalSignal: AbortSignal,
 ) {
-  const url1 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_wide`;
-  const url2 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_tele`;
-
-  const timeoutSignal1 = AbortSignal.timeout(timeout);
-  const timeoutSignal2 = AbortSignal.timeout(timeout);
-
-  const combinedSignal = AbortSignal.any([
-    timeoutSignal1,
-    timeoutSignal2,
-    externalSignal,
-  ]);
-
+  // Configuration health is independent of legacy singleton stream names and
+  // does not claim the telescope's RTSP source is actually producing frames.
+  const target = `http://${getIpServerMTX()}:9997/v3/config/global/get`;
+  const timeoutSignal = AbortSignal.timeout(timeout);
+  const combinedSignal = AbortSignal.any([timeoutSignal, externalSignal]);
   try {
-    const proxyUrl1 = `${getProxyUrl(
-      connectionCtx,
-    )}?target=${encodeURIComponent(url1)}`;
-    const proxyUrl2 = `${getProxyUrl(
-      connectionCtx,
-    )}?target=${encodeURIComponent(url2)}`;
-
-    const [response1, response2] = await Promise.all([
-      fetch(proxyUrl1, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        redirect: "follow",
-        signal: combinedSignal,
-      }),
-      fetch(proxyUrl2, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        redirect: "follow",
-        signal: combinedSignal,
-      }),
-    ]);
-
-    if (!response1.ok) {
-      throw new Error(`HTTP error! Status: ${response1.status}`);
-    }
-
-    if (!response2.ok) {
-      throw new Error(`HTTP error! Status: ${response2.status}`);
-    }
-
-    return true; // Both requests were successful
-  } catch (error) {
-    if (error instanceof Error) {
-      if (timeoutSignal1.aborted || timeoutSignal2.aborted) {
-        console.log(
-          `checkMediaMtxStreamUrls Operation timed out after ${timeout} ms`,
-        );
-      } else if (externalSignal.aborted) {
-        console.log(`Media Mtx Request aborted`);
-      } else {
-        // MediaMTX is optional in the web build and may not be running until
-        // the Tauri sidecar starts. Treat that as an unavailable service,
-        // not an application-level runtime error.
-        console.warn("MediaMTX stream service is unavailable:", error.message);
-      }
-    } else {
-      console.error("Error verifying stream info:", error);
-    }
-    return false; // An error occurred, return false
+    const response = await fetch(
+      `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(target)}`,
+      { signal: combinedSignal },
+    );
+    if (!response.ok) return false;
+    const config = await response.json();
+    return (
+      config !== null && typeof config === "object" && !Array.isArray(config)
+    );
+  } catch {
+    return false;
   }
 }
 

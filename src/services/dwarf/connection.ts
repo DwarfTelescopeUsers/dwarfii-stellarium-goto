@@ -37,6 +37,7 @@ export class WebSocketHandler {
   private client?: CurrentWebSocketHandler;
   private borrowed = false;
   private detach?: () => void;
+  private revision = 0;
 
   /** A page borrows the Fleet transport; it must never reconnect or close it. */
   static fromFleet(client: CurrentWebSocketHandler, ip: string) {
@@ -64,6 +65,10 @@ export class WebSocketHandler {
   }
   get session() {
     return this.client?.session;
+  }
+  /** The owned transport for runtime subscriptions; never create a second socket. */
+  get currentClient() {
+    return this.client;
   }
   setProfile(profile: CurrentProfile): void {
     if (this.borrowed) return;
@@ -130,7 +135,8 @@ export class WebSocketHandler {
     operation: CurrentCommand,
     values: Record<string, unknown> = {},
   ): Promise<CurrentPacket> {
-    if (!this.client?.ready)
+    const client = this.client;
+    if (!client?.ready)
       throw new CurrentProtocolError(
         "transport",
         "Connect to the DWARF and wait for device status first.",
@@ -139,31 +145,34 @@ export class WebSocketHandler {
       "getDeviceState",
       "getQuickSets",
       "getSavedInfinityPosition",
+      "getAllShootingSchedule",
+      "getShootingScheduleById",
     ];
     const ownership = operation === "setMasterLock";
-    const stopping = [
-      "stopTeleCapture",
-      "stopWideCapture",
-      "stopFocus",
-      "stopAstroAutoFocus",
-      "stopGoto",
-      "stopOneClickGoto",
-      "stopJoystick",
-      "stopCalibration",
-      "stopEqSolving",
-    ];
     if (
       !readOnly.includes(operation) &&
       !ownership &&
-      !stopping.includes(operation) &&
-      this.client.session.state.ownership !== "control"
+      client.session.state.ownership !== "control"
     ) {
       throw new CurrentProtocolError(
         "device",
         "This connection does not have control of the DWARF. Request control in Connection setup.",
       );
     }
-    return requestCaptureCommand(this.client, operation, values);
+    const revision = this.revision;
+    const generation = client.session.state.generation;
+    const result = await requestCaptureCommand(client, operation, values);
+    if (
+      revision !== this.revision ||
+      client !== this.client ||
+      generation !== client.session.state.generation ||
+      !client.ready
+    )
+      throw new CurrentProtocolError(
+        "transport",
+        "Command result belongs to a previous connection.",
+      );
+    return result;
   }
 
   async prepare(
@@ -226,6 +235,15 @@ export class WebSocketHandler {
         return;
       }
     }
+    if (batch.length && !this.isConnected()) {
+      this.reportError(
+        new CurrentProtocolError(
+          "transport",
+          "Wait for this telescope to connect before sending commands.",
+        ),
+      );
+      return;
+    }
     this.queue.push(...batch);
     await this.flush();
   }
@@ -253,7 +271,10 @@ export class WebSocketHandler {
     this.detach?.();
     this.detach = this.client?.subscribe((state, packet) => {
       const ready = state.session.phase === "ready";
-      if (!ready) this.queue = [];
+      if (!ready) {
+        this.revision++;
+        this.queue = [];
+      }
       if (ready) {
         if (this.closeSocketTimer) clearTimeout(this.closeSocketTimer);
         this.closeTimerHandler();
@@ -287,19 +308,30 @@ export class WebSocketHandler {
   private async flush(): Promise<void> {
     if (!this.isConnected() || this.flushing) return;
     this.flushing = true;
+    const revision = this.revision;
     try {
-      while (this.queue.length && this.isConnected()) {
+      while (
+        revision === this.revision &&
+        this.queue.length &&
+        this.isConnected()
+      ) {
         const entry = this.queue.shift()!;
         try {
           await this.request(entry.operation, entry.values);
         } catch (error) {
-          this.reportError(error);
-          this.queue = [];
+          if (revision === this.revision) {
+            this.reportError(error);
+            this.queue = [];
+          }
           break;
         }
       }
     } finally {
       this.flushing = false;
+      // A replacement connection may have queued work while the old request
+      // was settling. Its errors must not clear or report into the new page.
+      if (revision !== this.revision && this.queue.length && this.isConnected())
+        void this.flush();
     }
   }
   private reportError(error: unknown): void {
@@ -329,6 +361,7 @@ export class WebSocketHandler {
     this.polling = undefined;
   }
   close(): void {
+    this.revision++;
     this.stopTelemetryPolling();
     if (this.closeSocketTimer) clearTimeout(this.closeSocketTimer);
     this.queue = [];

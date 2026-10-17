@@ -1,12 +1,6 @@
 import React from "react";
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { Formik } from "formik";
-import { useContext } from "react";
-import { ConnectionContext } from "@/stores/ConnectionContext";
-import { allowedCountBurst, allowedIntervalBurst } from "@/lib/data_utils";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import i18n from "@/i18n";
+import { usePhotoMediaCatalog } from "./usePhotoMediaCatalog";
+import type { Dispatch, SetStateAction } from "react";
 
 type PropTypes = {
   countValue: number;
@@ -16,128 +10,64 @@ type PropTypes = {
   setShowSettingsMenu: Dispatch<SetStateAction<boolean>>;
 };
 
-export default function CameraPanoSettings(props: PropTypes) {
-  let connectionCtx = useContext(ConnectionContext);
-  const {
-    countValue,
-    setCountValue,
-    intervalValue,
-    setIntervalValue,
-    setShowSettingsMenu,
-  } = props;
-
-  function changeCountHandler(e: ChangeEvent<HTMLSelectElement>) {
-    let targetValue = e.target.value;
-    setCountValue(parseInt(targetValue, 10));
-  }
-
-  function changeIntervalHandler(e: ChangeEvent<HTMLSelectElement>) {
-    let targetValue = e.target.value;
-    setIntervalValue(parseInt(targetValue, 10));
-  }
-
-  // Function to generate options for a specific Dwarf model
-  const generateCountBurstOptions = (DwarfModelId = 1) => {
-    const countBurst = allowedCountBurst[DwarfModelId];
-    return countBurst.values.map(({ index, name }) => (
-      <option key={index} value={index}>
-        {name}
-      </option>
-    ));
-  };
-  const allowedCountBurstOptions = generateCountBurstOptions(
-    connectionCtx.typeIdDwarf,
-  ); //DwarfModelId
-
-  // Function to generate options for a specific Dwarf model
-  const generateIntervalBurstOptions = (DwarfModelId = 1) => {
-    const intervalBurst = allowedIntervalBurst[DwarfModelId];
-    return intervalBurst.values.map(({ index, name }) => (
-      <option key={index} value={index}>
-        {name}
-      </option>
-    ));
-  };
-  const allowedIntervalBurstOptions = generateIntervalBurstOptions(
-    connectionCtx.typeIdDwarf,
-  ); //DwarfModelId
-
-  const { t } = useTranslation();
-  // eslint-disable-next-line no-unused-vars
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
-
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language");
-    if (storedLanguage) {
-      setSelectedLanguage(storedLanguage);
-      i18n.changeLanguage(storedLanguage);
-    }
-  }, []);
-
+export default function CameraBurstSettings({
+  countValue,
+  setCountValue,
+  intervalValue,
+  setIntervalValue,
+  setShowSettingsMenu,
+}: PropTypes) {
+  const { catalog, error } = usePhotoMediaCatalog();
+  const count = catalog?.sharedParameters?.find(
+    (parameter) => parameter.key === "burstCount",
+  );
+  const interval = catalog?.sharedParameters?.find(
+    (parameter) => parameter.key === "burstIntervalTime",
+  );
   return (
     <div>
-      <Formik
-        enableReinitialize
-        initialValues={{
-          count: String(countValue),
-          interval: String(intervalValue),
+      {error && <p role="alert">{error}</p>}
+      {!catalog && !error && (
+        <p role="status">Loading device capture settings?</p>
+      )}
+      <label htmlFor="burst-frame-count">Frame count</label>
+      <input
+        id="burst-frame-count"
+        type="number"
+        min={count?.range?.minimum}
+        max={count?.range?.maximum}
+        step={1}
+        value={countValue}
+        disabled={!count}
+        onChange={(event) => {
+          const value = Number(event.target.value);
+          if (Number.isSafeInteger(value) && value >= 1 && value <= 2147483647)
+            setCountValue(value);
         }}
-        onSubmit={() => {}}
+      />
+      <label htmlFor="burst-interval">Interval (seconds)</label>
+      <select
+        id="burst-interval"
+        value={intervalValue}
+        onChange={(event) => setIntervalValue(Number(event.target.value))}
+        disabled={!interval?.options?.length}
       >
-        {({ values, handleChange, handleBlur, handleSubmit }) => (
-          <form onSubmit={handleSubmit}>
-            <div className="row mb-md-2 mb-sm-1">
-              <div className="col-6">
-                <label htmlFor="count">{t("cCameraBurstSettingsCount")}</label>
-              </div>
-              <div className="col-4 me-2">
-                <select
-                  id="count"
-                  name="count"
-                  onBlur={handleBlur}
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeCountHandler(e);
-                  }}
-                  value={values.count}
-                >
-                  {allowedCountBurstOptions}
-                </select>
-              </div>
-            </div>
-            <div className="row mb-md-2 mb-sm-1">
-              <div className="col-6">
-                <label htmlFor="interval">
-                  {t("cCameraBurstSettingsinterval")}
-                </label>
-              </div>
-              <div className="col-4 me-2">
-                <select
-                  id="interval"
-                  name="interval"
-                  onBlur={handleBlur}
-                  onChange={(e) => {
-                    handleChange(e);
-                    changeIntervalHandler(e);
-                  }}
-                  value={values.interval}
-                >
-                  {allowedIntervalBurstOptions}
-                </select>
-              </div>
-            </div>
-            <div>
-              <button
-                onClick={() => setShowSettingsMenu(false)}
-                className="btn btn-more02"
-              >
-                Close
-              </button>
-            </div>
-            {/* {JSON.stringify(values)} */}
-          </form>
-        )}
-      </Formik>
+        {interval?.options?.map((option) => (
+          <option key={String(option.value)} value={Number(option.value)}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {catalog && (!count || !interval) && (
+        <p role="status">The device did not advertise burst configuration.</p>
+      )}
+      <button
+        type="button"
+        onClick={() => setShowSettingsMenu(false)}
+        className="btn btn-more02"
+      >
+        Close
+      </button>
     </div>
   );
 }

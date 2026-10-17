@@ -1,3 +1,7 @@
+jest.mock("@/services/dwarf/mediaConfiguration", () => ({
+  submitConfiguredMedia: jest.fn().mockResolvedValue(undefined),
+}));
+import { submitConfiguredMedia } from "@/services/dwarf/mediaConfiguration";
 jest.mock("@/services/dwarf", () => ({
   Dwarfii_Api: {
     DwarfCMD: {
@@ -132,46 +136,38 @@ describe("operation request routing", () => {
     expect(context.setAstroSettings).not.toHaveBeenCalled();
   });
 
-  test("keeps the wide burst start after settings with no empty packets", async () => {
+  test("wide burst sends the canonical count without legacy feature settings", async () => {
     const context = createContext();
-    await startBurst(1, 3, 1, context, jest.fn(), jest.fn(), jest.fn());
-    const packets = context.socketIPDwarf.prepare.mock.calls[0][0];
-    expect(messageCameraWideStartBurst).toHaveBeenCalledTimes(1);
-    expect(packets).toEqual([new Uint8Array([6]), new Uint8Array([5])]);
-    expect(packets.every(Boolean)).toBe(true);
+    context.socketIPDwarf.isConnected = () => true;
+    context.socketIPDwarf.request = jest.fn().mockResolvedValue({ data: {} });
+    await startBurst(1, 3, 0, context, jest.fn(), jest.fn(), jest.fn());
+    expect(submitConfiguredMedia).toHaveBeenLastCalledWith(
+      1,
+      context,
+      "burst",
+      3,
+      0,
+    );
+    expect(messageCameraWideStartBurst).not.toHaveBeenCalled();
+    expect(context.socketIPDwarf.prepare).not.toHaveBeenCalled();
   });
 
   test.each([0, 1])(
-    "uses the requested total time independently of interval for camera %s",
+    "time-lapse camera %i delegates actual firmware values",
     async (camera) => {
       const context = createContext();
-      await startTimeLapse(
+      expect(await startTimeLapse(camera, 2, 120, context, jest.fn())).toBe(
+        true,
+      );
+      expect(submitConfiguredMedia).toHaveBeenLastCalledWith(
         camera,
-        2,
-        7,
         context,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-      );
-      expect(messageCameraTeleSetFeatureParams).toHaveBeenNthCalledWith(
-        1,
-        false,
-        1,
-        4,
-        0,
+        "timelapse",
         2,
-        0,
+        120,
       );
-      expect(messageCameraTeleSetFeatureParams).toHaveBeenNthCalledWith(
-        2,
-        false,
-        1,
-        5,
-        0,
-        7,
-        0,
-      );
+      expect(messageCameraTeleSetFeatureParams).not.toHaveBeenCalled();
+      expect(context.socketIPDwarf.prepare).not.toHaveBeenCalled();
     },
   );
 });

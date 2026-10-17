@@ -70,3 +70,40 @@ test("stop cancels unsent transaction steps and duplicate capture is rejected", 
   expect(a.client.request).toHaveBeenCalledTimes(1);
   expect(a.client.request).toHaveBeenCalledWith("stopTeleCapture", {}, 60000);
 });
+
+test("an old capture cannot unlock or complete a capture on the replacement connection", async () => {
+  const a = harness("a");
+  let finishOld!: (result: any) => void;
+  let finishNew!: (result: any) => void;
+  jest
+    .mocked(executeCurrentCaptureWithRuntime)
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishOld = resolve;
+        }),
+    )
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishNew = resolve;
+        }),
+    );
+  const oldCapture = a.controller.capture(settings);
+  await Promise.resolve();
+  a.controller.disconnect();
+  const replacement = harness("replacement");
+  Object.assign(a.controller, {
+    client: replacement.client,
+    profile: getCurrentProfile(4),
+  });
+  const newCapture = a.controller.capture(settings);
+  await Promise.resolve();
+  finishOld({ status: "completed", frames: 2 });
+  await expect(oldCapture).rejects.toThrow("previous connection");
+  await expect(a.controller.capture(settings)).rejects.toThrow(
+    "already in progress",
+  );
+  finishNew({ status: "completed", frames: 2 });
+  await expect(newCapture).resolves.toMatchObject({ status: "completed" });
+});

@@ -10,6 +10,7 @@ export class FleetManager {
   private stopSaving?: () => void;
   private connectionStorage?: Pick<Storage, "getItem" | "setItem">;
   private desiredConnections = new Set<string>();
+  private connectionRevisions = new Map<string, number>();
 
   constructor(
     private readonly factory = (id: string) => new FleetDeviceController(id),
@@ -25,30 +26,61 @@ export class FleetManager {
     return controller;
   }
 
+  getActiveDeviceAtHost(host: string) {
+    let normalized: string;
+    try {
+      normalized = validFleetHost(host);
+    } catch {
+      return undefined;
+    }
+    for (const [id, controller] of Array.from(this.controllers)) {
+      if (
+        ["connected", "connecting", "reconnecting"].includes(
+          controller.getSnapshot().connection,
+        ) &&
+        controller.getConnectionHost() === normalized
+      )
+        return this.registry.getDevice(id);
+    }
+    return undefined;
+  }
+
   async connect(id: string, proxy?: string, requestControl = false) {
     const registration = this.registry.getDevice(id);
     const host = validFleetHost(registration.lastKnownHost ?? "");
-    for (const [otherId, controller] of Array.from(this.controllers)) {
-      if (
-        otherId !== id &&
-        this.registry.getDevice(otherId).lastKnownHost === host &&
-        ["connected", "connecting", "reconnecting"].includes(
-          controller.getSnapshot().connection,
-        )
-      )
-        throw new Error("This address already has an active Fleet connection.");
-    }
+    const existing = this.getActiveDeviceAtHost(host);
+    if (existing && existing.id !== id)
+      throw new Error("This address already has an active Fleet connection.");
+    const controller = this.getDevice(id);
+    if (
+      ["connected", "connecting", "reconnecting"].includes(
+        controller.getSnapshot().connection,
+      ) &&
+      controller.getConnectionHost() !== host
+    )
+      throw new Error("Disconnect this telescope before changing its address.");
+    const revision = (this.connectionRevisions.get(id) ?? 0) + 1;
+    this.connectionRevisions.set(id, revision);
     this.desiredConnections.add(id);
     this.saveDesiredConnections();
-    const controller = this.getDevice(id);
     await controller.connect(registration, proxy);
     if (requestControl) {
+      const checkIntent = () => {
+        if (this.connectionRevisions.get(id) !== revision)
+          throw new Error("Telescope connection was cancelled.");
+      };
+      checkIntent();
       await controller.waitUntilConnected();
+      checkIntent();
       await controller.setControl(true);
     }
   }
 
   disconnect(id: string) {
+    this.connectionRevisions.set(
+      id,
+      (this.connectionRevisions.get(id) ?? 0) + 1,
+    );
     this.desiredConnections.delete(id);
     this.saveDesiredConnections();
     this.getDevice(id).disconnect();
@@ -87,6 +119,10 @@ export class FleetManager {
       throw new Error("Disconnect this telescope before removing it.");
     controller?.disconnect();
     this.controllers.delete(id);
+    this.connectionRevisions.set(
+      id,
+      (this.connectionRevisions.get(id) ?? 0) + 1,
+    );
     this.desiredConnections.delete(id);
     this.saveDesiredConnections();
     this.registry.removeDisconnected(id);
@@ -150,6 +186,12 @@ export class FleetManager {
   dispose() {
     this.stopSaving?.();
     this.stopSaving = undefined;
-    this.controllers.forEach((controller) => controller.disconnect());
+    this.controllers.forEach((controller, id) => {
+      this.connectionRevisions.set(
+        id,
+        (this.connectionRevisions.get(id) ?? 0) + 1,
+      );
+      controller.disconnect();
+    });
   }
 }

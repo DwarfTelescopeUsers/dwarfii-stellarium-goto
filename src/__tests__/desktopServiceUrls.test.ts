@@ -4,6 +4,7 @@ import {
   getServerUrl,
   proxyHostname,
   shouldUseHttpsPreview,
+  checkMediaMtxStreamUrls,
 } from "@/lib/get_proxy_url";
 import type { ConnectionContextType } from "@/types";
 
@@ -33,6 +34,27 @@ test("desktop service URLs use the bundled loopback proxy, not tauri.localhost",
 test("browser service URLs can still use a LAN proxy", () => {
   process.env.NEXT_PUBLIC_PORT_PROXY_CORS = "8860";
   expect(getProxyUrl(connection)).toBe("http://192.168.178.21:8860");
+  expect(getIpServerMTX()).toBe("127.0.0.1");
+});
+
+test("MediaMTX service health does not require legacy singleton paths", async () => {
+  const previousFetch = global.fetch;
+  const fetcher = jest
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => ({ hls: true }) });
+  global.fetch = fetcher;
+  try {
+    const abort = new AbortController();
+    await expect(
+      checkMediaMtxStreamUrls(connection, 1000, abort.signal),
+    ).resolves.toBe(true);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(new URL(fetcher.mock.calls[0][0]).searchParams.get("target")).toBe(
+      "http://127.0.0.1:9997/v3/config/global/get",
+    );
+  } finally {
+    global.fetch = previousFetch;
+  }
 });
 
 test("HTTPS standalone rejects a stale insecure proxy URL and keeps HLS local", () => {

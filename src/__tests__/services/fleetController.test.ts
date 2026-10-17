@@ -3,7 +3,10 @@ import {
   CurrentCommands,
   encodeCurrentMessage,
 } from "dwarfii_api";
-import { FleetDeviceController } from "@/services/fleet/controller";
+import {
+  FleetDeviceController,
+  validFleetHost,
+} from "@/services/fleet/controller";
 
 class Socket {
   readyState = 0;
@@ -47,7 +50,7 @@ function wire(operation: keyof typeof CurrentCommands, values = {}) {
 async function flush() {
   for (let i = 0; i < 15; i++) await Promise.resolve();
 }
-function harness(id: string) {
+function harness(id: string, reconnectDelaysMs: number[] = []) {
   const sockets: Socket[] = [];
   const fetcher = jest.fn().mockResolvedValue({
     ok: true,
@@ -57,7 +60,7 @@ function harness(id: string) {
     id,
     {
       heartbeatIntervalMs: 0,
-      reconnectDelaysMs: [],
+      reconnectDelaysMs,
       webSocketFactory: () => {
         const socket = new Socket();
         sockets.push(socket);
@@ -86,6 +89,143 @@ async function ready(h: ReturnType<typeof harness>, battery: number) {
 }
 
 describe("Fleet controller isolation through real SDK sessions", () => {
+  test("reported preview transports belong to their camera and controller and reset offline", async () => {
+    const a = harness("a"),
+      b = harness("b");
+    try {
+      await ready(a, 20);
+      await ready(b, 80);
+      a.sockets[0].emit("message", {
+        data: wire("getDeviceState", {
+          teleCameraStateInfo: { streamType: { streamType: 2 } },
+          wideCameraStateInfo: { streamType: { streamType: 1, camId: 1 } },
+        }),
+      });
+      await flush();
+      expect(a.controller.getSnapshot()).toMatchObject({
+        streamTypeTele: 2,
+        streamTypeWide: 1,
+      });
+      expect(b.controller.getSnapshot().streamTypeTele).toBeUndefined();
+      a.sockets[0].emit("message", {
+        data: CurrentDwarfSchema.WsPacket.encode({
+          majorVersion: 1,
+          minorVersion: 20,
+          deviceId: 4,
+          moduleId: 9,
+          cmd: 15234,
+          type: 2,
+          data: encodeCurrentMessage("notify.StreamType", { camId: 1 }),
+        }).finish(),
+      });
+      await flush();
+      expect(a.controller.getSnapshot()).toMatchObject({
+        streamTypeTele: 2,
+        streamTypeWide: 0,
+      });
+      a.controller.disconnect();
+      expect(a.controller.getSnapshot().streamTypeTele).toBeUndefined();
+      expect(a.controller.getSnapshot().streamTypeWide).toBeUndefined();
+    } finally {
+      a.controller.disconnect();
+      b.controller.disconnect();
+    }
+  });
+  test("A reconnect rejects old work without affecting B or replaying mutations", async () => {
+    jest.useFakeTimers();
+    const a = harness("a", [5]),
+      b = harness("b");
+    try {
+      await ready(a, 20);
+      await ready(b, 80);
+      const page = a.controller.getWorkspaceSocket()!;
+      const pending = page.request("getDeviceState");
+      const rejected = expect(pending).rejects.toThrow();
+      const bSnapshot = b.controller.getSnapshot();
+      const bSent = b.sockets[0].sent.length;
+      a.sockets[0].emit("close");
+      await rejected;
+      expect(a.controller.getSnapshot().connection).toBe("reconnecting");
+      expect(a.controller.getSnapshot().telemetry).toEqual({});
+      jest.advanceTimersByTime(5);
+      expect(a.sockets).toHaveLength(2);
+      a.sockets[1].emit("open");
+      a.sockets[1].emit("message", {
+        data: wire("getDeviceState", {
+          deviceStateInfo: { batteryInfo: { percentage: 25 } },
+        }),
+      });
+      await flush();
+      expect(a.controller.getSnapshot().connection).toBe("connected");
+      expect(a.controller.getSnapshot().telemetry.batteryPercentage).toBe(25);
+      expect(a.controller.getSnapshot().ownership).not.toBe("control");
+      await expect(page.request("takeTelePhoto")).rejects.toThrow("control");
+      expect(b.controller.getSnapshot()).toBe(bSnapshot);
+      expect(b.sockets[0].sent).toHaveLength(bSent);
+      expect(b.sockets[0].closed).toBe(false);
+      a.sockets[0].emit("message", {
+        data: wire("getDeviceState", {
+          deviceStateInfo: { batteryInfo: { percentage: 99 } },
+        }),
+      });
+      await flush();
+      expect(a.controller.getSnapshot().telemetry.batteryPercentage).toBe(25);
+    } finally {
+      a.controller.disconnect();
+      b.controller.disconnect();
+      jest.useRealTimers();
+    }
+  });
+
+  test.each([
+    "192.168.001.90",
+    "192.168.178.090",
+    "0xC0.168.178.90",
+    "256.1.1.1",
+  ])(
+    "rejects ambiguous or invalid address %s before URL parsing can change its destination",
+    (host) => expect(() => validFleetHost(host)).toThrow("IPv4"),
+  );
+
+  test("a page cannot consume a response after its borrowed workspace is disposed", async () => {
+    const h = harness("a");
+    try {
+      await ready(h, 20);
+      const page = h.controller.getWorkspaceSocket()!;
+      const pending = page.request("getDeviceState");
+      h.sockets[0].emit("message", {
+        data: wire("getDeviceState", {
+          deviceStateInfo: { batteryInfo: { percentage: 21 } },
+        }),
+      });
+      h.controller.releaseWorkspaceSocket();
+      await expect(pending).rejects.toThrow("previous connection");
+      expect(h.controller.getSnapshot().connection).toBe("connected");
+      expect(h.controller.getSnapshot().telemetry.batteryPercentage).toBe(21);
+    } finally {
+      h.controller.disconnect();
+    }
+  });
+
+  test("disconnect cancels handshake waiters before a replacement connection", async () => {
+    const h = harness("a");
+    try {
+      await h.controller.connect({
+        id: "a",
+        alias: "A",
+        lastKnownHost: "192.0.2.1",
+      });
+      const pending = h.controller.waitUntilConnected();
+      h.controller.disconnect();
+      await expect(pending).rejects.toThrow("cancelled");
+      await expect(h.controller.waitUntilConnected()).rejects.toThrow(
+        "cancelled",
+      );
+    } finally {
+      h.controller.disconnect();
+    }
+  });
+
   test("page facades borrow a single connection and never close either Fleet device", async () => {
     const a = harness("a"),
       b = harness("b");
@@ -207,6 +347,19 @@ describe("Fleet controller isolation through real SDK sessions", () => {
       await expect(a.controller.request("takeTelePhoto")).rejects.toThrow(
         "control",
       );
+      const page = a.controller.getWorkspaceSocket()!;
+      for (const operation of [
+        "stopTeleCapture",
+        "stopWideCapture",
+        "stopFocus",
+        "stopAstroAutoFocus",
+        "stopGoto",
+        "stopOneClickGoto",
+        "stopJoystick",
+        "stopCalibration",
+        "stopEqSolving",
+      ] as const)
+        await expect(page.request(operation)).rejects.toThrow("control");
       const request = a.controller.request("getDeviceState");
       expect(b.sockets[0].sent).toHaveLength(bCount);
       a.sockets[0].emit("message", {

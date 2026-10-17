@@ -6,6 +6,86 @@ import {
 } from "@/services/fleet/manager";
 
 describe("Fleet metadata persistence", () => {
+  test("editable metadata cannot hide an active transport from duplicate-address checks", async () => {
+    const factory = (id: string) => {
+      let host: string | undefined;
+      let connection = "disconnected";
+      return {
+        id,
+        getConnectionHost: () => host,
+        getSnapshot: () => ({ connection }),
+        connect: async (registration: { lastKnownHost: string }) => {
+          host = registration.lastKnownHost;
+          connection = "connected";
+        },
+        disconnect: () => {
+          connection = "disconnected";
+          host = undefined;
+        },
+      } as any;
+    };
+    const manager = new FleetManager(factory);
+    try {
+      const a = manager.registry.register({
+        alias: "A",
+        lastKnownHost: "192.0.2.1",
+      });
+      const b = manager.registry.register({
+        alias: "B",
+        lastKnownHost: "192.0.2.1",
+      });
+      await manager.connect(a.id);
+      manager.registry.updateHost(a.id, "192.0.2.2");
+      expect(manager.getActiveDeviceAtHost("192.0.2.1")?.id).toBe(a.id);
+      expect(manager.getActiveDeviceAtHost("192.0.2.2")).toBeUndefined();
+      await expect(manager.connect(b.id)).rejects.toThrow(
+        "active Fleet connection",
+      );
+      await expect(manager.connect(a.id)).rejects.toThrow("Disconnect");
+      manager.disconnect(a.id);
+      await manager.connect(b.id);
+      expect(manager.getDevice(b.id).getSnapshot().connection).toBe(
+        "connected",
+      );
+    } finally {
+      manager.dispose();
+    }
+  });
+
+  test("disconnect cancels pending Connect ownership even if another session becomes ready", async () => {
+    let ready!: () => void;
+    const setControl = jest.fn();
+    const manager = new FleetManager(
+      (id: string) =>
+        ({
+          id,
+          connect: async () => {},
+          getSnapshot: () => ({ connection: "disconnected" }),
+          waitUntilConnected: () =>
+            new Promise<void>((resolve) => {
+              ready = resolve;
+            }),
+          setControl,
+          disconnect: jest.fn(),
+        }) as any,
+    );
+    try {
+      const device = manager.registry.register({
+        alias: "A",
+        lastKnownHost: "192.0.2.1",
+      });
+      const pending = manager.connect(device.id, undefined, true);
+      await Promise.resolve();
+      manager.disconnect(device.id);
+      await manager.connect(device.id);
+      ready();
+      await expect(pending).rejects.toThrow("cancelled");
+      expect(setControl).not.toHaveBeenCalled();
+    } finally {
+      manager.dispose();
+    }
+  });
+
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();

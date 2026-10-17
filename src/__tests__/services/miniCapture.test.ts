@@ -4,6 +4,8 @@ import {
   type CurrentCameraCatalog,
   type CurrentPacket,
   type CurrentWebSocketHandler,
+  currentCaptureControlsForObservedMode,
+  resolveCurrentCaptureControls,
 } from "dwarfii_api";
 import { executeCurrentCaptureWithRuntime } from "@/services/dwarf/captureRuntime";
 
@@ -82,6 +84,9 @@ test("Mini ignores stale frame progress and stops after five new frames", async 
       if (operation === "stopTeleCapture")
         listener?.(state, packet(15208, { state: 3 }));
       return packet(0, {
+        ...(operation === "getDeviceState"
+          ? { teleCameraStateInfo: { exclusiveState: {} } }
+          : {}),
         ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
         ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
         ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
@@ -105,4 +110,151 @@ test("Mini ignores stale frame progress and stops after five new frames", async 
     listener?.(state, packet(15209, { currentCount: count, totalCount: 30 }));
   await expect(capture).resolves.toEqual({ status: "completed", frames: 5 });
   expect(sent.filter((name) => name === "stopTeleCapture")).toHaveLength(1);
+});
+
+test("Mini stop acknowledgement keeps the transaction locked until stopped notification", async () => {
+  let listener: ((state: any, packet?: CurrentPacket) => void) | undefined;
+  const client = {
+    session: { state: { generation: 1 } },
+    subscribe: (callback) => {
+      listener = callback;
+      return () => {
+        listener = undefined;
+      };
+    },
+  } as unknown as CurrentWebSocketHandler;
+  const transport = {
+    request: jest.fn(async (operation: string) => {
+      if (operation === "startTeleCapture") {
+        listener?.(state, packet(15208, { state: 1 }));
+        listener?.(state, packet(15209, { updateType: 2 }));
+        listener?.(state, packet(15209, { currentCount: 5 }));
+      }
+      return packet(0, {
+        ...(operation === "getDeviceState"
+          ? { teleCameraStateInfo: { exclusiveState: {} } }
+          : {}),
+        ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
+        ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
+        ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
+      });
+    }),
+  } as any;
+  let completed = false;
+  const capture = executeCurrentCaptureWithRuntime(
+    client,
+    transport,
+    getCurrentProfile(4),
+    catalog,
+    settings,
+    async () => catalog,
+  ).then(() => {
+    completed = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(transport.request).toHaveBeenCalledWith("stopTeleCapture", {});
+  expect(completed).toBe(false);
+  listener?.(state, packet(15208, { state: 2 }));
+  expect(completed).toBe(false);
+  listener?.(state, packet(15208, { state: 3 }));
+  await capture;
+  expect(completed).toBe(true);
+});
+
+test("D3 reapplies requested settings in the device-reported runtime namespace and finishes from stopped state", async () => {
+  let listener: ((state: any, packet?: CurrentPacket) => void) | undefined;
+  const client = {
+    session: { state: { generation: 1 } },
+    subscribe: (callback) => {
+      listener = callback;
+      return () => {
+        listener = undefined;
+      };
+    },
+  } as unknown as CurrentWebSocketHandler;
+  const profile = getCurrentProfile(2);
+  const active = currentCaptureControlsForObservedMode(
+    resolveCurrentCaptureControls(profile, catalog, settings),
+    11,
+  );
+  const transport = {
+    state,
+    request: jest.fn(async (operation: string) => {
+      if (operation === "startTeleCapture") {
+        listener?.(state, {
+          ...packet(15264, { paramId: active.exposure.paramId, value: 156 }),
+          moduleId: 15,
+        });
+        listener?.(state, packet(15208, { state: 1 }));
+        listener?.(state, packet(15209, { updateType: 2 }));
+      }
+      return packet(0, {
+        ...(operation === "getDeviceState"
+          ? { teleCameraStateInfo: { exclusiveState: {} } }
+          : {}),
+        ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
+        ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
+        ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
+        ...(operation === "getQuickSets"
+          ? { cameraType: 0, quickSetList: [{ infoId: "0|0|15|100|0|0" }] }
+          : {}),
+      });
+    }),
+  } as any;
+  let completed = false;
+  const capture = executeCurrentCaptureWithRuntime(
+    client,
+    transport,
+    profile,
+    catalog,
+    settings,
+    async () => catalog,
+  ).then(() => {
+    completed = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(transport.request).toHaveBeenCalledWith(
+    "setExposure",
+    active.exposure,
+  );
+  expect(transport.request).toHaveBeenCalledWith("setGain", active.gain);
+  expect(transport.request).toHaveBeenCalledWith(
+    "setIntegerParameter",
+    active.frameCount,
+  );
+  expect(completed).toBe(false);
+  listener?.(state, packet(15209, { currentCount: 5, expIndex: 150 }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(transport.request).toHaveBeenCalledWith("stopTeleCapture", {});
+  expect(completed).toBe(false);
+  listener?.(state, packet(15208, { state: 3 }));
+  await capture;
+  expect(completed).toBe(true);
+});
+
+test("a busy hardware snapshot prevents settings writes even after a previous local timeout", async () => {
+  const client = {
+    session: { state: { generation: 1 } },
+  } as unknown as CurrentWebSocketHandler;
+  const transport = {
+    request: jest.fn(async () =>
+      packet(16405, {
+        teleCameraStateInfo: {
+          exclusiveState: { captureRawState: { state: 1 } },
+        },
+      }),
+    ),
+  } as any;
+  await expect(
+    executeCurrentCaptureWithRuntime(
+      client,
+      transport,
+      getCurrentProfile(4),
+      catalog,
+      settings,
+      async () => catalog,
+    ),
+  ).rejects.toThrow("idle state is not confirmed");
+  expect(transport.request).toHaveBeenCalledTimes(1);
+  expect(transport.request).toHaveBeenCalledWith("getDeviceState", {});
 });

@@ -1,4 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
+import {
+  deviceOperationIsCurrent,
+  scheduleDeviceAction,
+} from "@/services/dwarf/operationScope";
 import { AstroObject, ConnectionContextType } from "@/types";
 import {
   focusPath,
@@ -64,6 +68,8 @@ export async function calibrationHandler(
   setSuccess: Dispatch<SetStateAction<string | undefined>>,
   callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
+  const current = deviceOperationIsCurrent(connectionCtx);
+  if (!current()) return;
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
@@ -211,6 +217,7 @@ export async function calibrationHandler(
   }
 
   await sleep(500);
+  if (!current()) return;
 
   // Send Command : messageSystemSetTimezone
   let WS_Packet2 = messageSystemSetTimezone(timezone);
@@ -224,6 +231,7 @@ export async function calibrationHandler(
   );
 
   await sleep(500);
+  if (!current()) return;
 
   // Send Command : messageAstroStartCalibration
   if (
@@ -487,44 +495,40 @@ export async function startGotoHandler(
 }
 
 function resetCameraData(connectionCtx) {
-  setTimeout(() => {
-    turnOnTeleCameraFn(connectionCtx);
-  }, 1000);
-  setTimeout(() => {
+  scheduleDeviceAction(connectionCtx, 1000, (scoped) => {
+    turnOnTeleCameraFn(scoped);
+  });
+  scheduleDeviceAction(connectionCtx, 1500, (scoped) => {
     updateTelescopeISPSetting(
       "gainMode",
-      connectionCtx.astroSettings.gainMode as number,
-      connectionCtx,
+      scoped.astroSettings.gainMode as number,
+      scoped,
     );
-  }, 1500);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 2000, (scoped) => {
     updateTelescopeISPSetting(
       "exposureMode",
-      connectionCtx.astroSettings.exposureMode as number,
-      connectionCtx,
+      scoped.astroSettings.exposureMode as number,
+      scoped,
     );
-  }, 2000);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 2500, (scoped) => {
     updateTelescopeISPSetting(
       "gain",
-      connectionCtx.astroSettings.gain as number,
-      connectionCtx,
+      scoped.astroSettings.gain as number,
+      scoped,
     );
-  }, 2500);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 3000, (scoped) => {
     updateTelescopeISPSetting(
       "exposure",
-      connectionCtx.astroSettings.exposure as number,
-      connectionCtx,
+      scoped.astroSettings.exposure as number,
+      scoped,
     );
-  }, 3000);
-  setTimeout(() => {
-    updateTelescopeISPSetting(
-      "IR",
-      connectionCtx.astroSettings.IR as number,
-      connectionCtx,
-    );
-  }, 3500);
+  });
+  scheduleDeviceAction(connectionCtx, 3500, (scoped) => {
+    updateTelescopeISPSetting("IR", scoped.astroSettings.IR as number, scoped);
+  });
 }
 
 export function savePositionHandler(

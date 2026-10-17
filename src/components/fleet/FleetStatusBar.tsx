@@ -85,13 +85,13 @@ export default function FleetStatusBar() {
 
   useEffect(() => {
     const selected = registry.selectedDeviceId;
-    if (selected && connectedIds.includes(selected)) return;
-    // Preserve the saved selection while Fleet restores its transport after a
-    // full reload. Do not replace it with "no device" during the first poll.
-    if (selected && !connectedIds.length && registry.devices[selected]) return;
+    // Connection changes must never change the command destination. Retain an
+    // explicitly chosen registered device while offline or reconnecting; its
+    // workspace blocks commands until that same telescope is ready again.
+    if (selected && registry.devices[selected]) return;
     const next = connectedIds[0];
     if (selected !== next) manager.registry.select(next);
-  }, [connectedIds, manager, registry.selectedDeviceId]);
+  }, [connectedIds, manager, registry.selectedDeviceId, registry.devices]);
 
   return (
     <div className="dw-fleet-statusbar" aria-label="Fleet device status">

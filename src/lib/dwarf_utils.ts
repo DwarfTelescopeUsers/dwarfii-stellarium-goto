@@ -23,17 +23,21 @@ import {
   getWideGainNameByIndex,
 } from "@/lib/data_wide_utils";
 import { logger } from "@/lib/logger";
+import { deviceOperationIsCurrent } from "@/services/dwarf/operationScope";
 
 export const telephotoCamera = 0;
 export const wideangleCamera = 1;
 
 function report(context: ConnectionContextType, error: unknown): void {
+  if (context.deviceOperationSignal?.aborted) return;
   const message = error instanceof Error ? error.message : String(error);
   context.setDeviceError?.(message);
   logger("Device settings failed", { error: message }, context);
 }
 
 function socket(context: ConnectionContextType) {
+  if (context.deviceOperationSignal?.aborted)
+    throw new Error("The originating device workspace was closed.");
   if (!context.socketIPDwarf?.isConnected())
     throw new Error("Connect to the DWARF before changing camera settings.");
   return context.socketIPDwarf;
@@ -87,14 +91,17 @@ async function preview(
 ): Promise<void> {
   try {
     const device = socket(context);
+    const current = deviceOperationIsCurrent(context);
     if (!context.connectionStatusSlave) {
       // Enter without changing shooting mode or waiting an arbitrary delay.
       await device.request("enterCamera", { clientParam: { encodeType: 1 } });
+      if (!current()) return;
       await device.request(
         cameraId === 0 ? "telePreviewQuality" : "widePreviewQuality",
         { level: 1 },
       );
     }
+    if (!current()) return;
     setStatus?.("on");
     setSource?.(true);
   } catch (error) {

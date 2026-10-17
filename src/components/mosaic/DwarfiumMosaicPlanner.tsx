@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { getMosaicConfig } from "@/lib/mosaic_profile";
 import { readMosaicPlan } from "@/lib/mosaic_export";
+import NativeMosaicPanel from "./NativeMosaicPanel";
 
 const DwarfiumMosaicPlanner: React.FC = () => {
   const connection = useContext(ConnectionContext);
@@ -127,6 +128,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
 
   return (
     <div id="allDiv" className="all_div">
+      <NativeMosaicPanel />
       <div className="new-layout">
         {/* Panel voor observatie-instellingen (1) */}
         <div className="panel panel-left">

@@ -31,13 +31,10 @@ import {
   devicePreviewPath,
   ensureDevicePreviewPaths,
 } from "@/services/dwarf/previewPaths";
+import { openDevicePreview } from "@/services/dwarf/previewSession";
+import { previewTransport } from "@/services/dwarf/previewState";
 import { logger } from "@/lib/logger";
-import {
-  telephotoCamera,
-  wideangleCamera,
-  turnOnTeleCameraFn,
-  turnOnWideCameraFn,
-} from "@/lib/dwarf_utils";
+import { telephotoCamera, wideangleCamera } from "@/lib/dwarf_utils";
 
 type PropType = {
   setExchangeCamerasStatus: Dispatch<SetStateAction<boolean>>;
@@ -54,7 +51,18 @@ export default function DwarfCameras(props: PropType) {
     showControls,
   } = props;
   let connectionCtx = useContext(ConnectionContext);
-  const previewSetupInFlight = useRef(false);
+  const previewAbort = useRef(new AbortController());
+  const cameraStatusTimer = useRef<ReturnType<typeof setTimeout>>();
+  const previewGeneration =
+    connectionCtx.socketIPDwarf?.session?.state.generation;
+  useEffect(() => {
+    const abort = new AbortController();
+    previewAbort.current = abort;
+    return () => {
+      abort.abort();
+      if (cameraStatusTimer.current) clearTimeout(cameraStatusTimer.current);
+    };
+  }, [connectionCtx.socketIPDwarf, connectionCtx.IPDwarf, previewGeneration]);
 
   let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
 
@@ -94,9 +102,7 @@ export default function DwarfCameras(props: PropType) {
   //  const wideAngleURL_D3 = "http://localhost:8083/static/wide_angle_stream.html";
   //  const telePhotoURL_D3 = "http://localhost:8083/static/tele_stream.html";
   const [wideAngleURL_D3, setWideAngleURL_D3] = useState(transformedWideUrl_D3);
-  // `http://${getMediaMTXUrl(connectionCtx)}:8888/dwarf_wide`
   const [telePhotoURL_D3, setTelePhotoURL_D3] = useState(transformedTeleUrl_D3);
-  // `http://${getMediaMTXUrl(connectionCtx)}:8888/dwarf_tele`
 
   const defaultTeleCameraSrc: StaticImageData = imgTeleCameraSrc;
   const defaultWideCameraSrc: StaticImageData = imgWideCameraSrc;
@@ -107,15 +113,47 @@ export default function DwarfCameras(props: PropType) {
   const [wideangleCameraStatus, setWideangleCameraStatus] = useState<
     string | undefined
   >("off");
+  useEffect(() => {
+    const needed =
+      (telephotoCameraStatus === "on" &&
+        previewTransport(
+          connectionCtx.typeIdDwarf,
+          connectionCtx.streamTypeTeleDwarf,
+        ) === "rtsp") ||
+      (wideangleCameraStatus === "on" &&
+        previewTransport(
+          connectionCtx.typeIdDwarf,
+          connectionCtx.streamTypeWideDwarf,
+        ) === "rtsp");
+    if (!needed) return;
+    const abort = previewAbort.current;
+    void ensureDevicePreviewPaths(connectionCtx, abort.signal).catch(
+      (error) => {
+        if (!abort.signal.aborted)
+          setErrorTxt(error instanceof Error ? error.message : String(error));
+      },
+    );
+  }, [
+    connectionCtx.socketIPDwarf,
+    connectionCtx.IPDwarf,
+    previewGeneration,
+    connectionCtx.typeIdDwarf,
+    connectionCtx.streamTypeTeleDwarf,
+    connectionCtx.streamTypeWideDwarf,
+    telephotoCameraStatus,
+    wideangleCameraStatus,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [mainMediaScreenCameraStatus, setMainMediaScreenCameraStatus] =
     useState<string | undefined>("off");
   const [smallMediaScreenCameraStatus, setSmallMediaScreenCameraStatus] =
     useState<string | undefined>("off");
-  const [mainMediaScreenStreamType, setMainMediaScreenStreamType] =
-    useState<number>(2); // 1: RTSP 2:JPEG
-  const [smallMediaScreenStreamType, setSmallMediaScreenStreamType] =
-    useState<number>(2); // 1: RTSP 2:JPEG
+  const [mainMediaScreenStreamType, setMainMediaScreenStreamType] = useState<
+    number | undefined
+  >(); // 1: RTSP 2:JPEG; absent is unknown
+  const [smallMediaScreenStreamType, setSmallMediaScreenStreamType] = useState<
+    number | undefined
+  >();
   const [mainMediaScreenCameraSrc, setMainMediaScreenCameraSrc] =
     useState<string>(defaultTeleCameraSrc.src);
   const [smallMediaScreenCameraSrc, setSmallMediaScreenCameraSrc] =
@@ -501,17 +539,15 @@ export default function DwarfCameras(props: PropType) {
   };
 
   function getWideAngleURL() {
-    if (!connectionCtx.typeIdDwarf || connectionCtx.typeIdDwarf == 1) {
-      return wideAngleURL;
-    } else if (
-      connectionCtx.typeIdDwarf == 2 &&
-      connectionCtx.streamTypeWideDwarf == 2
-    ) {
-      return wideAngleURL;
-    } else {
-      // wideAngleURL_D3
-      return wideAngleURL_D3;
-    }
+    const transport = previewTransport(
+      connectionCtx.typeIdDwarf,
+      connectionCtx.streamTypeWideDwarf,
+    );
+    return transport === "jpeg"
+      ? wideAngleURL
+      : transport === "rtsp"
+        ? wideAngleURL_D3
+        : defaultWideCameraSrc.src;
   }
 
   function getTelePhotoURL() {
@@ -520,33 +556,26 @@ export default function DwarfCameras(props: PropType) {
       connectionCtx.typeIdDwarf,
       connectionCtx.streamTypeTeleDwarf,
     );
-    if (!connectionCtx.typeIdDwarf || connectionCtx.typeIdDwarf == 1) {
-      return telePhotoURL;
-    } else if (
-      connectionCtx.typeIdDwarf == 2 &&
-      connectionCtx.streamTypeTeleDwarf == 2
-    ) {
-      return telePhotoURL;
-    } else {
-      // telePhotoURL_D3
-      return telePhotoURL_D3;
-    }
+    const transport = previewTransport(
+      connectionCtx.typeIdDwarf,
+      connectionCtx.streamTypeTeleDwarf,
+    );
+    return transport === "jpeg"
+      ? telePhotoURL
+      : transport === "rtsp"
+        ? telePhotoURL_D3
+        : defaultTeleCameraSrc.src;
   }
 
   async function turnOnCameraHandler(cameraId: number, connectionCtx) {
+    const abort = previewAbort.current;
     if (connectionCtx.connectionStatusSlave) {
       setErrorTxt("Request control in Fleet before opening a camera preview.");
       return;
     }
     setErrorTxt("");
-    try {
-      if (connectionCtx.typeIdDwarf !== 1)
-        await ensureDevicePreviewPaths(connectionCtx);
-      if (!connectionCtx.socketIPDwarf?.isConnected()) return;
-    } catch (error) {
-      setErrorTxt(error instanceof Error ? error.message : String(error));
+    if (abort.signal.aborted || !connectionCtx.socketIPDwarf?.isConnected())
       return;
-    }
     if (cameraId === telephotoCamera) {
       // Mount the HLS player immediately. DWARF mini can start the RTSP stream
       // without returning a decoded open-camera acknowledgement, and waiting
@@ -554,19 +583,27 @@ export default function DwarfCameras(props: PropType) {
       // handler still rolls this state back when the device reports an error.
       setTelephotoCameraStatus("on");
       setSrcTeleCamera(true);
-      void turnOnTeleCameraFn(
-        connectionCtx,
-        setTelephotoCameraStatus,
-        setSrcTeleCamera,
-      );
     } else {
       setWideangleCameraStatus("on");
       setSrcWideCamera(true);
-      void turnOnWideCameraFn(
+    }
+    try {
+      await openDevicePreview(
         connectionCtx,
-        setWideangleCameraStatus,
-        setSrcWideCamera,
+        [cameraId === telephotoCamera ? 0 : 1],
+        abort.signal,
+        true,
       );
+    } catch (error) {
+      if (abort.signal.aborted) return;
+      if (cameraId === telephotoCamera) {
+        setTelephotoCameraStatus("off");
+        setSrcTeleCamera(false);
+      } else {
+        setWideangleCameraStatus("off");
+        setSrcWideCamera(false);
+      }
+      setErrorTxt(error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -606,8 +643,10 @@ export default function DwarfCameras(props: PropType) {
       (!connectionCtx.typeIdDwarf || connectionCtx.typeIdDwarf === 1)
     ) {
       console.debug("mainScreenStatus : ", mainScreenStatus);
-      setTimeout(() => {
-        checkCameraStatusLater();
+      if (cameraStatusTimer.current) clearTimeout(cameraStatusTimer.current);
+      const abort = previewAbort.current;
+      cameraStatusTimer.current = setTimeout(() => {
+        if (!abort.signal.aborted) void checkCameraStatusLater();
       }, 1000);
     }
   }
@@ -636,17 +675,20 @@ export default function DwarfCameras(props: PropType) {
   }
 
   async function checkCameraStatusLater() {
+    const abort = previewAbort.current;
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
     if (connectionCtx.typeIdDwarf !== 1) {
       try {
-        await ensureDevicePreviewPaths(connectionCtx);
+        await ensureDevicePreviewPaths(connectionCtx, abort.signal);
       } catch (error) {
+        if (abort.signal.aborted) return;
         setErrorTxt(error instanceof Error ? error.message : String(error));
         return;
       }
     }
+    if (abort.signal.aborted) return;
     console.debug("checkCameraStatusLater");
     // Slave Mode turn on Camera
     if (connectionCtx.connectionStatusSlave) {
@@ -658,24 +700,13 @@ export default function DwarfCameras(props: PropType) {
     }
     adjustIframeSize();
 
-    const socket = connectionCtx.socketIPDwarf;
-    if (!socket?.isConnected() || previewSetupInFlight.current) return;
-    previewSetupInFlight.current = true;
-    try {
-      // Enter the current mode's camera; do not silently switch astronomy to Photo.
-      await socket.request("enterCamera", { clientParam: { encodeType: 1 } });
-      await socket.request("telePreviewQuality", { level: 1 });
-      await socket.request("widePreviewQuality", { level: 1 });
-      setTelephotoCameraStatus("on");
-      setWideangleCameraStatus("on");
-      setSrcTeleCamera(true);
-      setSrcWideCamera(true);
-      setErrorTxt("");
-    } catch (error) {
-      setErrorTxt(error instanceof Error ? error.message : String(error));
-    } finally {
-      previewSetupInFlight.current = false;
-    }
+    // A status check can attach an already available feed. Firmware mutations
+    // belong exclusively to the explicit Go live buttons.
+    if (!connectionCtx.socketIPDwarf?.isConnected()) return;
+    setTelephotoCameraStatus("on");
+    setWideangleCameraStatus("on");
+    setSrcTeleCamera(true);
+    setSrcWideCamera(true);
   }
 
   // Function to set the source for the wide-angle camera
@@ -1101,7 +1132,7 @@ export default function DwarfCameras(props: PropType) {
                         turnOnCameraHandler(wideangleCamera, connectionCtx)
                       }
                     >
-                      Show Wideangle
+                      Go live: wide-angle
                     </button>
                     <button
                       className="btn btn-more02"
@@ -1109,7 +1140,7 @@ export default function DwarfCameras(props: PropType) {
                         turnOnCameraHandler(telephotoCamera, connectionCtx)
                       }
                     >
-                      Show telephoto
+                      Go live: telephoto
                     </button>
                   </div>
                 )}
@@ -1122,7 +1153,7 @@ export default function DwarfCameras(props: PropType) {
                         turnOnCameraHandler(wideangleCamera, connectionCtx)
                       }
                     >
-                      Turn on wideangle cam.
+                      Go live: wide-angle
                     </button>
                   </div>
                 )}
@@ -1135,7 +1166,7 @@ export default function DwarfCameras(props: PropType) {
                         turnOnCameraHandler(telephotoCamera, connectionCtx)
                       }
                     >
-                      Turn on telephoto cam.
+                      Go live: telephoto
                     </button>
                   </div>
                 )}

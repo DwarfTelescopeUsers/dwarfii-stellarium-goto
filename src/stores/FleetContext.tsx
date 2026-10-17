@@ -56,13 +56,7 @@ export function useFleetHostGuard() {
   const manager = useContext(FleetContext);
   return (host?: string) => {
     if (!manager || !host) return false;
-    const existing = Object.values(manager.registry.getSnapshot().devices).find(
-      (device) =>
-        device.lastKnownHost === host &&
-        ["connected", "connecting", "reconnecting"].includes(
-          manager.getDevice(device.id).getSnapshot().connection,
-        ),
-    );
+    const existing = manager.getActiveDeviceAtHost(host);
     if (!existing) return false;
     manager.registry.select(existing.id);
     return true;

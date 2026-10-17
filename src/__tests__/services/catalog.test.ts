@@ -64,7 +64,7 @@ test("rejects invalid bounds and leaves original response unchanged", () => {
   normalizeDeviceCameraCatalog(raw, 2);
   expect(JSON.stringify(raw)).toBe(before);
   raw.data.shootingTechSettings[0].generalParams[0].maxValue = 0;
-  expect(() => normalizeDeviceCameraCatalog(raw, 2)).toThrow("bounds");
+  expect(() => normalizeDeviceCameraCatalog(raw, 2)).toThrow("range");
 });
 test("does not import shared camera controls and accepts older catalogs", () => {
   const raw = fixture();
