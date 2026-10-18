@@ -1,4 +1,11 @@
-import { deviceInfo, normalizeCurrentDeviceInfo } from "dwarfii_api";
+import {
+  deviceInfo,
+  normalizeCurrentDeviceInfo,
+  getDefaultParamsConfig,
+  getCurrentProfile,
+  createCurrentTimedSchedule,
+  type CurrentScheduleTransport,
+} from "dwarfii_api";
 import type { ConnectionContextType } from "@/types";
 import { getProxyUrl } from "@/lib/get_proxy_url";
 import { DeviceSchedules } from "./schedules";
@@ -73,6 +80,8 @@ export function createDeviceSchedules(
   );
 }
 
+const submitting = new WeakSet<object>();
+
 export async function queueTimedObservation(
   context: ConnectionContextType,
   recipe: TimedObservationRecipe,
@@ -81,36 +90,131 @@ export async function queueTimedObservation(
   const device = createDeviceSchedules(context);
   if (!device)
     throw new Error("Select and connect a DWARF before queuing a timed job.");
-  // Read native state first. A query timeout is a failure, not an
-  // empty queue or permission to send an unverified schedule write.
-  await device.list();
-  const identity = await device.identity();
-  await loadV3AstroParameterCatalog(device.host, context);
-  const catalog = getV3NormalizedCameraCatalog(2, context);
-  if (!catalog)
-    throw new Error("The device's live astronomy catalogue is unavailable.");
-  const schedule = buildTimedNativeSchedule(
-    recipe,
-    catalog,
-    identity,
-    {
-      latitude: context.latitude as number,
-      longitude: context.longitude as number,
-    },
-    now,
-  );
-  const schedules = await device.sync(
-    {
-      format: "dwarfium-native-schedule-v1",
-      host: device.host,
-      hardwareId: device.hardwareId,
-      schedule,
-    },
-    now,
-  );
-  if (!schedules.some((entry) => entry.scheduleId === schedule.scheduleId))
-    throw new Error(
-      "The device did not confirm the new timed job in its schedule list. Read device schedules before retrying.",
+  const socket = context.socketIPDwarf!;
+  if (submitting.has(socket))
+    throw new Error("A schedule change is already pending.");
+  submitting.add(socket);
+  try {
+    const session = socket.session;
+    const generation = session?.state.generation;
+    const began = Date.now();
+    const clock = () => Math.floor((now + Date.now() - began) / 1000);
+    const check = () => {
+      if (
+        context.deviceOperationSignal?.aborted ||
+        context.IPDwarf !== device.host ||
+        context.socketIPDwarf !== socket ||
+        socket.session !== session ||
+        socket.session?.state.generation !== generation ||
+        !socket.isConnected()
+      )
+        throw new Error(
+          "Device selection or connection changed during schedule preparation.",
+        );
+      if (socket.session?.state.ownership !== "control")
+        throw new Error(
+          "Request control of this DWARF before changing its schedules.",
+        );
+    };
+    check();
+    const identity = await device.identity();
+    await loadV3AstroParameterCatalog(device.host, context);
+    check();
+    const catalog = getV3NormalizedCameraCatalog(2, context);
+    if (!catalog)
+      throw new Error("The device's live astronomy catalogue is unavailable.");
+    const schedule = buildTimedNativeSchedule(
+      recipe,
+      catalog,
+      identity,
+      {
+        latitude: context.latitude as number,
+        longitude: context.longitude as number,
+      },
+      now,
+      (() => {
+        let id = 0;
+        return () => `validation-${++id}`;
+      })(),
     );
-  return { scheduleId: schedule.scheduleId, schedules };
+    const verified = await device.identity();
+    if (
+      verified.macAddress.replace(/[:-]/g, "").toLowerCase() !==
+      identity.macAddress.replace(/[:-]/g, "").toLowerCase()
+    )
+      throw new Error("The address now belongs to a different physical DWARF.");
+    const response = await fetch(
+      `${getProxyUrl(context)}?target=${encodeURIComponent(getDefaultParamsConfig(device.host))}`,
+      {
+        signal: context.deviceOperationSignal
+          ? AbortSignal.any([
+              AbortSignal.timeout(10_000),
+              context.deviceOperationSignal,
+            ])
+          : AbortSignal.timeout(10_000),
+      },
+    );
+    if (!response.ok)
+      throw new Error("Device scheduling capability request failed.");
+    const config = await response.json();
+    check();
+    if (config.code !== 0)
+      throw new Error("Device scheduling capability is unavailable.");
+    const transport: CurrentScheduleTransport = {
+      profile: getCurrentProfile(device.hardwareId),
+      get state() {
+        return { session: socket.session!.state };
+      },
+      async request(operation, values) {
+        check();
+        const packet = await socket.request(operation, values);
+        check();
+        return packet;
+      },
+    };
+    const task = JSON.parse(
+      (schedule.shootingTasks as { params: string }[])[0].params,
+    );
+    // Explicit fresh-ID creation avoids D3's silent empty-list handler. It never
+    // turns a list timeout into an empty queue, replaces a job, or retries writes.
+    const result = await createCurrentTimedSchedule(
+      transport,
+      {
+        ...verified,
+        protocolVersion: {
+          majorVersion: config.data?.majorVersion,
+          minorVersion: config.data?.minorVersion,
+        },
+      },
+      catalog,
+      {
+        name: recipe.name,
+        latitude: context.latitude as number,
+        longitude: context.longitude as number,
+        timezone:
+          context.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        autofocus: recipe.autofocus,
+        planningTimeSeconds: clock(),
+        tasks: [
+          {
+            target: recipe.target,
+            rightAscensionHours: task.ra,
+            declinationDegrees: task.dec,
+            startTimeSeconds: task.startTime,
+            endTimeSeconds: task.endTime,
+            exposureSeconds: recipe.exposureSeconds,
+            gain: recipe.gain,
+            filterIndex: task.filterModeIndex,
+          },
+        ],
+      },
+      clock,
+    );
+    return {
+      scheduleId: result.schedule.scheduleId,
+      schedules: [result.schedule],
+    };
+  } finally {
+    submitting.delete(socket);
+  }
 }

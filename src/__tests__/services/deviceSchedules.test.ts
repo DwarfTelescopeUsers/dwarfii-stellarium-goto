@@ -73,7 +73,7 @@ test("a stale response never becomes the next device's verified schedule list", 
   expect(() => service.export(row.scheduleId)).toThrow("connection changed");
 });
 
-test("cancel requires the loaded device's ID and current ownership, then rereads state", async () => {
+test("cancel verifies its ID without relying on the empty-list handler", async () => {
   const { socket, service } = setup();
   await expect(service.cancel("other-device-id")).rejects.toThrow(
     "does not belong",
@@ -85,14 +85,15 @@ test("cancel requires the loaded device's ID and current ownership, then rereads
   );
   socket.session.state.ownership = "control";
   socket.request.mockResolvedValueOnce(packet({ code: 0 }));
-  await expect(service.cancel(row.scheduleId, "secret")).resolves.toEqual([
-    row,
-  ]);
+  socket.request.mockResolvedValueOnce(packet({ code: -16305 }));
+  await expect(service.cancel(row.scheduleId, "secret")).resolves.toEqual([]);
   expect(socket.request).toHaveBeenNthCalledWith(2, "cancelShootingSchedule", {
     id: row.scheduleId,
     password: "secret",
   });
-  expect(socket.request).toHaveBeenLastCalledWith("getAllShootingSchedule");
+  expect(socket.request).toHaveBeenLastCalledWith("getShootingScheduleById", {
+    id: row.scheduleId,
+  });
 });
 
 test("native submission preserves opaque app task JSON and never replaces device plans", async () => {
@@ -114,6 +115,31 @@ test("native submission preserves opaque app task JSON and never replaces device
     ),
   ).toBe(false);
 });
+
+test.each(["active", "wrong-id", "timeout"])(
+  "cancel remains unverified after %s readback",
+  async (kind) => {
+    const { socket, service } = setup();
+    await service.list();
+    socket.request.mockResolvedValueOnce(packet({ code: 0 }));
+    if (kind === "timeout")
+      socket.request.mockRejectedValueOnce(new Error("Read timed out"));
+    else
+      socket.request.mockResolvedValueOnce(
+        packet({
+          shootingSchedule: {
+            ...row,
+            scheduleId: kind === "wrong-id" ? "another-id" : row.scheduleId,
+            state: kind === "active" ? 1 : 3,
+          },
+        }),
+      );
+    await expect(service.cancel(row.scheduleId)).rejects.toThrow();
+    expect(service.export(row.scheduleId).schedule.scheduleId).toBe(
+      row.scheduleId,
+    );
+  },
+);
 
 test("rejects wrong device, milliseconds and tasks outside the native time window without writes", async () => {
   const { socket, service } = setup();

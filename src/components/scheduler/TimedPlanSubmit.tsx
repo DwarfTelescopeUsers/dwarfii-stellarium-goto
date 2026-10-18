@@ -69,7 +69,8 @@ export default function TimedPlanSubmit({ plan }: { plan: Plan }) {
         , starting {plan.startAt || "at the plan's start time"}. The telescope
         captures during the chosen time window. This does not guarantee the
         plan's {plan.frameCount} frames and continues after this page closes.
-        Choose a window of at least 10 minutes.
+        Choose whole-minute times, a window of at least 10 minutes, and a start
+        within the next 12 hours.
       </p>
       <label>
         Explicit local end time

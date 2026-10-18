@@ -15,8 +15,8 @@ const recipe = {
   target: "M45",
   rightAscension: "3.78",
   declination: "24.1",
-  startAt: "2033-05-18T03:33:20Z",
-  endAt: "2033-05-18T03:43:20Z",
+  startAt: "2033-05-18T03:34:00Z",
+  endAt: "2033-05-18T03:44:00Z",
   exposureSeconds: 60,
   gain: 60,
   filter: "dual-band" as const,
@@ -24,6 +24,7 @@ const recipe = {
   eqMode: false,
   captureDarks: false,
 };
+const now = Date.parse("2033-05-18T02:00:00Z");
 const id = (paramIndex: number) =>
   encodeCurrentParamId({
     shootingMode: 2,
@@ -40,7 +41,7 @@ function setup() {
   });
   const socket = {
     isConnected: () => true,
-    session: { state: { generation: 1, ownership: "control" } },
+    session: { state: { generation: 1, ownership: "control", phase: "ready" } },
     request: jest.fn(
       async (operation: string, values?: Record<string, any>) => {
         if (operation === "syncShootingSchedule")
@@ -49,9 +50,11 @@ function setup() {
           known: true,
           type: 1,
           data:
-            operation === "getAllShootingSchedule"
-              ? { shootingSchedule: schedules }
-              : { code: 0 },
+            operation === "getShootingScheduleById"
+              ? { shootingSchedule: schedules[0] }
+              : operation === "getAllShootingSchedule"
+                ? { shootingSchedule: schedules }
+                : { code: 0 },
         } as any;
       },
     ),
@@ -60,14 +63,17 @@ function setup() {
     IPDwarf: "192.0.2.1",
     typeIdDwarf: 4,
     socketIPDwarf: socket,
+    timezone: "Europe/Berlin",
     latitude: 10,
     longitude: 20,
   } as any;
-  global.fetch = jest.fn(async () => ({
+  global.fetch = jest.fn(async (url) => ({
     ok: true,
     json: async () => ({
       code: 0,
-      data: { deviceId: 4, macAddress: "00:11:22:33:44:55" },
+      data: String(url).includes("getDefaultParamsConfig")
+        ? { majorVersion: 2, minorVersion: 6 }
+        : { deviceId: context.typeIdDwarf, macAddress: "00:11:22:33:44:55" },
     }),
   })) as any;
   jest.mocked(getV3NormalizedCameraCatalog).mockReturnValue({
@@ -101,22 +107,28 @@ beforeEach(() => jest.clearAllMocks());
 
 test("explicit submit verifies native support, physical identity and live choices before writing and confirms the exact new ID", async () => {
   const { socket, context } = setup();
-  const result = await queueTimedObservation(context, recipe, 1000);
-  expect(result.scheduleId).toBe("new-id-1");
+  const result = await queueTimedObservation(context, recipe, now);
+  expect(result.scheduleId).toMatch(/^new-id-1\d+\.Android$/);
   expect(loadV3AstroParameterCatalog).toHaveBeenCalledWith(
     "192.0.2.1",
     context,
   );
-  expect(socket.request).toHaveBeenNthCalledWith(1, "getAllShootingSchedule");
+  expect(socket.request).toHaveBeenNthCalledWith(
+    1,
+    "setTime",
+    expect.objectContaining({ timezoneOffset: 2 }),
+  );
   const write = socket.request.mock.calls.find(
     ([operation]) => operation === "syncShootingSchedule",
   );
   expect(write?.[1]?.shootingSchedule).toMatchObject({
-    scheduleId: "new-id-1",
+    scheduleId: result.scheduleId,
     deviceId: 4,
     macAddress: "00:11:22:33:44:55",
   });
-  expect(socket.request).toHaveBeenLastCalledWith("getAllShootingSchedule");
+  expect(socket.request).toHaveBeenLastCalledWith("getShootingScheduleById", {
+    id: result.scheduleId,
+  });
   expect(
     socket.request.mock.calls.some(
       ([operation]) => operation === "replaceShootingSchedule",
@@ -124,24 +136,20 @@ test("explicit submit verifies native support, physical identity and live choice
   ).toBe(false);
 });
 
-test("a D3 unsupported native-list timeout never becomes a schedule write", async () => {
+test("fresh D3 creation never calls its broken empty-list handler", async () => {
   const { socket, context } = setup();
   context.typeIdDwarf = 2;
-  socket.request.mockRejectedValueOnce(
-    new Error("DWARF request 13:16102 timed out"),
-  );
-  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
-    "timed out",
-  );
-  expect(socket.request).toHaveBeenCalledTimes(1);
-  expect(global.fetch).not.toHaveBeenCalled();
-  expect(loadV3AstroParameterCatalog).not.toHaveBeenCalled();
+  const result = await queueTimedObservation(context, recipe, now);
+  expect(result.schedules[0].deviceId).toBe(2);
+  expect(
+    socket.request.mock.calls.some(([op]) => op === "getAllShootingSchedule"),
+  ).toBe(false);
 });
 
 test("observer or changed discovery identity never writes a timed job", async () => {
   const { socket, context } = setup();
   socket.session.state.ownership = "slave";
-  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
+  await expect(queueTimedObservation(context, recipe, now)).rejects.toThrow(
     "Request control",
   );
   expect(
@@ -157,7 +165,7 @@ test("observer or changed discovery identity never writes a timed job", async ()
       data: { deviceId: 2, macAddress: "00:11:22:33:44:66" },
     }),
   } as any);
-  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
+  await expect(queueTimedObservation(context, recipe, now)).rejects.toThrow(
     "model and physical address",
   );
   expect(
@@ -185,7 +193,7 @@ test("an address reused by a different physical Mini during preparation cannot r
         data: { deviceId: 4, macAddress: "00:11:22:33:44:66" },
       }),
     } as any);
-  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
+  await expect(queueTimedObservation(context, recipe, now)).rejects.toThrow(
     "different physical DWARF",
   );
   expect(
@@ -202,7 +210,7 @@ test("leaving the originating page during verification cannot submit a native ti
   jest.mocked(loadV3AstroParameterCatalog).mockImplementationOnce(async () => {
     abort.abort();
   });
-  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
+  await expect(queueTimedObservation(context, recipe, now)).rejects.toThrow(
     "connection changed",
   );
   expect(

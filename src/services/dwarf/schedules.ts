@@ -1,5 +1,6 @@
 import {
   assertCurrentSuccess,
+  CurrentProtocolError,
   type CurrentCommand,
   type CurrentPacket,
 } from "dwarfii_api";
@@ -155,8 +156,47 @@ export class DeviceSchedules {
     if (![0, 1, 2].includes(schedule.state ?? 0))
       throw new Error("Only pending or running schedules can be cancelled.");
     await this.mutate("cancelShootingSchedule", { id: scheduleId, password });
-    // The cancellation ACK is not a terminal lifecycle state. Query again.
-    return this.list();
+    // D3 never answers getAll when cancelling its last record. Verify this ID
+    // directly after a successful cancellation ACK instead of waiting for it.
+    let packet: CurrentPacket;
+    try {
+      packet = await this.socket.request("getShootingScheduleById", {
+        id: scheduleId,
+      });
+    } catch (error) {
+      if (
+        !(error instanceof CurrentProtocolError) ||
+        error.kind !== "device" ||
+        error.code !== -16305
+      )
+        throw error;
+      packet = {
+        moduleId: 13,
+        cmd: 16103,
+        type: 1,
+        known: true,
+        rawData: new Uint8Array(),
+        data: { code: -16305 },
+      };
+    }
+    this.check(true);
+    if (packet.data.code !== -16305) {
+      assertCurrentSuccess(packet);
+      const saved = packet.data.shootingSchedule;
+      if (
+        !saved ||
+        saved.scheduleId !== scheduleId ||
+        ![3, 4].includes(saved.state)
+      )
+        throw new Error(
+          "The device did not confirm cancellation. Read schedules before retrying.",
+        );
+      this.known.set(scheduleId, saved);
+    } else {
+      this.known.delete(scheduleId);
+    }
+    this.listRevision++;
+    return Array.from(this.known.values());
   }
 
   async sync(value: unknown, now = Date.now()) {
