@@ -49,13 +49,13 @@ async function executeRuntimeCapture(
   const snapshot = await send("getDeviceState", {});
   assertCameraIdle(snapshot.data, settings.cameraId);
   if (profile.model === "dwarfmini") {
-    const mode = await send("switchShootingMode", { mode: 8 });
-    if (mode.data.shootingModeId !== 8)
+    const mode = await send("switchShootingMode", { mode: 2 });
+    if (mode.data.shootingModeId !== 2)
       throw new Error("Mini did not confirm astronomy shooting mode.");
     const camera = await send("enterCamera", {
       clientParam: { encodeType: 1 },
     });
-    if (![2, 8].includes(camera.data.shootingModeId ?? -1))
+    if (camera.data.shootingModeId !== 2)
       throw new Error("Mini did not confirm the astronomy camera.");
     const tech = await send("switchShootingTech", { tech: 2 });
     if (tech.data.shootingTechId !== 2)

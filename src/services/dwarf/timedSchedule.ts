@@ -117,6 +117,8 @@ export function buildTimedNativeSchedule(
     throw new Error(
       "Choose an explicit future start and an end after the start for this timed job.",
     );
+  if (end - start < 600)
+    throw new Error("Native timed tasks must last at least 10 minutes.");
   const ra = coordinate(recipe.rightAscension, true),
     dec = coordinate(recipe.declination, false);
   const exposure = selectCurrentExposure(catalog, 0, recipe.exposureSeconds);
@@ -139,7 +141,8 @@ export function buildTimedNativeSchedule(
     result: 0,
     createdTime: created,
     updatedTime: created,
-    state: 0,
+    // APK ScheduleDetailVM maps local draft (0) to pending-shoot (1) before sync.
+    state: 1,
     lock: 0,
     password: "",
     paramMode: 0,

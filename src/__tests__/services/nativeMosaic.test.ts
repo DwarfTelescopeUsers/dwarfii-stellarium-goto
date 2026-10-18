@@ -74,7 +74,7 @@ function setup() {
         ? { teleCameraStateInfo: { exclusiveState: {} } }
         : {}),
       ...(operation === "switchShootingMode" || operation === "enterCamera"
-        ? { shootingModeId: 8 }
+        ? { shootingModeId: 2 }
         : {}),
       ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
     }),
@@ -99,6 +99,7 @@ test("uses native mosaic count 17 and scale units, and stops only from device st
   const { context, request, notify } = setup();
   const report = jest.fn();
   const run = await startCurrentMosaic(context, settings, report);
+  expect(request).toHaveBeenCalledWith("switchShootingMode", { mode: 2 });
   expect(request).toHaveBeenCalledWith("setIntegerParameter", {
     paramId: id(2, 17),
     value: 10,

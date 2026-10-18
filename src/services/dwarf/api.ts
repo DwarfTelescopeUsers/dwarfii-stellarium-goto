@@ -74,7 +74,7 @@ export function createV3WidePreviewPacket(): Uint8Array {
 }
 
 /** Build the current task-manager shooting-mode request (command 16402). */
-export function createV3ShootingModePacket(mode = 8): Uint8Array {
+export function createV3ShootingModePacket(mode = 2): Uint8Array {
   // dwarfii_api 3.0.0 still calls this schema a mode query. Its field 1 has
   // the same wire representation as the current ReqSwitchShootingMode.mode.
   const messageClass = Dwarfii_Api.V3ReqModeQuery;

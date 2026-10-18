@@ -101,9 +101,12 @@ test("native submission preserves opaque app task JSON and never replaces device
   const value = nativeImport();
   socket.request.mockResolvedValueOnce(packet({ shootingSchedule: [row] }));
   socket.request.mockResolvedValueOnce(packet({ code: 0 }));
+  socket.request.mockResolvedValueOnce(
+    packet({ shootingSchedule: [row, value.schedule] }),
+  );
   await service.sync(value, 1000);
   expect(socket.request).toHaveBeenCalledWith("syncShootingSchedule", {
-    shootingSchedule: value.schedule,
+    shootingSchedule: { ...value.schedule, state: 1 },
   });
   expect(
     socket.request.mock.calls.some(
@@ -133,4 +136,49 @@ test("nonzero device errors and unsupported reads remain errors rather than empt
   await expect(service.list()).rejects.toThrow("timed out");
   socket.request.mockResolvedValueOnce(packet({ code: -1 }));
   await expect(service.list()).rejects.toThrow();
+});
+
+test("a schedule ACK without its exact ID in device readback remains unverified", async () => {
+  const { socket, service } = setup();
+  await service.list();
+  socket.request.mockResolvedValueOnce(packet({ shootingSchedule: [row] }));
+  socket.request.mockResolvedValueOnce(packet({ code: 0 }));
+  await expect(service.sync(nativeImport(), 1000)).rejects.toThrow(
+    "did not confirm",
+  );
+});
+
+test.each(["short", "running"])(
+  "invalid %s native imports never write",
+  async (kind) => {
+    const { socket, service } = setup();
+    const value = nativeImport();
+    if (kind === "short")
+      value.schedule.shootingTasks[0].params = JSON.stringify({
+        startTime: 2000000000,
+        endTime: 2000000599,
+      });
+    else Object.assign(value.schedule, { state: 2 });
+    await expect(service.sync(value, 1000)).rejects.toThrow(
+      kind === "short" ? "10 minutes" : "pending native plans",
+    );
+    expect(socket.request).not.toHaveBeenCalled();
+  },
+);
+
+test("an older overlapping list cannot replace a newer device schedule snapshot", async () => {
+  const { socket, service } = setup();
+  let finishOld!: (value: any) => void;
+  socket.request.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishOld = resolve;
+      }),
+  );
+  const old = service.list();
+  await service.list();
+  finishOld(packet({ shootingSchedule: [{ ...row, scheduleId: "obsolete" }] }));
+  await expect(old).rejects.toThrow("newer schedule read");
+  expect(service.export(row.scheduleId).schedule).toEqual(row);
+  expect(() => service.export("obsolete")).toThrow("Refresh schedules");
 });

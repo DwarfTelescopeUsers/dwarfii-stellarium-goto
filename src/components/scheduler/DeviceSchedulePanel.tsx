@@ -20,6 +20,7 @@ export default function DeviceSchedulePanel() {
       generation,
       context.IPDwarf,
       context.typeIdDwarf,
+      context.deviceOperationSignal,
     ],
   );
   const current = useRef(device);
@@ -104,7 +105,8 @@ export default function DeviceSchedulePanel() {
         Native tasks use start and end times. Their count fields report
         progress; they do not guarantee a requested number of frames. Import
         accepts the native device export format, with version 1 task parameters
-        and future times, for this same device.
+        and future times, for this same device. Each native task must last at
+        least 10 minutes.
       </p>
       <div className="dw-action-row">
         <button

@@ -2,6 +2,7 @@ import {
   configureDwarfProtocol,
   createV3ShootingModePacket,
   createV3OneClickGotoDsoPacket,
+  createV3OneClickGotoSolarPacket,
   createV3SessionPackets,
   getDwarfDeviceProfile,
   WebSocketHandler,
@@ -40,7 +41,7 @@ describe("current DWARF application protocol boundary", () => {
     const socket = new WebSocketHandler("192.0.2.1");
     configureDwarfProtocol(socket, getDwarfDeviceProfile(4));
     expect(decodeCurrentPacket(createV3ShootingModePacket()).data).toEqual({
-      mode: 8,
+      mode: 2,
     });
     const packet = decodeCurrentPacket(
       createV3OneClickGotoDsoPacket(5.588, -5.391, "M42", 10.9, 49.4),
@@ -55,6 +56,13 @@ describe("current DWARF application protocol boundary", () => {
       shootingMode: 2,
     });
     expect(packet.data).not.toHaveProperty("mode");
+    expect(decodeCurrentPacket(createV3ShootingModePacket(8)).data).toEqual({
+      mode: 8,
+    });
+    expect(
+      decodeCurrentPacket(createV3OneClickGotoSolarPacket(0, 10.9, 49.4, "Sun"))
+        .data.shootingMode,
+    ).toBe(8);
   });
 
   test("mutations require a ready protocol session", async () => {

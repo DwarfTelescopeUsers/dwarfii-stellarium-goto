@@ -19,45 +19,58 @@ export function createDeviceSchedules(
     socket = context.socketIPDwarf;
   if (!host || hardwareId === undefined || !socket) return undefined;
   const generation = socket.session?.state.generation;
+  const session = socket.session;
   const sameDevice = () => {
     if (
+      context.deviceOperationSignal?.aborted ||
       context.socketIPDwarf !== socket ||
       context.IPDwarf !== host ||
       socket.session?.state.generation !== generation ||
+      socket.session !== session ||
       !socket.isConnected()
     )
       throw new Error(
         "Device selection or connection changed during schedule preparation.",
       );
   };
-  return new DeviceSchedules(socket, host, hardwareId, async () => {
-    sameDevice();
-    const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 10_000);
-    try {
-      const response = await fetch(
-        `${getProxyUrl(context)}?target=${encodeURIComponent(deviceInfo(host))}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{}",
-          signal: abort.signal,
-        },
-      );
-      if (!response.ok)
-        throw new Error(`Device identity request failed (${response.status}).`);
-      const raw = await response.json();
-      const identity = normalizeCurrentDeviceInfo(raw);
+  return new DeviceSchedules(
+    socket,
+    host,
+    hardwareId,
+    async () => {
       sameDevice();
-      // Never retain the discovery response: it also contains Wi-Fi credentials.
-      return {
-        hardwareId: identity.hardwareId,
-        macAddress: raw.data?.macAddress,
-      };
-    } finally {
-      clearTimeout(timer);
-    }
-  });
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), 10_000);
+      try {
+        const response = await fetch(
+          `${getProxyUrl(context)}?target=${encodeURIComponent(deviceInfo(host))}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+            signal: context.deviceOperationSignal
+              ? AbortSignal.any([abort.signal, context.deviceOperationSignal])
+              : abort.signal,
+          },
+        );
+        if (!response.ok)
+          throw new Error(
+            `Device identity request failed (${response.status}).`,
+          );
+        const raw = await response.json();
+        const identity = normalizeCurrentDeviceInfo(raw);
+        sameDevice();
+        // Never retain the discovery response: it also contains Wi-Fi credentials.
+        return {
+          hardwareId: identity.hardwareId,
+          macAddress: raw.data?.macAddress,
+        };
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+    context.deviceOperationSignal,
+  );
 }
 
 export async function queueTimedObservation(
@@ -68,7 +81,7 @@ export async function queueTimedObservation(
   const device = createDeviceSchedules(context);
   if (!device)
     throw new Error("Select and connect a DWARF before queuing a timed job.");
-  // Discover native support first. A D3 firmware timeout is a failure, not an
+  // Read native state first. A query timeout is a failure, not an
   // empty queue or permission to send an unverified schedule write.
   await device.list();
   const identity = await device.identity();

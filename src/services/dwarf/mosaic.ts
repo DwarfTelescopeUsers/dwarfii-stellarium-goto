@@ -150,13 +150,13 @@ export async function startCurrentMosaic(
         { paramId: count.paramId, value: settings.count },
       ],
     ] as const;
-    const mode = await send("switchShootingMode", { mode: 8 });
-    if (mode.data.shootingModeId !== 8)
+    const mode = await send("switchShootingMode", { mode: 2 });
+    if (mode.data.shootingModeId !== 2)
       throw new Error("The device did not confirm astronomy mode.");
     const camera = await send("enterCamera", {
       clientParam: { encodeType: 1 },
     });
-    if (![2, 8].includes(camera.data.shootingModeId))
+    if (camera.data.shootingModeId !== 2)
       throw new Error("The device did not confirm the astronomy camera.");
     const tech = await send("switchShootingTech", { tech: 2 });
     if (tech.data.shootingTechId !== 2)

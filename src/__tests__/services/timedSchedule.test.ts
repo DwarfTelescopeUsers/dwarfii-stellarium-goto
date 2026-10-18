@@ -69,6 +69,7 @@ test("builds an official version-1 timed job with hours, seconds, and live expos
     startTime: "2000000000",
     endTime: "2000000600",
     scheduleTime: "2000000000",
+    state: 1,
     paramMode: 0,
     paramVersion: 1,
   });
@@ -116,6 +117,7 @@ test.each([
   { declination: "90:00:01" },
   { endAt: "" },
   { endAt: timedRecipe.startAt },
+  { endAt: "2033-05-18T03:43:19Z" },
 ])(
   "rejects unsupported or ambiguous recipe %j before a schedule exists",
   (override) => {

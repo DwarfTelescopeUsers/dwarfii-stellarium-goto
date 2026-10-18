@@ -194,3 +194,20 @@ test("an address reused by a different physical Mini during preparation cannot r
     ),
   ).toBe(false);
 });
+
+test("leaving the originating page during verification cannot submit a native timed job", async () => {
+  const { socket, context } = setup();
+  const abort = new AbortController();
+  context.deviceOperationSignal = abort.signal;
+  jest.mocked(loadV3AstroParameterCatalog).mockImplementationOnce(async () => {
+    abort.abort();
+  });
+  await expect(queueTimedObservation(context, recipe, 1000)).rejects.toThrow(
+    "connection changed",
+  );
+  expect(
+    socket.request.mock.calls.some(
+      ([operation]) => operation === "syncShootingSchedule",
+    ),
+  ).toBe(false);
+});

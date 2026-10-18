@@ -37,12 +37,14 @@ export class DeviceSchedules {
   private listed = false;
   private pending = false;
   private ownedSession: ScheduleSocket["session"];
+  private listRevision = 0;
 
   constructor(
     private socket: ScheduleSocket,
     readonly host: string,
     readonly hardwareId: number,
     private discoverIdentity?: () => Promise<ScheduleDeviceIdentity>,
+    private signal?: AbortSignal,
   ) {
     this.generation = socket.session?.state.generation ?? -1;
     this.ownedSession = socket.session;
@@ -69,6 +71,7 @@ export class DeviceSchedules {
 
   private check(write = false) {
     if (
+      this.signal?.aborted ||
       !this.socket.isConnected() ||
       this.generation < 0 ||
       this.socket.session !== this.ownedSession ||
@@ -85,10 +88,15 @@ export class DeviceSchedules {
 
   async list(): Promise<NativeSchedule[]> {
     this.check();
+    const revision = ++this.listRevision;
     this.listed = false;
     this.known.clear();
     const packet = await this.socket.request("getAllShootingSchedule");
     this.check();
+    if (revision !== this.listRevision)
+      throw new Error(
+        "A newer schedule read replaced this response. Read schedules again.",
+      );
     assertCurrentSuccess(packet);
     const rows = packet.data.shootingSchedule ?? [];
     if (
@@ -163,6 +171,10 @@ export class DeviceSchedules {
         "Import a native schedule exported for this exact DWARF address and model.",
       );
     const schedule = data.schedule;
+    if (schedule?.state !== undefined && ![0, 1].includes(schedule.state))
+      throw new Error(
+        "Only new or pending native plans can be submitted. Reset completed or running plans before importing.",
+      );
     const tasks = schedule?.shootingTasks;
     if (
       !schedule ||
@@ -217,6 +229,8 @@ export class DeviceSchedules {
         throw new Error(
           "Every task must fit inside the schedule's time window.",
         );
+      if (params.endTime - params.startTime < 600)
+        throw new Error("Native timed tasks must last at least 10 minutes.");
     }
     // Never silently overwrite or replace another plan on the device.
     const [, identity] = await Promise.all([this.list(), this.identity()]);
@@ -237,12 +251,18 @@ export class DeviceSchedules {
         "The scheduled start passed while verifying the device. Choose a new future start time.",
       );
     const response = await this.mutate("syncShootingSchedule", {
-      shootingSchedule: schedule,
+      // Draft state is local to the official app. Firmware receives pending-shoot.
+      shootingSchedule: { ...schedule, state: 1 },
     });
     if (response.data.timeConflictScheduleIds?.length)
       throw new Error(
         "The device reported a scheduling conflict. Refresh schedules to verify their state.",
       );
-    return this.list();
+    const confirmed = await this.list();
+    if (!confirmed.some((entry) => entry.scheduleId === schedule.scheduleId))
+      throw new Error(
+        "The device did not confirm the submitted schedule ID. Read device schedules before retrying.",
+      );
+    return confirmed;
   }
 }

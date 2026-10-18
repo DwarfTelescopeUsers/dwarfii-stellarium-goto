@@ -61,6 +61,36 @@ const state = { session: { generation: 1, phase: "ready" as const } };
 const packet = (cmd: number, data: Record<string, unknown>) =>
   ({ cmd, type: 2, known: true, data }) as CurrentPacket;
 
+test("Mini rejects a Sun-mode confirmation when a DSO capture was requested", async () => {
+  const client = {
+    session: { state: { generation: 1 } },
+    subscribe: jest.fn(),
+  } as any;
+  const transport = {
+    request: jest.fn(async (operation: string) =>
+      packet(
+        0,
+        operation === "getDeviceState"
+          ? { teleCameraStateInfo: { exclusiveState: {} } }
+          : { shootingModeId: 8 },
+      ),
+    ),
+  } as any;
+  await expect(
+    executeCurrentCaptureWithRuntime(
+      client,
+      transport,
+      getCurrentProfile(4),
+      catalog,
+      settings,
+      async () => catalog,
+    ),
+  ).rejects.toThrow("shooting mode");
+  expect(
+    transport.request.mock.calls.map(([operation]: [string]) => operation),
+  ).toEqual(["getDeviceState", "switchShootingMode"]);
+});
+
 test("Mini ignores stale frame progress and stops after five new frames", async () => {
   let listener: ((state: any, packet?: CurrentPacket) => void) | undefined;
   const client = {
@@ -87,8 +117,8 @@ test("Mini ignores stale frame progress and stops after five new frames", async 
         ...(operation === "getDeviceState"
           ? { teleCameraStateInfo: { exclusiveState: {} } }
           : {}),
-        ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
-        ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
+        ...(operation === "switchShootingMode" ? { shootingModeId: 2 } : {}),
+        ...(operation === "enterCamera" ? { shootingModeId: 2 } : {}),
         ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
       });
     }),
@@ -103,6 +133,9 @@ test("Mini ignores stale frame progress and stops after five new frames", async 
   );
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(sent).toContain("startTeleCapture");
+  expect(transport.request).toHaveBeenCalledWith("switchShootingMode", {
+    mode: 2,
+  });
   expect(sent).not.toContain("setQuickSet");
   expect(sent).not.toContain("stopTeleCapture");
   listener?.(state, packet(15209, { updateType: 2, totalCount: 30 }));
@@ -134,8 +167,8 @@ test("Mini stop acknowledgement keeps the transaction locked until stopped notif
         ...(operation === "getDeviceState"
           ? { teleCameraStateInfo: { exclusiveState: {} } }
           : {}),
-        ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
-        ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
+        ...(operation === "switchShootingMode" ? { shootingModeId: 2 } : {}),
+        ...(operation === "enterCamera" ? { shootingModeId: 2 } : {}),
         ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
       });
     }),
@@ -192,8 +225,8 @@ test("D3 reapplies requested settings in the device-reported runtime namespace a
         ...(operation === "getDeviceState"
           ? { teleCameraStateInfo: { exclusiveState: {} } }
           : {}),
-        ...(operation === "switchShootingMode" ? { shootingModeId: 8 } : {}),
-        ...(operation === "enterCamera" ? { shootingModeId: 8 } : {}),
+        ...(operation === "switchShootingMode" ? { shootingModeId: 2 } : {}),
+        ...(operation === "enterCamera" ? { shootingModeId: 2 } : {}),
         ...(operation === "switchShootingTech" ? { shootingTechId: 2 } : {}),
         ...(operation === "getQuickSets"
           ? { cameraType: 0, quickSetList: [{ infoId: "0|0|15|100|0|0" }] }
