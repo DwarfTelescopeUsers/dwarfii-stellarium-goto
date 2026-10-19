@@ -26,6 +26,7 @@ export type ConnectionContextType = {
   IPDwarf: string | undefined;
   setIPDwarf: Dispatch<SetStateAction<string | undefined>>;
   socketIPDwarf: any | undefined;
+  sessionPreviewCameras?: readonly { cameraId: 0 | 1; revision: number }[];
   setSocketIPDwarf: Dispatch<SetStateAction<any | undefined>>;
   typeIdDwarf: number | undefined;
   setTypeIdDwarf: Dispatch<SetStateAction<number | undefined>>;

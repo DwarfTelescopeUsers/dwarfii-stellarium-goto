@@ -89,6 +89,52 @@ async function ready(h: ReturnType<typeof harness>, battery: number) {
 }
 
 describe("Fleet controller isolation through real SDK sessions", () => {
+  test("session preview identity follows actual cameras and survives unrelated updates", async () => {
+    const h = harness("preview-camera");
+    const notify = async (cmd: number, state: number, cameraType: number) => {
+      h.sockets[0].emit("message", {
+        data: CurrentDwarfSchema.WsPacket.encode({
+          majorVersion: 1,
+          minorVersion: 20,
+          deviceId: 4,
+          moduleId: 9,
+          cmd,
+          type: 2,
+          data: encodeCurrentMessage("notify.CaptureRawState", {
+            state,
+            cameraType,
+          }),
+        }).finish(),
+      });
+      await flush();
+    };
+    try {
+      await ready(h, 20);
+      await notify(15236, 1, 1);
+      await flush();
+      const wide = h.controller.getSnapshot().capturePreviews![0];
+      expect(wide.cameraId).toBe(1);
+      await notify(15208, 0, 0);
+      expect(h.controller.getSnapshot().capturePreviews).toEqual([wide]);
+      await notify(15236, 1, 1);
+      expect(h.controller.getSnapshot().capturePreviews).toEqual([wide]);
+      await notify(15208, 1, 0);
+      expect(
+        h.controller.getSnapshot().capturePreviews?.map((p) => p.cameraId),
+      ).toEqual([0, 1]);
+      await notify(15236, 0, 1);
+      await notify(15236, 1, 1);
+      expect(
+        h.controller
+          .getSnapshot()
+          .capturePreviews?.find((p) => p.cameraId === 1)?.revision,
+      ).not.toBe(wide.revision);
+      h.controller.disconnect();
+      expect(h.controller.getSnapshot().capturePreviews).toBeUndefined();
+    } finally {
+      h.controller.disconnect();
+    }
+  });
   test("capture and stacking counts stay with their controller and clear offline", async () => {
     const a = harness("progress-a"),
       b = harness("progress-b");

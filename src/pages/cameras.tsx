@@ -8,6 +8,7 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 
 import DwarfCameras from "@/components/DwarfCameras";
 import ImagingMenu from "@/components/imaging/ImagingMenu";
+import SessionPreview from "@/components/imaging/SessionPreview";
 
 export default function AstroPhoto() {
   const { t } = useTranslation();
@@ -115,25 +116,28 @@ export default function AstroPhoto() {
           </p>
         </div>
       </header>
-      {connectionCtx.imagingSession.isRecording && (
-        <p role="status">
-          Capturing: {connectionCtx.imagingSession.imagesTaken ?? 0} frames
-          captured, {connectionCtx.imagingSession.imagesStacked ?? 0} stacked.{" "}
-          <Link href="/image-session">View device session images</Link>. Session
-          images show the latest stack saved by the telescope.
-        </p>
-      )}
       <div className="dw-camera-layout">
-        <section className="dw-camera-stage" aria-label="Live camera preview">
+        <section
+          className="dw-camera-stage"
+          aria-label={
+            connectionCtx.imagingSession.isRecording
+              ? "Live session preview"
+              : "Live camera preview"
+          }
+        >
           <div className="container">
             <div className="row px-0">
               <main className="col">
-                <DwarfCameras
-                  setExchangeCamerasStatus={setExchangeCamerasStatus}
-                  showWideangle={showWideangle}
-                  useRawPreviewURL={useRawPreviewURL}
-                  showControls={true}
-                />
+                {connectionCtx.imagingSession.isRecording ? (
+                  <SessionPreview />
+                ) : (
+                  <DwarfCameras
+                    setExchangeCamerasStatus={setExchangeCamerasStatus}
+                    showWideangle={showWideangle}
+                    useRawPreviewURL={useRawPreviewURL}
+                    showControls={true}
+                  />
+                )}
               </main>
             </div>
           </div>

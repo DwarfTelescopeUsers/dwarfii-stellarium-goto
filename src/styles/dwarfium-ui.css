@@ -739,6 +739,21 @@ textarea {
   margin: 0;
   padding: 0;
 }
+.dw-camera-stage .col {
+  min-width: 0;
+  padding: 0;
+}
+.dw-camera-controls .dropdown-wrapper {
+  position: static;
+  width: 100%;
+  margin: 0 !important;
+  transform: none;
+}
+.dw-camera-controls .dw-imaging-toolbar {
+  position: static;
+  max-width: 100%;
+  transform: none;
+}
 .dw-imaging-toolbar {
   width: 100%;
   min-height: 0;
@@ -4193,36 +4208,6 @@ body.light-theme .dw-statusbar {
   .dw-status-grid,
   .dw-camera-status-grid {
     grid-template-columns: 1fr;
-  }
-  .dw-camera-stage .top-buttons-container {
-    width: 100%;
-    gap: 8px;
-  }
-  .dw-camera-stage .controls-container {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .dw-camera-stage .controls-container .btn-more02,
-  .dw-camera-stage .float-end-buttons .btn-more02 {
-    width: 100%;
-    margin: 0 !important;
-    padding-inline: 8px;
-    font-size: 0.8rem;
-  }
-  .dw-camera-stage .float-end-buttons,
-  .dw-camera-stage .float-end-buttons > div {
-    width: 100%;
-    display: grid;
-    gap: 8px;
-    margin-top: 0;
-  }
-  .dw-camera-stage .float-end-buttons {
-    grid-template-columns: 1fr;
-  }
-  .dw-camera-stage .float-end-buttons > div {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .dw-imaging-toolbar > .nav-item:last-of-type {
     min-width: 84px;

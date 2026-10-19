@@ -80,6 +80,7 @@ function DeviceScope({
     connectionStatusStellarium: shared.connectionStatusStellarium,
     IPDwarf: controller?.getConnectionHost() ?? device?.lastKnownHost,
     socketIPDwarf: socket,
+    sessionPreviewCameras: runtime.capturePreviews,
     typeIdDwarf: profile?.hardwareId ?? 0,
     typeNameDwarf: profile ? getDwarfDeviceName(profile.hardwareId) : "DWARF",
     typeUidDwarf: device?.id ?? "",

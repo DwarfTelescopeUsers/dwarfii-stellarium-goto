@@ -1,3 +1,61 @@
+.cameraShell {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.cameraShell :global(.react-transform-wrapper),
+.cameraShell :global(.react-transform-component) {
+  width: 100%;
+  max-width: 100%;
+}
+
+.cameraShell :global(.camera-container) > img {
+  width: 100%;
+  height: auto;
+}
+
+.previewToolbar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.previewControls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.streamButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.streamControls {
+  min-width: 0;
+}
+
+.previewToolbar button {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 8px 10px;
+  white-space: normal;
+  text-transform: none;
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+@container (max-width: 520px) {
+  .previewControls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .previewStage {
   position: relative;
   width: 100%;

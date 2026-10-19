@@ -7,7 +7,6 @@ import {
   TransformComponent,
   useControls,
 } from "react-zoom-pan-pinch";
-import Link from "next/link";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import {
   getProxyUrl,
@@ -995,7 +994,7 @@ export default function DwarfCameras(props: PropType) {
   const Controls = () => {
     const { resetTransform, zoomIn, zoomOut } = useControls();
     return (
-      <div className="controls-container">
+      <div className={styles.previewControls}>
         <button
           type="button"
           className="btn btn-more02 me-3 top-align"
@@ -1039,74 +1038,19 @@ export default function DwarfCameras(props: PropType) {
 
   if (showControls)
     return (
-      <div>
-        {window.innerWidth > 768 &&
-          wideangleCameraStatus !== "off" &&
-          telephotoCameraStatus !== "off" && (
-            <div className="py-2 clearfix">
-              <span className="text-danger">{errorTxt}&nbsp;</span>
-            </div>
-          )}
-        {window.innerWidth > 768 &&
-          wideangleCameraStatus === "off" &&
-          telephotoCameraStatus === "off" && (
-            <div className="py-2 clearfix">
-              <span className="text-danger">{errorTxt}</span>
-              <div className="float-end">
-                <Link
-                  className="minilink me-4"
-                  target="_blank"
-                  href={getWideAngleURL()}
-                >
-                  {getWideAngleURL()}
-                </Link>
-                <Link
-                  className="minilink"
-                  target="_blank"
-                  href={getTelePhotoURL()}
-                >
-                  {getTelePhotoURL()}
-                </Link>
-              </div>
-            </div>
-          )}
-        {window.innerWidth > 768 &&
-          wideangleCameraStatus === "off" &&
-          telephotoCameraStatus !== "off" && (
-            <div className="py-2 clearfix">
-              <div className="float-end">
-                <Link
-                  className="minilink me-4"
-                  target="_blank"
-                  href={getWideAngleURL()}
-                >
-                  {getWideAngleURL()}
-                </Link>
-              </div>
-            </div>
-          )}
-        {window.innerWidth > 768 &&
-          wideangleCameraStatus !== "off" &&
-          telephotoCameraStatus === "off" && (
-            <div className="py-2 clearfix">
-              <div className="float-end">
-                <Link
-                  className="minilink"
-                  target="_blank"
-                  href={getTelePhotoURL()}
-                >
-                  {getTelePhotoURL()}
-                </Link>
-              </div>
-            </div>
-          )}
+      <div className={styles.cameraShell}>
+        {errorTxt && (
+          <p role="alert" className="text-danger">
+            {errorTxt}
+          </p>
+        )}
         <TransformWrapper>
-          <div className="top-buttons-container">
+          <div className={styles.previewToolbar}>
             <Controls />
-            <div className="float-end-buttons">
+            <div className={styles.streamControls}>
               {wideangleCameraStatus === "off" &&
                 telephotoCameraStatus === "off" && (
-                  <div className="float-end">
+                  <div className={styles.streamButtons}>
                     <button
                       className="btn btn-more02 me-4"
                       onClick={() =>
@@ -1127,7 +1071,7 @@ export default function DwarfCameras(props: PropType) {
                 )}
               {wideangleCameraStatus === "off" &&
                 telephotoCameraStatus !== "off" && (
-                  <div className="float-end">
+                  <div className={styles.streamButtons}>
                     <button
                       className="btn btn-more02 me-4"
                       onClick={() =>
@@ -1140,7 +1084,7 @@ export default function DwarfCameras(props: PropType) {
                 )}
               {wideangleCameraStatus !== "off" &&
                 telephotoCameraStatus === "off" && (
-                  <div className="float-end">
+                  <div className={styles.streamButtons}>
                     <button
                       className="btn btn-more02"
                       onClick={() =>
@@ -1164,7 +1108,7 @@ export default function DwarfCameras(props: PropType) {
     );
   else
     return (
-      <div>
+      <div className={styles.cameraShell}>
         <TransformWrapper>
           <TransformComponent>
             <div className={styles.previewStage}>

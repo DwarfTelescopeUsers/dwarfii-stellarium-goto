@@ -19,6 +19,7 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 import { Agent, fetch, type RequestInit } from "undici";
 import {
   buildBleCommandArguments,
@@ -538,6 +539,8 @@ app.use((req, res, next) => {
 // Proxy route
 app.all("*", async (req, res) => {
   const controller = new AbortController();
+  const disconnect = () => controller.abort();
+  res.once("close", disconnect);
   const timeout = 90000; // 90 seconds timeout
 
   // Set up the timeout manually
@@ -638,9 +641,13 @@ app.all("*", async (req, res) => {
     // Handle multipart streaming (if applicable)
     if (typeof contentType === "string" && contentType.includes("multipart")) {
       if (response.body) {
-        return Readable.from(
-          response.body as unknown as AsyncIterable<Uint8Array>,
-        ).pipe(res);
+        res.status(response.status);
+        res.setHeader("Cache-Control", "no-store");
+        await pipeline(
+          Readable.from(response.body as unknown as AsyncIterable<Uint8Array>),
+          res,
+        );
+        return;
       } else {
         // Handle the case where response.body is null or undefined
         return res
@@ -659,6 +666,7 @@ app.all("*", async (req, res) => {
       res.status(response.status).send(await response.text());
     }
   } catch (error: any) {
+    if (res.destroyed) return;
     if (error.name === "AbortError") {
       return res.status(504).json({
         error: "Error: Proxy request timed out",
@@ -672,6 +680,7 @@ app.all("*", async (req, res) => {
       details: err.message || "An unknown error occurred",
     });
   } finally {
+    res.off("close", disconnect);
     clearTimeout(timeoutSignal);
   }
 });

@@ -24,6 +24,10 @@ import type { FleetRegistration } from "./registry";
 import { createFleetSessionProfile } from "@/services/dwarf/sessionProfile";
 import { WebSocketHandler } from "@/services/dwarf/connection";
 import { reducePreviewTypes } from "@/services/dwarf/previewState";
+import {
+  reduceSessionPreview,
+  type SessionPreviewProgress,
+} from "@/services/dwarf/sessionPreview";
 import { decodeV3TelemetryPacket } from "@/services/dwarf/telemetry";
 import type { DwarfModel } from "@/services/dwarf/deviceProfile";
 import {
@@ -44,6 +48,7 @@ export type FleetRuntime = Readonly<{
   telemetry: Readonly<V3DeviceTelemetry>;
   frames?: number;
   stackedFrames?: number;
+  capturePreviews?: readonly { cameraId: 0 | 1; revision: number }[];
   streamTypeTele?: number;
   streamTypeWide?: number;
   lastSeen?: number;
@@ -86,6 +91,11 @@ export class FleetDeviceController {
   private proxy?: string;
   private host?: string;
   private activity: ActivityEvidence = {};
+  private previewRevision = 0;
+  private previewProgress: [SessionPreviewProgress, SessionPreviewProgress] = [
+    {},
+    {},
+  ];
   private profile?: CurrentProfile;
   private capturePending = false;
   private captureRevision = 0;
@@ -269,6 +279,8 @@ export class FleetDeviceController {
       update.telemetry = Object.freeze({});
       update.frames = undefined;
       update.stackedFrames = undefined;
+      update.capturePreviews = undefined;
+      this.previewProgress = [{}, {}];
       update.streamTypeTele = undefined;
       update.streamTypeWide = undefined;
     }
@@ -300,11 +312,40 @@ export class FleetDeviceController {
           ...this.snapshot.telemetry,
           ...telemetry,
         });
+      const previousActivity = this.activity;
       this.activity = reduceActivity(this.activity, packet);
+      const activeCapture = (value?: number) => value === 1 || value === 2;
+      update.capturePreviews = ([0, 1] as const)
+        .filter((cameraId) =>
+          activeCapture(this.activity[cameraId === 0 ? "tele" : "wide"]),
+        )
+        .map((cameraId) => {
+          const field = cameraId === 0 ? "tele" : "wide";
+          const previous = this.snapshot.capturePreviews?.find(
+            (item) => item.cameraId === cameraId,
+          );
+          return {
+            cameraId,
+            revision:
+              activeCapture(previousActivity[field]) && previous
+                ? previous.revision
+                : ++this.previewRevision,
+          };
+        });
       update.activity = summarizeActivity(this.activity);
-      if (packet.type === 2 && [15209, 15237].includes(packet.cmd)) {
-        update.frames = packet.data.currentCount ?? 0;
-        update.stackedFrames = packet.data.stackedCount ?? 0;
+      if (
+        [2, 3].includes(packet.type) &&
+        [15209, 15237, 15263].includes(packet.cmd)
+      ) {
+        const cameraId = packet.cmd === 15237 ? 1 : 0;
+        const progress = reduceSessionPreview(
+          this.previewProgress[cameraId],
+          packet,
+          cameraId,
+        );
+        this.previewProgress[cameraId] = progress;
+        update.frames = progress.frames;
+        update.stackedFrames = progress.stackedFrames;
       }
     }
     this.publish(update);
@@ -523,6 +564,7 @@ export class FleetDeviceController {
       lastSeen: this.snapshot.lastSeen,
       frames: undefined,
       stackedFrames: undefined,
+      capturePreviews: undefined,
       streamTypeTele: undefined,
       streamTypeWide: undefined,
       error: undefined,
