@@ -407,42 +407,23 @@ export default function DwarfCameras(props: PropType) {
     return () => {};
   }, [connectionCtx.streamTypeTeleDwarf]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Starting from an unknown stream may temporarily leave the placeholder in
+  // the player. Attach from the requested camera's state, not the placeholder's
+  // derived visibility, once firmware reports JPEG/RTSP or its URL changes.
   useEffect(() => {
-    console.debug(
-      "smallMediaScreenStreamType changed: ",
-      smallMediaScreenStreamType,
-    );
-    console.debug("Tele fullScreen: ", connectionCtx.isFullScreenCameraTele);
-
-    // Trigger any additional actions when stream type changes
-    if (connectionCtx.isFullScreenCameraTele) {
-      if (smallMediaScreenCameraStatus == "on") {
-        setSrcWideCamera(true);
-      }
-    } else {
-      if (smallMediaScreenCameraStatus == "on") {
-        setSrcTeleCamera(true);
-      }
-    }
-  }, [smallMediaScreenStreamType]);
-
-  useEffect(() => {
-    console.debug(
-      "mainMediaScreenStreamType changed: ",
-      mainMediaScreenStreamType,
-    );
-    console.debug("Tele fullScreen: ", connectionCtx.isFullScreenCameraTele);
-    if (connectionCtx.isFullScreenCameraTele) {
-      if (mainMediaScreenCameraStatus == "on") {
-        setSrcTeleCamera(true);
-      }
-    } else {
-      if (mainMediaScreenCameraStatus == "on") {
-        setSrcWideCamera(true);
-      }
-    }
-    // Trigger any additional actions when stream type changes
-  }, [mainMediaScreenStreamType]);
+    if (wideangleCameraStatus === "on") setSrcWideCamera(true);
+    if (telephotoCameraStatus === "on") setSrcTeleCamera(true);
+  }, [
+    wideangleCameraStatus,
+    telephotoCameraStatus,
+    connectionCtx.streamTypeWideDwarf,
+    connectionCtx.streamTypeTeleDwarf,
+    connectionCtx.isFullScreenCameraTele,
+    wideAngleURL,
+    wideAngleURL_D3,
+    telePhotoURL,
+    telePhotoURL_D3,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     console.debug("showWideangle changed: ", showWideangle);

@@ -43,6 +43,7 @@ export type FleetRuntime = Readonly<{
   ownership: "unknown" | "control" | "slave";
   telemetry: Readonly<V3DeviceTelemetry>;
   frames?: number;
+  stackedFrames?: number;
   streamTypeTele?: number;
   streamTypeWide?: number;
   lastSeen?: number;
@@ -81,6 +82,7 @@ export class FleetDeviceController {
   private poll?: ReturnType<typeof setInterval>;
   private snapshot = offlineRuntime;
   private listeners = new Set<() => void>();
+  private packetListeners = new Set<(packet: CurrentPacket) => void>();
   private proxy?: string;
   private host?: string;
   private activity: ActivityEvidence = {};
@@ -109,6 +111,12 @@ export class FleetDeviceController {
   ) {}
 
   getSnapshot = () => this.snapshot;
+  subscribePackets(listener: (packet: CurrentPacket) => void) {
+    this.packetListeners.add(listener);
+    return () => {
+      this.packetListeners.delete(listener);
+    };
+  }
   /** Actual transport destination, independent of editable registry metadata. */
   getConnectionHost = () => this.host;
   subscribe = (listener: () => void) => {
@@ -260,6 +268,7 @@ export class FleetDeviceController {
       update.activity = "unknown";
       update.telemetry = Object.freeze({});
       update.frames = undefined;
+      update.stackedFrames = undefined;
       update.streamTypeTele = undefined;
       update.streamTypeWide = undefined;
     }
@@ -293,10 +302,20 @@ export class FleetDeviceController {
         });
       this.activity = reduceActivity(this.activity, packet);
       update.activity = summarizeActivity(this.activity);
-      if (packet.type === 2 && [15209, 15237].includes(packet.cmd))
+      if (packet.type === 2 && [15209, 15237].includes(packet.cmd)) {
         update.frames = packet.data.currentCount ?? 0;
+        update.stackedFrames = packet.data.stackedCount ?? 0;
+      }
     }
     this.publish(update);
+    if (packet?.known)
+      this.packetListeners.forEach((listener) => {
+        try {
+          listener(packet);
+        } catch (error) {
+          console.warn("Device log listener failed", error);
+        }
+      });
   }
 
   /** Commands are bound to this controller, never resolved through UI selection. */
@@ -503,6 +522,7 @@ export class FleetDeviceController {
       ...offlineRuntime,
       lastSeen: this.snapshot.lastSeen,
       frames: undefined,
+      stackedFrames: undefined,
       streamTypeTele: undefined,
       streamTypeWide: undefined,
       error: undefined,

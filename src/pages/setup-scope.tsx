@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import ConnectDwarfSTA from "@/components/setup/ConnectDwarfSTA";
-import ConnectDwarf from "@/components/setup/ConnectDwarf";
+import FleetConnectionSetup from "@/components/setup/FleetConnectionSetup";
 import ConnectStellarium from "@/components/setup/ConnectStellarium";
 import SetLocation from "@/components/setup/SetLocation";
 import RegisterConfiguredDevice from "@/components/fleet/RegisterConfiguredDevice";
@@ -83,7 +83,7 @@ export default function SetupScope() {
           description="Connect using the discovered address or enter an IP address."
           open
         >
-          <ConnectDwarf />
+          <FleetConnectionSetup />
         </SetupSection>
         <SetupSection
           number="04"

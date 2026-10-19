@@ -37,13 +37,15 @@ export async function openDevicePreview(
       const snapshot = await socket!.request("getDeviceState");
       check();
       for (const camera of cameras) assertCameraIdle(snapshot.data, camera);
+    }
+    check();
+    await socket!.request("enterCamera", { clientParam: { encodeType: 1 } });
+    // Cold devices need camera initialization before legacy GoLive commands.
+    if (returnToLive)
       for (const camera of cameras) {
         check();
         await socket!.request(camera === 0 ? "goLiveTele" : "goLiveWide");
       }
-    }
-    check();
-    await socket!.request("enterCamera", { clientParam: { encodeType: 1 } });
     for (const camera of cameras) {
       check();
       await socket!.request(

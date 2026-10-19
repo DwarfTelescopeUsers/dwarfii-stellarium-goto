@@ -60,6 +60,12 @@ function DeviceScope({
   const telemetry = runtime.telemetry;
   const value: ConnectionContextType = {
     ...local,
+    logger: shared.logger,
+    setLogger: shared.setLogger,
+    loggerStatus: shared.loggerStatus,
+    setLoggerStatus: shared.setLoggerStatus,
+    loggerView: shared.loggerView,
+    setLoggerView: shared.setLoggerView,
     deviceOperationSignal: operationScope?.signal,
     latitude: shared.latitude,
     longitude: shared.longitude,
@@ -92,6 +98,7 @@ function DeviceScope({
       ...local.imagingSession,
       isRecording: runtime.activity === "capturing",
       imagesTaken: runtime.frames ?? 0,
+      imagesStacked: runtime.stackedFrames ?? 0,
     },
     deviceError: runtime.error ?? local.deviceError,
   };

@@ -62,6 +62,19 @@ export default function LogMessages() {
     setConfirmDelete(false);
   };
 
+  const exportMessages = () => {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(messages, null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `dwarfium-device-log-${new Date().toISOString().replaceAll(":", "-")}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div className={styles.logs}>
       <div className={styles.intro}>
@@ -85,6 +98,12 @@ export default function LogMessages() {
         </div>
       </div>
 
+      <p>
+        Device messages are stored in this browser or app. Export them below to
+        include with a bug report. Windows desktop service logs are stored at{" "}
+        <code>%LOCALAPPDATA%\com.Dwarfium.build\logs\sidecars.log</code>.
+      </p>
+
       <div className={styles.toolbar}>
         <label className={styles.search}>
           <i className="bi bi-search" aria-hidden="true" />
@@ -100,6 +119,13 @@ export default function LogMessages() {
           />
         </label>
         <div className={styles.actions}>
+          <button
+            className="dw-button is-secondary"
+            disabled={messages.length === 0}
+            onClick={exportMessages}
+          >
+            Export logs
+          </button>
           <button className="dw-button is-secondary" onClick={toggleLogger}>
             {connection.loggerStatus ? "Pause logging" : "Start logging"}
           </button>

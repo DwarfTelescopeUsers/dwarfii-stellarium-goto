@@ -89,6 +89,45 @@ async function ready(h: ReturnType<typeof harness>, battery: number) {
 }
 
 describe("Fleet controller isolation through real SDK sessions", () => {
+  test("capture and stacking counts stay with their controller and clear offline", async () => {
+    const a = harness("progress-a"),
+      b = harness("progress-b");
+    const recorded = jest.fn();
+    const stop = a.controller.subscribePackets(recorded);
+    try {
+      await ready(a, 20);
+      await ready(b, 80);
+      a.sockets[0].emit("message", {
+        data: CurrentDwarfSchema.WsPacket.encode({
+          majorVersion: 1,
+          minorVersion: 20,
+          deviceId: 4,
+          moduleId: 9,
+          cmd: 15209,
+          type: 2,
+          data: encodeCurrentMessage("notify.ProgressCaptureRawLiveStacking", {
+            currentCount: 7,
+            stackedCount: 5,
+          }),
+        }).finish(),
+      });
+      await flush();
+      expect(a.controller.getSnapshot()).toMatchObject({
+        frames: 7,
+        stackedFrames: 5,
+      });
+      expect(b.controller.getSnapshot().stackedFrames).toBeUndefined();
+      expect(recorded).toHaveBeenCalledWith(
+        expect.objectContaining({ cmd: 15209 }),
+      );
+      a.controller.disconnect();
+      expect(a.controller.getSnapshot().stackedFrames).toBeUndefined();
+    } finally {
+      stop();
+      a.controller.disconnect();
+      b.controller.disconnect();
+    }
+  });
   test("reported preview transports belong to their camera and controller and reset offline", async () => {
     const a = harness("a"),
       b = harness("b");

@@ -57,8 +57,8 @@ test("explicit Go live uses idle evidence and refreshes the reported stream afte
   await openDevicePreview(context, [0], abort.signal, true);
   expect(socket.request.mock.calls.map(([command]) => command)).toEqual([
     "getDeviceState",
-    "goLiveTele",
     "enterCamera",
+    "goLiveTele",
     "telePreviewQuality",
     "getDeviceState",
   ]);

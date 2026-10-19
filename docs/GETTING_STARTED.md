@@ -58,6 +58,26 @@ This real Mini connection was **idle** and reported battery and free storage, bu
 
 ## FAQ and troubleshooting
 
+### Where are the Windows desktop logs?
+
+Open **Device → Logs** and enable logging before reproducing a problem. Fleet
+responses appear here with the telescope address and a timestamp. **Export logs**
+saves the most recent 1,000 recorded messages as JSON, including messages from
+background Fleet connections after navigating to another page.
+
+The installed Windows desktop app writes proxy and MediaMTX service output to
+`%LOCALAPPDATA%\com.Dwarfium.build\logs\sidecars.log`. Paste that path into File
+Explorer to open it. A `var` folder in the installation directory is not used by
+this desktop build. Service output and the UI device-message log are separate;
+include both when reporting a desktop connection or playback issue.
+
+### Where can I see capture and stacking progress?
+
+The Camera workspace displays captured and stacked frame counts while a capture
+is running. **Sessions** shows images and counts saved in the telescope's album;
+use **Refresh sessions** to load the latest saved stack. Live camera video and a
+saved stacked image are different views, and a saved image can lag ongoing capture.
+
 ### “Connection failed! DWARF transport closed (code 4409)”
 
 The DWARF closed the WebSocket connection. In this project's DWARF protocol probe, **4409 is treated as `DEVICE_OCCUPIED`**: another controller, often the DWARFLAB phone app, is holding the host connection. This matches the community report where switching the phone's Wi-Fi off resolved the problem. Close the phone app, turn off its **Set Current Device as Host** option, or disconnect that phone from Wi-Fi, then reconnect in Dwarfium. If Dwarfium reaches the telescope in monitoring-only mode, use **Request control**. Also close duplicate Dwarfium windows or other automation connected to the same DWARF. The numeric code comes from the device-side connection; Dwarfium currently displays it without a friendly explanation.

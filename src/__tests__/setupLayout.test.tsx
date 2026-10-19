@@ -1,6 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SetupScope from "@/pages/setup-scope";
+jest.mock("@/components/fleet/FleetWorkspace", () => ({
+  useSelectedFleetDevice: () => ({ runtime: { connection: "disconnected" } }),
+}));
 jest.mock("next/head", () => ({
   __esModule: true,
   default: ({ children }: any) => <>{children}</>,

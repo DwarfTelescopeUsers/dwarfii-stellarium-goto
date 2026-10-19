@@ -117,7 +117,7 @@ fn main() {
             if let Some(log_dir) = log_path.parent() {
                 let _ = create_dir_all(log_dir);
             }
-            let _ = std::fs::write(&log_path, "");
+            write_sidecar_log(&log_path, "--- Dwarfium desktop starting ---");
 
             let mut children = Vec::new();
             if let Some(proxy) = start_sidecar(

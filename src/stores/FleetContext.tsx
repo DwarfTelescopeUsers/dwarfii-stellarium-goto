@@ -3,19 +3,43 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { FleetManager } from "@/services/fleet/manager";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { getProxyUrl } from "@/lib/get_proxy_url";
+import { logger } from "@/lib/logger";
 
 const FleetContext = createContext<FleetManager | undefined>(undefined);
 
 export function FleetProvider({ children }: { children: ReactNode }) {
   const [manager] = useState(() => new FleetManager());
   const connection = useContext(ConnectionContext);
+  const currentConnection = useRef(connection);
+  currentConnection.current = connection;
   const [error, setError] = useState<string>();
+  useEffect(() => {
+    manager.setPacketListener((id, packet) => {
+      const context = currentConnection.current;
+      if (!context.loggerStatus) return;
+      logger(
+        "Fleet device response",
+        {
+          timestamp: new Date().toISOString(),
+          deviceId: id,
+          host: manager.getDevice(id).getConnectionHost(),
+          moduleId: packet.moduleId,
+          cmd: packet.cmd,
+          type: packet.type,
+          data: packet.data,
+        },
+        context,
+      );
+    });
+    return () => manager.setPacketListener(undefined);
+  }, [manager]);
   useEffect(() => {
     try {
       manager.initialize(localStorage, setError, sessionStorage);

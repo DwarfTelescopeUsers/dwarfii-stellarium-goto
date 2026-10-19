@@ -115,6 +115,14 @@ export default function AstroPhoto() {
           </p>
         </div>
       </header>
+      {connectionCtx.imagingSession.isRecording && (
+        <p role="status">
+          Capturing: {connectionCtx.imagingSession.imagesTaken ?? 0} frames
+          captured, {connectionCtx.imagingSession.imagesStacked ?? 0} stacked.{" "}
+          <Link href="/image-session">View device session images</Link>. Session
+          images show the latest stack saved by the telescope.
+        </p>
+      )}
       <div className="dw-camera-layout">
         <section className="dw-camera-stage" aria-label="Live camera preview">
           <div className="container">

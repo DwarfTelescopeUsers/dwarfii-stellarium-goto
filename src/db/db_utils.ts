@@ -460,7 +460,7 @@ export function saveLogMessagesDb(value: { [k: string]: any }): void {
   let data = fetchLogMessagesDb();
   if (data) {
     data.push(value);
-    localStorage.setItem("logMessages", JSON.stringify(data));
+    localStorage.setItem("logMessages", JSON.stringify(data.slice(-1000)));
   } else {
     localStorage.setItem("logMessages", JSON.stringify([value]));
   }

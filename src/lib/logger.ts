@@ -8,7 +8,11 @@ export function logger(
 ) {
   console.log(text, message);
   if (store.loggerStatus) {
-    store.setLogger((prev) => prev?.concat(message));
-    saveLogMessagesDb(message);
+    store.setLogger((prev) => (prev ?? []).concat(message).slice(-1000));
+    try {
+      saveLogMessagesDb(message);
+    } catch (error) {
+      console.warn("Could not persist device log", error);
+    }
   }
 }

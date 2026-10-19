@@ -1,5 +1,6 @@
 import { FleetRegistry } from "./registry";
 import { FleetDeviceController, validFleetHost } from "./controller";
+import type { CurrentPacket } from "dwarfii_api";
 
 export const FLEET_STORAGE_KEY = "dwarfium.fleet.v1";
 export const FLEET_ACTIVE_KEY = "dwarfium.fleet.active.v1";
@@ -11,6 +12,10 @@ export class FleetManager {
   private connectionStorage?: Pick<Storage, "getItem" | "setItem">;
   private desiredConnections = new Set<string>();
   private connectionRevisions = new Map<string, number>();
+  private packetListener?: (id: string, packet: CurrentPacket) => void;
+  setPacketListener(listener?: (id: string, packet: CurrentPacket) => void) {
+    this.packetListener = listener;
+  }
 
   constructor(
     private readonly factory = (id: string) => new FleetDeviceController(id),
@@ -21,6 +26,9 @@ export class FleetManager {
     let controller = this.controllers.get(id);
     if (!controller) {
       controller = this.factory(id);
+      controller.subscribePackets((packet) =>
+        this.packetListener?.(id, packet),
+      );
       this.controllers.set(id, controller);
     }
     return controller;

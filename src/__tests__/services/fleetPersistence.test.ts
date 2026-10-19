@@ -13,6 +13,7 @@ describe("Fleet metadata persistence", () => {
       return {
         id,
         getConnectionHost: () => host,
+        subscribePackets: () => () => {},
         getSnapshot: () => ({ connection }),
         connect: async (registration: { lastKnownHost: string }) => {
           host = registration.lastKnownHost;
@@ -66,6 +67,7 @@ describe("Fleet metadata persistence", () => {
               ready = resolve;
             }),
           setControl,
+          subscribePackets: () => () => {},
           disconnect: jest.fn(),
         }) as any,
     );
@@ -158,6 +160,7 @@ describe("Fleet metadata persistence", () => {
     const factory = (id: string) =>
       ({
         id,
+        subscribePackets: () => () => {},
         connect,
         disconnect,
         getSnapshot: () => ({ connection: "disconnected" }),
@@ -193,6 +196,7 @@ describe("Fleet metadata persistence", () => {
     const factory = (id: string) =>
       ({
         id,
+        subscribePackets: () => () => {},
         connect: async () => {
           calls.push("connect");
         },
