@@ -63,7 +63,7 @@ export default function Home() {
             </p>
           </div>
           <div className="dw-header-actions">
-            <Link className="dw-button is-secondary" href="/weather">
+            <Link className="dw-button is-secondary" href="/forecast">
               <i className="bi bi-cloud-moon" aria-hidden="true" />
               Conditions
             </Link>
@@ -246,7 +246,7 @@ export default function Home() {
               </li>
               <li>
                 <span>Forecast</span>
-                <Link href="/weather">
+                <Link href="/forecast">
                   View conditions{" "}
                   <i className="bi bi-arrow-right" aria-hidden="true" />
                 </Link>

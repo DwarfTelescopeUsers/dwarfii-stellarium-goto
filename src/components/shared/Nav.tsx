@@ -47,9 +47,7 @@ const navigation: NavGroup[] = [
   {
     label: "Conditions",
     items: [
-      { href: "/weather", label: "Weather", icon: "bi-cloud-moon" },
-      { href: "/clouds", label: "Clouds", icon: "bi-clouds" },
-      { href: "/moonphase", label: "Moon", icon: "bi-moon-stars" },
+      { href: "/forecast", label: "Forecast", icon: "bi-cloud-moon" },
       { href: "/astro-calendar", label: "Calendar", icon: "bi-calendar3" },
     ],
   },

@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 //import i18n from "@/i18n";
 import SunCalc from "suncalc";
 import PageHeader from "@/components/shared/PageHeader";
+import { useRouter } from "next/router";
 
 export default function Moonphase() {
+  const router = useRouter();
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, "0");
@@ -25,8 +27,45 @@ export default function Moonphase() {
   const searchId = useRef(0);
 
   useEffect(() => {
+    if (!router.isReady) return;
+    const {
+      latitude: lat,
+      longitude: lon,
+      timezone,
+      location,
+      month,
+    } = router.query;
+    if (
+      typeof lat === "string" &&
+      typeof lon === "string" &&
+      lat.trim() &&
+      lon.trim() &&
+      Number.isFinite(Number(lat)) &&
+      Math.abs(Number(lat)) <= 90 &&
+      Number.isFinite(Number(lon)) &&
+      Math.abs(Number(lon)) <= 180 &&
+      typeof timezone === "string" &&
+      typeof location === "string"
+    ) {
+      try {
+        new Intl.DateTimeFormat("en", { timeZone: timezone }).format();
+        searchId.current++;
+        setLatitude(Number(lat));
+        setLongitude(Number(lon));
+        setTimeZone(timezone);
+        setLocationName(location);
+        setCity(location);
+        setSearching(false);
+        setError("");
+        if (typeof month === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(month))
+          setSelectedMonth(month);
+        return;
+      } catch {
+        /* Invalid links fall back to the saved city. */
+      }
+    }
     if (city) void fetchCoordinates(city);
-  }, []); // Empty dependency array means this runs once on mount
+  }, [router.isReady, router.asPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Resolve city coordinates without requiring a weather API key.
   const fetchCoordinates = async (cityName: string) => {
