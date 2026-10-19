@@ -47,7 +47,7 @@
   },
   "productName": "Dwarfium",
   "mainBinaryName": "Dwarfium",
-  "version": "3.1.9",
+  "version": "3.1.10",
   "identifier": "com.Dwarfium.build",
   "plugins": {
     "updater": {
