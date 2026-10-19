@@ -58,18 +58,27 @@ This real Mini connection was **idle** and reported battery and free storage, bu
 
 ## FAQ and troubleshooting
 
-### Where are the Windows desktop logs?
+### Where are the logs in desktop and standalone?
 
 Open **Device → Logs** and enable logging before reproducing a problem. Fleet
 responses appear here with the telescope address and a timestamp. **Export logs**
 saves the most recent 1,000 recorded messages as JSON, including messages from
 background Fleet connections after navigating to another page.
 
-The installed Windows desktop app writes proxy and MediaMTX service output to
-`%LOCALAPPDATA%\com.Dwarfium.build\logs\sidecars.log`. Paste that path into File
-Explorer to open it. A `var` folder in the installation directory is not used by
-this desktop build. Service output and the UI device-message log are separate;
-include both when reporting a desktop connection or playback issue.
+Both editions record the same proxy and MediaMTX service output, including
+standard output and errors, in `DwarfiumProxy.log` and `mediamtx.log`. Logs append
+across runs rather than replacing the previous run.
+
+- Windows desktop: `%LOCALAPPDATA%\com.Dwarfium.build\logs`. Paste that path into
+  File Explorer. Desktop also keeps the combined `sidecars.log`, which includes
+  service startup and exit diagnostics.
+- Standalone: `var/log` inside the extracted folder. Its separate Python web
+  server also writes `server.log`; the desktop app does not use that server.
+
+The UI device-message log and JSON export use the same frontend code in both
+editions. Service logs are separate from that device-message log; include both
+when reporting a connection or playback issue. The UI retains the latest 1,000
+messages, while service files append their process output independently.
 
 ### Where can I see capture and stacking progress?
 

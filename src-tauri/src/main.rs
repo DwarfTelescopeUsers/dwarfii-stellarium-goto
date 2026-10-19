@@ -2,8 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::{
-    fs::{create_dir_all, OpenOptions},
-    io::Write,
+    fs::create_dir_all,
     net::{SocketAddr, TcpStream},
     path::{Path, PathBuf},
     sync::Mutex,
@@ -11,6 +10,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{Manager, RunEvent};
+mod service_logs;
 use tauri_plugin_shell::{
     process::{Command, CommandChild, CommandEvent},
     Error as ShellError, ShellExt,
@@ -29,13 +29,11 @@ impl SidecarProcesses {
 }
 
 fn write_sidecar_log(log_path: &Path, message: &str) {
-    if let Some(parent) = log_path.parent() {
-        let _ = create_dir_all(parent);
-    }
+    let _ = service_logs::append_log(log_path, message);
+}
 
-    if let Ok(mut log) = OpenOptions::new().create(true).append(true).open(log_path) {
-        let _ = writeln!(log, "{message}");
-    }
+fn write_process_log(log_path: &Path, name: &str, channel: &str, message: &str) {
+    let _ = service_logs::record_process_message(log_path, name, channel, message);
 }
 
 fn proxy_https_is_available() -> bool {
@@ -60,37 +58,49 @@ fn start_sidecar(
     let command = match command {
         Ok(command) => command,
         Err(error) => {
-            write_sidecar_log(log_path, &format!("failed to resolve {name}: {error}"));
+            write_process_log(
+                log_path,
+                name,
+                "error",
+                &format!("failed to resolve: {error}"),
+            );
             return None;
         }
     };
 
     match command.spawn() {
         Ok((mut events, child)) => {
-            write_sidecar_log(
+            write_process_log(
                 log_path,
-                &format!("started {name} with process id {}", child.pid()),
+                name,
+                "lifecycle",
+                &format!("started with process id {}", child.pid()),
             );
 
             let event_log_path = log_path.to_path_buf();
             tauri::async_runtime::spawn(async move {
                 while let Some(event) = events.recv().await {
                     match event {
-                        CommandEvent::Stderr(bytes) => write_sidecar_log(
+                        CommandEvent::Stderr(bytes) => write_process_log(
                             &event_log_path,
-                            &format!("{name} stderr: {}", String::from_utf8_lossy(&bytes).trim()),
+                            name,
+                            "stderr",
+                            &String::from_utf8_lossy(&bytes),
                         ),
-                        CommandEvent::Error(error) => write_sidecar_log(
+                        CommandEvent::Error(error) => {
+                            write_process_log(&event_log_path, name, "error", &error)
+                        }
+                        CommandEvent::Terminated(payload) => write_process_log(
                             &event_log_path,
-                            &format!("{name} process error: {error}"),
+                            name,
+                            "lifecycle",
+                            &format!("exited with code {:?}", payload.code),
                         ),
-                        CommandEvent::Terminated(payload) => write_sidecar_log(
+                        CommandEvent::Stdout(bytes) => write_process_log(
                             &event_log_path,
-                            &format!("{name} exited with code {:?}", payload.code),
-                        ),
-                        CommandEvent::Stdout(bytes) => write_sidecar_log(
-                            &event_log_path,
-                            &format!("{name} stdout: {}", String::from_utf8_lossy(&bytes).trim()),
+                            name,
+                            "stdout",
+                            &String::from_utf8_lossy(&bytes),
                         ),
                         _ => {}
                     }
@@ -100,7 +110,12 @@ fn start_sidecar(
             Some(child)
         }
         Err(error) => {
-            write_sidecar_log(log_path, &format!("failed to start {name}: {error}"));
+            write_process_log(
+                log_path,
+                name,
+                "error",
+                &format!("failed to start: {error}"),
+            );
             None
         }
     }

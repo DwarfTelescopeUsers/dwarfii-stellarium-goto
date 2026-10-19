@@ -100,8 +100,11 @@ export default function LogMessages() {
 
       <p>
         Device messages are stored in this browser or app. Export them below to
-        include with a bug report. Windows desktop service logs are stored at{" "}
-        <code>%LOCALAPPDATA%\com.Dwarfium.build\logs\sidecars.log</code>.
+        include with a bug report. Both editions also save service output in{" "}
+        <code>DwarfiumProxy.log</code> and <code>mediamtx.log</code>. In the
+        Windows desktop app, find them in{" "}
+        <code>%LOCALAPPDATA%\com.Dwarfium.build\logs</code>. In standalone, open{" "}
+        <code>var/log</code> in the extracted folder.
       </p>
 
       <div className={styles.toolbar}>

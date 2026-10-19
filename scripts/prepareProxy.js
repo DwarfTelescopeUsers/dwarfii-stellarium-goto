@@ -106,8 +106,9 @@ console.log("Copying configuration...");
 const launcherScriptWindows = `
 @echo off
 cd /d "%~dp0"
+if not exist var\\log mkdir var\\log
 rem Start DwarfiumProxy minimized
-start "" /Min DwarfiumProxy.exe
+start "" /Min cmd /c "DwarfiumProxy.exe >> var\\log\\DwarfiumProxy.log 2>&1"
 
 rem Check if HTTPS is running by trying to connect to proxy on the HTTPS port
 setlocal enabledelayedexpansion
@@ -124,10 +125,10 @@ rem Check if the response contains "error"
 echo %RESPONSE% | find /i "status" >nul
 if %ERRORLEVEL% equ 0 (
     echo HTTPS detected, using mediamtx-https.yml
-    start "" /Min mediamtx.exe mediamtx-https.yml
+    start "" /Min cmd /c "mediamtx.exe mediamtx-https.yml >> var\\log\\mediamtx.log 2>&1"
 ) else (
     echo HTTPS not detected, using mediamtx.yml
-    start "" /Min mediamtx.exe mediamtx.yml
+    start "" /Min cmd /c "mediamtx.exe mediamtx.yml >> var\\log\\mediamtx.log 2>&1"
 )
 
 echo All tools have been started.
@@ -140,8 +141,11 @@ const launcherScriptLinuxMac = `
 # Ensure script exits on error
 set -e
 
+cd -- "$(dirname "$0")"
+mkdir -p var/log
+
 # Start DwarfiumProxy
-nohup ./DwarfiumProxy > DwarfiumProxy.log 2>&1 &
+nohup ./DwarfiumProxy >> var/log/DwarfiumProxy.log 2>&1 &
 
 if [ ! -f DwarfiumCert.pem ] && [ -f DwarfiumServerCert.pem ] && [ -f DwarfiumServerKey.pem ]; then
     export MTX_HLSSERVERCERT=DwarfiumServerCert.pem
@@ -153,10 +157,10 @@ RESPONSE=$(curl -k --silent --retry 5 --retry-delay 1 --retry-connrefused --max-
 
 if echo "$RESPONSE" | grep -qi "status"; then
     echo "HTTPS detected, using mediamtx-https.yml"
-    nohup ./mediamtx mediamtx-https.yml > mediamtx-https.log 2>&1 &
+    nohup ./mediamtx mediamtx-https.yml >> var/log/mediamtx.log 2>&1 &
 else
     echo "HTTPS not detected, using mediamtx.yml"
-    nohup ./mediamtx mediamtx.yml > mediamtx.log 2>&1 &
+    nohup ./mediamtx mediamtx.yml >> var/log/mediamtx.log 2>&1 &
 fi
 
 echo "All tools have been started."
