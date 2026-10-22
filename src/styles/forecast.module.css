@@ -1,0 +1,316 @@
+.locationPanel {
+  margin-bottom: 24px;
+}
+.search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.search label {
+  flex: 1 1 220px;
+}
+.search label,
+.nightActions label {
+  display: grid;
+  gap: 6px;
+  color: var(--dw-text-muted);
+  font-size: 0.85rem;
+}
+.search input,
+.nightActions select {
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--dw-border);
+  background: var(--dw-surface);
+  color: var(--dw-text);
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.choices p {
+  flex-basis: 100%;
+  margin-bottom: 0;
+}
+.error {
+  color: var(--dw-danger, #f88);
+  margin: 16px 0 0;
+}
+.nightHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.nightHeader h2 {
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+}
+.nightHeader p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.nightActions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.selection {
+  color: var(--dw-text-muted);
+  font-size: 0.9rem;
+}
+.selection strong {
+  color: var(--dw-text);
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.metric {
+  min-width: 0;
+  padding: 18px;
+}
+.metric p {
+  color: var(--dw-text-muted);
+  font-size: 0.82rem;
+  margin: 0 0 12px;
+}
+.metric p i {
+  color: var(--dw-accent);
+  margin-right: 5px;
+}
+.metric > strong {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.metric small {
+  display: block;
+  color: var(--dw-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+.skyGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.cloudPanel,
+.moonPanel,
+.hourlyPanel {
+  min-width: 0;
+}
+.cloudPanel h2,
+.moonPanel h2,
+.hourlyPanel h2 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.cloudPanel > p {
+  font-size: 0.85rem;
+}
+.timeline {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 2px 14px;
+  margin-bottom: 12px;
+}
+.hour {
+  flex: 1 0 38px;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  min-width: 0;
+  padding: 8px 3px;
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+  background: var(--dw-surface-soft);
+  color: var(--dw-text-muted);
+  font-size: 0.7rem;
+}
+.hour.dark {
+  background: var(--dw-bg, #080d16);
+}
+.hour[aria-pressed="true"] {
+  border-color: var(--dw-accent);
+  color: var(--dw-text);
+  box-shadow: inset 0 0 0 1px var(--dw-accent);
+}
+.hour:focus-visible {
+  outline: 2px solid var(--dw-accent);
+  outline-offset: 2px;
+}
+.hour > strong {
+  font-size: 0.65rem;
+}
+.cloudTrack {
+  display: flex;
+  align-items: flex-end;
+  width: 15px;
+  height: 68px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--dw-border);
+}
+.cloudTrack > span {
+  display: block;
+  width: 100%;
+  background: var(--dw-accent);
+  border-radius: 4px;
+}
+.layers {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+.layers > div {
+  display: grid;
+  grid-template-columns: 85px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--dw-text-muted);
+}
+.layers strong {
+  text-align: right;
+  font-weight: 500;
+}
+.layerTrack {
+  height: 6px;
+  background: var(--dw-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.layerTrack > span {
+  display: block;
+  height: 100%;
+  background: var(--dw-accent);
+}
+.hint {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--dw-text-muted);
+  margin: 16px 0 0;
+}
+.moonSummary {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 18px 0;
+}
+.moonSummary img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+.moonSummary p {
+  color: var(--dw-text-muted);
+  font-size: 0.82rem;
+  margin: 6px 0 0;
+}
+.moonPanel > a {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.85rem;
+}
+.events {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.events > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--dw-border);
+  padding-bottom: 10px;
+  font-size: 0.8rem;
+}
+.events dt {
+  font-weight: 400;
+  color: var(--dw-text-muted);
+}
+.events dd {
+  text-align: right;
+  margin: 0;
+}
+.tableScroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.tableScroll:focus-visible {
+  outline: 2px solid var(--dw-accent);
+}
+.tableScroll table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.tableScroll th,
+.tableScroll td {
+  padding: 12px 14px;
+  text-align: right;
+  border-bottom: 1px solid var(--dw-border);
+}
+.tableScroll thead th {
+  color: var(--dw-text-muted);
+  font-weight: 500;
+}
+.tableScroll th:first-child {
+  text-align: left;
+}
+.selectedRow {
+  background: var(--dw-surface-soft);
+}
+.source {
+  color: var(--dw-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+@media (max-width: 1100px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .skyGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .metrics {
+    gap: 10px;
+  }
+  .metric {
+    padding: 12px;
+  }
+  .metric > strong {
+    font-size: 1.4rem;
+  }
+  .search > button {
+    width: 100%;
+  }
+  .nightActions {
+    width: 100%;
+  }
+  .nightActions label {
+    flex: 1;
+  }
+  .moonSummary {
+    gap: 10px;
+  }
+}

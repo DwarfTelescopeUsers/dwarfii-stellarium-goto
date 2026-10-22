@@ -1,147 +1,1122 @@
 /*  eslint-disable @next/next/no-img-element */
 
-import { useState, useContext, useEffect } from "react";
-import Link from "next/link";
-
+import { useState, useContext, useEffect, useRef } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import {
-  wsURL,
-  telephotoCamera,
-  telephotoURL,
-  wideangleCamera,
-  wideangleURL,
-  socketSend,
-  cameraWorkingState,
-  statusWorkingStateTelephotoCmd,
-  DwarfIP,
-} from "dwarfii_api";
-import styles from "@/components/DwarfCameras.module.css";
+  TransformWrapper,
+  TransformComponent,
+  useControls,
+} from "react-zoom-pan-pinch";
 import { ConnectionContext } from "@/stores/ConnectionContext";
+import {
+  getProxyUrl,
+  getMediaMTXUrl,
+  getTransfomProxyImageUrl,
+} from "@/lib/get_proxy_url";
+import {
+  Dwarfii_Api,
+  DwarfIP,
+  wideangleURL,
+  telephotoURL,
+} from "@/services/dwarf";
+
+import Image from "next/image";
+import { StaticImageData } from "next/image";
+import imgTeleCameraSrc from "../../public/images/dwarflab_camera.png";
+import imgWideCameraSrc from "../../public/images/dwarfII.png";
+import { get_error } from "@/lib/dwarf_utils";
+import styles from "@/components/DwarfCameras.module.css";
+import {
+  devicePreviewPath,
+  ensureDevicePreviewPaths,
+} from "@/services/dwarf/previewPaths";
+import { openDevicePreview } from "@/services/dwarf/previewSession";
+import { previewTransport } from "@/services/dwarf/previewState";
 import { logger } from "@/lib/logger";
-import { turnOnCameraFn } from "@/lib/dwarf_utils";
+import { telephotoCamera, wideangleCamera } from "@/lib/dwarf_utils";
 
 type PropType = {
+  setExchangeCamerasStatus: Dispatch<SetStateAction<boolean>>;
   showWideangle: boolean;
+  useRawPreviewURL: boolean;
+  showControls: boolean;
 };
 
 export default function DwarfCameras(props: PropType) {
-  const { showWideangle } = props;
+  const {
+    setExchangeCamerasStatus,
+    showWideangle,
+    useRawPreviewURL,
+    showControls,
+  } = props;
   let connectionCtx = useContext(ConnectionContext);
-
+  const previewAbort = useRef(new AbortController());
+  const cameraStatusTimer = useRef<ReturnType<typeof setTimeout>>();
+  const previewGeneration =
+    connectionCtx.socketIPDwarf?.session?.state.generation;
   useEffect(() => {
-    // NOTE: checkCameraStatus only works with telephotoCamera
-    checkCameraStatus(telephotoCamera);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const abort = new AbortController();
+    previewAbort.current = abort;
+    return () => {
+      abort.abort();
+      if (cameraStatusTimer.current) clearTimeout(cameraStatusTimer.current);
+    };
+  }, [connectionCtx.socketIPDwarf, connectionCtx.IPDwarf, previewGeneration]);
 
+  let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
+
+  const proxyUrl = getProxyUrl(connectionCtx);
+  const wideUrl = wideangleURL(IPDwarf);
+  const transformedWideUrl = getTransfomProxyImageUrl(
+    wideUrl,
+    proxyUrl,
+    connectionCtx,
+    false,
+  );
+  const wideUrl_D3 = `http://${getMediaMTXUrl(connectionCtx)}:8888/${devicePreviewPath(IPDwarf, "wide")}`;
+  const transformedWideUrl_D3 = getTransfomProxyImageUrl(
+    wideUrl_D3,
+    proxyUrl,
+    connectionCtx,
+    true,
+  );
+  const teleUrl = telephotoURL(IPDwarf);
+  const transformedTeleUrl = getTransfomProxyImageUrl(
+    teleUrl,
+    proxyUrl,
+    connectionCtx,
+    false,
+  );
+
+  const teleUrl_D3 = `http://${getMediaMTXUrl(connectionCtx)}:8888/${devicePreviewPath(IPDwarf, "tele")}`;
+  const transformedTeleUrl_D3 = getTransfomProxyImageUrl(
+    teleUrl_D3,
+    proxyUrl,
+    connectionCtx,
+    true,
+  );
+  const [wideAngleURL, setWideAngleURL] = useState(transformedWideUrl);
+  const [telePhotoURL, setTelePhotoURL] = useState(transformedTeleUrl);
+
+  //  const wideAngleURL_D3 = "http://localhost:8083/static/wide_angle_stream.html";
+  //  const telePhotoURL_D3 = "http://localhost:8083/static/tele_stream.html";
+  const [wideAngleURL_D3, setWideAngleURL_D3] = useState(transformedWideUrl_D3);
+  const [telePhotoURL_D3, setTelePhotoURL_D3] = useState(transformedTeleUrl_D3);
+
+  const defaultTeleCameraSrc: StaticImageData = imgTeleCameraSrc;
+  const defaultWideCameraSrc: StaticImageData = imgWideCameraSrc;
+  const [errorTxt, setErrorTxt] = useState("");
   const [telephotoCameraStatus, setTelephotoCameraStatus] = useState<
     string | undefined
   >("off");
   const [wideangleCameraStatus, setWideangleCameraStatus] = useState<
     string | undefined
   >("off");
+  useEffect(() => {
+    const needed =
+      (telephotoCameraStatus === "on" &&
+        previewTransport(
+          connectionCtx.typeIdDwarf,
+          connectionCtx.streamTypeTeleDwarf,
+        ) === "rtsp") ||
+      (wideangleCameraStatus === "on" &&
+        previewTransport(
+          connectionCtx.typeIdDwarf,
+          connectionCtx.streamTypeWideDwarf,
+        ) === "rtsp");
+    if (!needed) return;
+    const abort = previewAbort.current;
+    void ensureDevicePreviewPaths(connectionCtx, abort.signal).catch(
+      (error) => {
+        if (!abort.signal.aborted)
+          setErrorTxt(error instanceof Error ? error.message : String(error));
+      },
+    );
+  }, [
+    connectionCtx.socketIPDwarf,
+    connectionCtx.IPDwarf,
+    previewGeneration,
+    connectionCtx.typeIdDwarf,
+    connectionCtx.streamTypeTeleDwarf,
+    connectionCtx.streamTypeWideDwarf,
+    telephotoCameraStatus,
+    wideangleCameraStatus,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
+  const [mainMediaScreenCameraStatus, setMainMediaScreenCameraStatus] =
+    useState<string | undefined>("off");
+  const [smallMediaScreenCameraStatus, setSmallMediaScreenCameraStatus] =
+    useState<string | undefined>("off");
+  const [mainMediaScreenStreamType, setMainMediaScreenStreamType] = useState<
+    number | undefined
+  >(); // 1: RTSP 2:JPEG; absent is unknown
+  const [smallMediaScreenStreamType, setSmallMediaScreenStreamType] = useState<
+    number | undefined
+  >();
+  const [mainMediaScreenCameraSrc, setMainMediaScreenCameraSrc] =
+    useState<string>(defaultTeleCameraSrc.src);
+  const [smallMediaScreenCameraSrc, setSmallMediaScreenCameraSrc] =
+    useState<string>(defaultWideCameraSrc.src);
+  const [mainMediaScreenCamera, setMainMediaScreenCamera] = useState<number>(0);
+  const [smallMediaScreenCamera, setSmallMediaScreenCamera] =
+    useState<number>(1);
+  const [mainMediaScreenCameraName, setMainMediaScreenCameraName] =
+    useState<string>("telephoto");
+  const [smallMediaScreenCameraName, setSmallMediaScreenCameraName] =
+    useState<string>("wide-angle");
+  const initFullScreenRcv = useRef<boolean>(
+    connectionCtx.isFullScreenCameraTele,
+  );
 
-  function turnOnCameraHandler(cameraId: number) {
-    if (cameraId === telephotoCamera) {
-      turnOnCameraFn(telephotoCamera, connectionCtx);
-      setTelephotoCameraStatus("on");
+  const [buttonSwap, setButtonSwap] = useState("Swap");
+  const [buttonReset, setButtonReset] = useState("Reset");
+
+  const doneIframeRefTele = useRef<number>(0);
+  const doneIframeRefWide = useRef<number>(0);
+  const iframeRefTele = useRef<HTMLIFrameElement | null>(null);
+  const iframeRefWide = useRef<HTMLIFrameElement | null>(null);
+
+  const doneIImgRefTele = useRef<number>(0);
+  const doneIImgRefWide = useRef<number>(0);
+  const iImgRefTele = useRef<HTMLImageElement | null>(null);
+  const iImgRefWide = useRef<HTMLImageElement | null>(null);
+
+  const [dimensionsTele, setDimensionsTele] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [dimensionsWide, setDimensionsWide] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  console.debug("Default Wide SRC : ", defaultWideCameraSrc.src);
+  console.debug("Default Tele SRC : ", defaultTeleCameraSrc.src);
+  console.debug("Init useRawPreviewURL : ", useRawPreviewURL);
+
+  let lastRenderTime = useRef(Date.now());
+
+  useEffect(() => {
+    console.debug("Start Of Effect DwarfCameras");
+    console.debug("Init Wide SRC : ", smallMediaScreenCameraSrc);
+    console.debug("Init Tele SRC : ", mainMediaScreenCameraSrc);
+    console.debug(
+      "Init is Tele Fullscreen : ",
+      connectionCtx.isFullScreenCameraTele,
+    );
+    initFullScreenRcv.current = connectionCtx.isFullScreenCameraTele;
+    console.debug("initFullScreenRcv : ", initFullScreenRcv.current);
+    setExchangeCamerasStatus(!connectionCtx.isFullScreenCameraTele);
+    checkCameraStatus();
+    return () => {
+      console.debug("Reset Effect DwarfCameras");
+      setWideangleCameraStatus("off");
+      setTelephotoCameraStatus("off");
+      setSmallMediaScreenCameraStatus("off");
+      setMainMediaScreenCameraStatus("off");
+      if (doneIframeRefTele.current) {
+        console.debug("iframeRefTele reset");
+        iframeRefTele.current = null;
+      }
+      if (doneIImgRefTele.current) {
+        console.debug("iImgRefTele reset");
+        iImgRefTele.current = null;
+      }
+      if (doneIframeRefWide.current) {
+        console.debug("iframeRefWide reset");
+        iframeRefWide.current = null;
+      }
+      if (doneIImgRefWide.current) {
+        console.debug("iImgRefWide reset");
+        iImgRefWide.current = null;
+      }
+      console.info(
+        `Device type read: ${connectionCtx.typeIdDwarf} - ${connectionCtx.typeNameDwarf}`,
+      );
+      console.debug("End Of Effect DwarfCameras");
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const updateButtonText = () => {
+      checkCameraStatus();
+      if (window.innerWidth > 768) {
+        setButtonSwap("Switch Cameras");
+        setButtonReset("Reset View");
+      } else {
+        setButtonSwap("Swap");
+        setButtonReset("Reset");
+      }
+    };
+
+    console.debug("Change setWideAngleURL and  setTelePhotoURL");
+    const proxyUrl = getProxyUrl(connectionCtx);
+    let IPDwarf = connectionCtx.IPDwarf || DwarfIP;
+
+    const wideUrl = wideangleURL(IPDwarf);
+    const transformedWideUrl = getTransfomProxyImageUrl(
+      wideUrl,
+      proxyUrl,
+      connectionCtx,
+      false,
+    );
+    console.debug("Change setWideAngleURL : ", transformedWideUrl);
+    setWideAngleURL(transformedWideUrl);
+
+    const wideUrl_D3 = `http://${getMediaMTXUrl(
+      connectionCtx,
+    )}:8888/${devicePreviewPath(IPDwarf, "wide")}`;
+    const transformedWideUrl_D3 = getTransfomProxyImageUrl(
+      wideUrl_D3,
+      proxyUrl,
+      connectionCtx,
+      true,
+    );
+    console.debug("Change setWideAngleURL_D3 : ", transformedWideUrl_D3);
+    setWideAngleURL_D3(transformedWideUrl_D3);
+
+    const teleUrl = telephotoURL(IPDwarf);
+    const transformedTeleUrl = getTransfomProxyImageUrl(
+      teleUrl,
+      proxyUrl,
+      connectionCtx,
+      false,
+    );
+    console.debug("Change setTelePhotoURL : ", transformedTeleUrl);
+    setTelePhotoURL(transformedTeleUrl);
+
+    const teleUrl_D3 = `http://${getMediaMTXUrl(
+      connectionCtx,
+    )}:8888/${devicePreviewPath(IPDwarf, "tele")}`;
+    const transformedTeleUrl_D3 = getTransfomProxyImageUrl(
+      teleUrl_D3,
+      proxyUrl,
+      connectionCtx,
+      true,
+    );
+    console.debug("Change setTelePhotoURL_D3 : ", transformedTeleUrl_D3);
+    setTelePhotoURL_D3(transformedTeleUrl_D3);
+
+    updateButtonText(); // Set initial value
+    window.addEventListener("resize", updateButtonText);
+
+    return () => window.removeEventListener("resize", updateButtonText);
+  }, [
+    connectionCtx,
+    wideangleCameraStatus,
+    telephotoCameraStatus,
+    connectionCtx.useHttps,
+    connectionCtx.proxyIP,
+    connectionCtx.proxyLocalIP,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.debug("Change wideangleCamera Status: ", wideangleCameraStatus);
+    console.debug("Change smallCamera Status: ", smallMediaScreenCameraStatus);
+    console.debug("Change mainCamera Status: ", mainMediaScreenCameraStatus);
+    console.debug("Change smallCamera SRC: ", smallMediaScreenCameraSrc);
+    console.debug("Tele fullScreen: ", connectionCtx.isFullScreenCameraTele);
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (smallMediaScreenCameraStatus != wideangleCameraStatus) {
+        setSmallMediaScreenCameraStatus(wideangleCameraStatus);
+        console.debug("Update smallCamera Status");
+        if (wideangleCameraStatus == "on") {
+          adjustIframeSizeWide();
+          console.debug("Update smallCamera Status: on");
+        }
+      }
     } else {
-      turnOnCameraFn(wideangleCamera, connectionCtx);
+      if (mainMediaScreenCameraStatus != wideangleCameraStatus) {
+        setMainMediaScreenCameraStatus(wideangleCameraStatus);
+        console.debug("Update mainCamera Status");
+        if (wideangleCameraStatus == "on") {
+          adjustIframeSize();
+          console.debug("Update mainCamera Status: on");
+        }
+      }
+    }
+    return () => {};
+  }, [wideangleCameraStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.debug("Change telephotoCamera Status: ", telephotoCameraStatus);
+    console.debug("Change mainCamera Status: ", mainMediaScreenCameraStatus);
+    console.debug("Change smallCamera Status: ", smallMediaScreenCameraStatus);
+    console.debug("Change mainCamera SRC: ", mainMediaScreenCameraSrc);
+    console.debug("Tele fullScreen: ", connectionCtx.isFullScreenCameraTele);
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (mainMediaScreenCameraStatus != telephotoCameraStatus) {
+        setMainMediaScreenCameraStatus(telephotoCameraStatus);
+        console.debug("Update mainCamera Status");
+        if (telephotoCameraStatus == "on") {
+          adjustIframeSize();
+          console.debug("Update mainCamera Status: on");
+        }
+      }
+    } else {
+      if (smallMediaScreenCameraStatus != telephotoCameraStatus) {
+        setSmallMediaScreenCameraStatus(telephotoCameraStatus);
+        console.debug("Update smallCamera Status");
+        if (telephotoCameraStatus == "on") {
+          adjustIframeSizeWide();
+          console.debug("Update smallCamera Status: on");
+        }
+      }
+    }
+    return () => {};
+  }, [telephotoCameraStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.debug(
+      "Change StreamTypeWideDwarf: ",
+      connectionCtx.streamTypeWideDwarf,
+    );
+
+    console.debug(
+      " API Cam 2 Tele fullScreen: ",
+      connectionCtx.isFullScreenCameraTele,
+    );
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (connectionCtx.streamTypeWideDwarf != smallMediaScreenStreamType)
+        setSmallMediaScreenStreamType(connectionCtx.streamTypeWideDwarf!);
+    } else {
+      if (connectionCtx.streamTypeWideDwarf != mainMediaScreenStreamType)
+        setMainMediaScreenStreamType(connectionCtx.streamTypeWideDwarf!);
+    }
+    return () => {};
+  }, [connectionCtx.streamTypeWideDwarf]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.debug(
+      "Change StreamTypeTeleDwarf: ",
+      connectionCtx.streamTypeTeleDwarf,
+    );
+
+    console.debug(
+      " API Cam 1 Tele fullScreen: ",
+      connectionCtx.isFullScreenCameraTele,
+    );
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (connectionCtx.streamTypeTeleDwarf != mainMediaScreenStreamType)
+        setMainMediaScreenStreamType(connectionCtx.streamTypeTeleDwarf!);
+    } else {
+      if (connectionCtx.streamTypeTeleDwarf != smallMediaScreenStreamType)
+        setSmallMediaScreenStreamType(connectionCtx.streamTypeTeleDwarf!);
+    }
+    return () => {};
+  }, [connectionCtx.streamTypeTeleDwarf]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Starting from an unknown stream may temporarily leave the placeholder in
+  // the player. Attach from the requested camera's state, not the placeholder's
+  // derived visibility, once firmware reports JPEG/RTSP or its URL changes.
+  useEffect(() => {
+    if (wideangleCameraStatus === "on") setSrcWideCamera(true);
+    if (telephotoCameraStatus === "on") setSrcTeleCamera(true);
+  }, [
+    wideangleCameraStatus,
+    telephotoCameraStatus,
+    connectionCtx.streamTypeWideDwarf,
+    connectionCtx.streamTypeTeleDwarf,
+    connectionCtx.isFullScreenCameraTele,
+    wideAngleURL,
+    wideAngleURL_D3,
+    telePhotoURL,
+    telePhotoURL_D3,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.debug("showWideangle changed: ", showWideangle);
+    if (showWideangle) adjustIframeSizeWide();
+  }, [showWideangle]);
+
+  useEffect(() => {
+    //  verify if exchange has been launched
+    if (initFullScreenRcv.current != connectionCtx.isFullScreenCameraTele) {
+      // with this all data will be updated after exchange
+
+      console.debug(
+        "exchange Effect IsFullScreen:",
+        connectionCtx.isFullScreenCameraTele,
+      );
+      setSrcTeleCamera(true);
+      setSrcWideCamera(true);
+
       setWideangleCameraStatus("on");
+      setTelephotoCameraStatus("on");
+      setExchangeCamerasStatus((prev) => !prev);
+      initFullScreenRcv.current = connectionCtx.isFullScreenCameraTele;
+    }
+  }, [connectionCtx.isFullScreenCameraTele]);
+
+  // Function to adjust iframe size to match the image
+  const adjustIframeSize = () => {
+    console.debug("iframeRefTele current :", iframeRefTele);
+    console.debug("iImgRefTele current :", iImgRefTele);
+    console.debug("dimensionsTele :", dimensionsTele);
+    if (
+      iframeRefTele.current != null &&
+      dimensionsTele != null &&
+      dimensionsTele.width != 0 &&
+      dimensionsTele.height != 0
+    ) {
+      doneIframeRefTele.current = 1;
+      iframeRefTele.current.style.width = `${dimensionsTele.width}px`;
+      iframeRefTele.current.style.height = `${dimensionsTele.height}px`;
+      iframeRefTele.current.style.display = `block`;
+      console.debug(
+        ` set Iframe dimensions ${dimensionsTele.width}px set imgHeight ${dimensionsTele.height}px`,
+      );
+    }
+    if (
+      iImgRefTele.current != null &&
+      dimensionsTele != null &&
+      dimensionsTele.width != 0 &&
+      dimensionsTele.height != 0
+    ) {
+      doneIImgRefTele.current = 1;
+      iImgRefTele.current.style.width = `${dimensionsTele.width}px`;
+      iImgRefTele.current.style.height = `${dimensionsTele.height}px`;
+      iImgRefTele.current.style.display = `block`;
+      console.debug(
+        ` set IImg dimensions ${dimensionsTele.width}px set imgHeight ${dimensionsTele.height}px`,
+      );
+    }
+    console.debug("End Of adjustIframeSize");
+  };
+  const adjustIframeSizeWide = () => {
+    console.debug("iframeRefWide current :", iframeRefWide);
+    console.debug("iImgRefWide current :", iImgRefTele);
+    console.debug("dimensionsWide :", dimensionsWide);
+    if (
+      iframeRefWide.current != null &&
+      dimensionsWide != null &&
+      dimensionsWide.width != 0 &&
+      dimensionsWide.height != 0
+    ) {
+      doneIframeRefWide.current = 1;
+      iframeRefWide.current.style.width = `${dimensionsWide.width}px`;
+      iframeRefWide.current.style.height = `${dimensionsWide.height}px`;
+      iframeRefWide.current.style.display = `block`;
+      console.debug(
+        ` set Iframe dimensions ${dimensionsWide.width}px set imgHeight ${dimensionsWide.height}px`,
+      );
+    }
+    if (
+      iImgRefWide.current != null &&
+      dimensionsWide != null &&
+      dimensionsWide.width != 0 &&
+      dimensionsWide.height != 0
+    ) {
+      doneIImgRefWide.current = 1;
+      iImgRefWide.current.style.width = `${dimensionsWide.width}px`;
+      iImgRefWide.current.style.height = `${dimensionsWide.height}px`;
+      iImgRefWide.current.style.display = `block`;
+      console.debug(
+        ` set IImg dimensions ${dimensionsWide.width}px set imgHeight ${dimensionsWide.height}px`,
+      );
+    }
+    console.debug("End Of adjustIframeSizeWide");
+  };
+
+  function getWideAngleURL() {
+    const transport = previewTransport(
+      connectionCtx.typeIdDwarf,
+      connectionCtx.streamTypeWideDwarf,
+    );
+    return transport === "jpeg"
+      ? wideAngleURL
+      : transport === "rtsp"
+        ? wideAngleURL_D3
+        : defaultWideCameraSrc.src;
+  }
+
+  function getTelePhotoURL() {
+    console.debug(
+      "getTelePhotoURL :",
+      connectionCtx.typeIdDwarf,
+      connectionCtx.streamTypeTeleDwarf,
+    );
+    const transport = previewTransport(
+      connectionCtx.typeIdDwarf,
+      connectionCtx.streamTypeTeleDwarf,
+    );
+    return transport === "jpeg"
+      ? telePhotoURL
+      : transport === "rtsp"
+        ? telePhotoURL_D3
+        : defaultTeleCameraSrc.src;
+  }
+
+  async function turnOnCameraHandler(cameraId: number, connectionCtx) {
+    const abort = previewAbort.current;
+    if (connectionCtx.connectionStatusSlave) {
+      setErrorTxt("Request control in Fleet before opening a camera preview.");
+      return;
+    }
+    setErrorTxt("");
+    if (abort.signal.aborted || !connectionCtx.socketIPDwarf?.isConnected())
+      return;
+    if (cameraId === telephotoCamera) {
+      // Mount the HLS player immediately. DWARF mini can start the RTSP stream
+      // without returning a decoded open-camera acknowledgement, and waiting
+      // for that callback leaves the placeholder visible forever. The command
+      // handler still rolls this state back when the device reports an error.
+      setTelephotoCameraStatus("on");
+      setSrcTeleCamera(true);
+    } else {
+      setWideangleCameraStatus("on");
+      setSrcWideCamera(true);
+    }
+    try {
+      await openDevicePreview(
+        connectionCtx,
+        [cameraId === telephotoCamera ? 0 : 1],
+        abort.signal,
+        true,
+      );
+    } catch (error) {
+      if (abort.signal.aborted) return;
+      if (cameraId === telephotoCamera) {
+        setTelephotoCameraStatus("off");
+        setSrcTeleCamera(false);
+      } else {
+        setWideangleCameraStatus("off");
+        setSrcWideCamera(false);
+      }
+      setErrorTxt(error instanceof Error ? error.message : String(error));
     }
   }
 
-  function checkCameraStatus(camera: number) {
+  function checkCameraStatus() {
+    let mainScreenStatus = "off";
+    // at Start only default value need to change them if Exchange is on
+    if (
+      smallMediaScreenCameraSrc &&
+      smallMediaScreenCameraSrc !== defaultWideCameraSrc.src
+    ) {
+      setSmallMediaScreenCameraStatus("on");
+      if (!connectionCtx.isFullScreenCameraTele) {
+        mainScreenStatus = "on";
+      }
+    } else {
+      setSmallMediaScreenCameraStatus("off");
+    }
+
+    if (
+      mainMediaScreenCameraSrc &&
+      mainMediaScreenCameraSrc !== defaultTeleCameraSrc.src
+    ) {
+      setMainMediaScreenCameraStatus("on");
+      if (connectionCtx.isFullScreenCameraTele) {
+        mainScreenStatus = "on";
+      }
+    } else {
+      setMainMediaScreenCameraStatus("off");
+    }
+
+    // Legacy devices expose a reliable camera-state response. V3/Mini camera
+    // responses are not decoded by the old client package, and the former
+    // fallback was actually opening both cameras every second. Leave V3
+    // cameras off until the user explicitly starts a preview.
+    if (
+      mainScreenStatus == "off" &&
+      (!connectionCtx.typeIdDwarf || connectionCtx.typeIdDwarf === 1)
+    ) {
+      console.debug("mainScreenStatus : ", mainScreenStatus);
+      if (cameraStatusTimer.current) clearTimeout(cameraStatusTimer.current);
+      const abort = previewAbort.current;
+      cameraStatusTimer.current = setTimeout(() => {
+        if (!abort.signal.aborted) void checkCameraStatusLater();
+      }, 1000);
+    }
+  }
+
+  function checkScreenCameraDefault(isMainCamera: boolean) {
+    let isDefault = true;
+    console.log("isdefaut mainMediaScreenCameraSrc", defaultTeleCameraSrc.src);
+    console.log("isdefaut smallMediaScreenCameraSrc", defaultWideCameraSrc.src);
+    if (isMainCamera) {
+      if (
+        mainMediaScreenCameraSrc &&
+        mainMediaScreenCameraSrc !== defaultTeleCameraSrc.src
+      ) {
+        isDefault = false;
+      }
+    } else {
+      if (
+        smallMediaScreenCameraSrc &&
+        smallMediaScreenCameraSrc !== defaultWideCameraSrc.src
+      ) {
+        isDefault = false;
+      }
+    }
+    console.log("isdefault", isDefault);
+    return isDefault;
+  }
+
+  async function checkCameraStatusLater() {
+    const abort = previewAbort.current;
     if (connectionCtx.IPDwarf === undefined) {
       return;
     }
-
-    let socket = new WebSocket(wsURL(connectionCtx.IPDwarf));
-    socket.addEventListener("open", () => {
-      let payload = cameraWorkingState(camera);
-      logger("start cameraWorkingState...", payload, connectionCtx);
-      socketSend(socket, payload);
-    });
-
-    socket.addEventListener("message", (event) => {
-      let message = JSON.parse(event.data);
-      if (message.interface === statusWorkingStateTelephotoCmd) {
-        let cameraName = camera === 0 ? "telephoto" : "wideangle";
-        if (message.camState === 1) {
-          logger(cameraName + " open", {}, connectionCtx);
-        } else {
-          logger(cameraName + " closed", {}, connectionCtx);
-          camera === 0
-            ? setTelephotoCameraStatus("off")
-            : setWideangleCameraStatus("off");
-        }
+    if (connectionCtx.typeIdDwarf !== 1) {
+      try {
+        await ensureDevicePreviewPaths(connectionCtx, abort.signal);
+      } catch (error) {
+        if (abort.signal.aborted) return;
+        setErrorTxt(error instanceof Error ? error.message : String(error));
+        return;
       }
-    });
+    }
+    if (abort.signal.aborted) return;
+    console.debug("checkCameraStatusLater");
+    // Slave Mode turn on Camera
+    if (connectionCtx.connectionStatusSlave) {
+      setWideangleCameraStatus("on");
+      setSrcWideCamera(true);
+      setTelephotoCameraStatus("on");
+      setSrcTeleCamera(true);
+      return;
+    }
+    adjustIframeSize();
 
-    socket.addEventListener("error", (error) => {
-      logger("cameraWorkingState error:", error, connectionCtx);
-    });
+    // A status check can attach an already available feed. Firmware mutations
+    // belong exclusively to the explicit Go live buttons.
+    if (!connectionCtx.socketIPDwarf?.isConnected()) return;
+    setTelephotoCameraStatus("on");
+    setWideangleCameraStatus("on");
+    setSrcTeleCamera(true);
+    setSrcWideCamera(true);
   }
 
-  function renderWideAngle() {
+  // Function to set the source for the wide-angle camera
+  function setSrcWideCamera(status: boolean) {
+    console.debug("Render setSrcWideCamera : ", status);
+    let url: string = "";
+    if (status) {
+      url = getWideAngleURL();
+    } else {
+      if (connectionCtx.isFullScreenCameraTele) {
+        url = defaultWideCameraSrc.src;
+      } else {
+        url = defaultTeleCameraSrc.src;
+      }
+    }
+
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (url != smallMediaScreenCameraSrc) {
+        setSmallMediaScreenCameraSrc(url);
+      }
+    } else {
+      if (url != mainMediaScreenCameraSrc) {
+        setMainMediaScreenCameraSrc(url);
+      }
+    }
+    console.info("setSrcWideCamera: ", url);
+  }
+
+  // Function to set the source for the tele camera
+  function setSrcTeleCamera(status: boolean) {
+    console.debug("Render setSrcTeleCamera : ", status);
+    let url: string = "";
+    if (status) {
+      url = getTelePhotoURL();
+    } else {
+      if (connectionCtx.isFullScreenCameraTele) {
+        url = defaultTeleCameraSrc.src;
+      } else {
+        url = defaultWideCameraSrc.src;
+      }
+    }
+
+    if (connectionCtx.isFullScreenCameraTele) {
+      if (url != mainMediaScreenCameraSrc) {
+        setMainMediaScreenCameraSrc(url);
+      }
+    } else {
+      if (url != smallMediaScreenCameraSrc) {
+        setSmallMediaScreenCameraSrc(url);
+      }
+    }
+    console.info("setSrcTeleCamera: ", url);
+  }
+
+  function renderSmallScreen() {
+    console.debug("Render Small Screen : ", showWideangle);
+    console.info("Render Small Screen SRC : ", smallMediaScreenCameraSrc);
     return (
       <div className={`${showWideangle ? "" : "d-none"}`}>
-        <img
-          onLoad={() => setWideangleCameraStatus("on")}
-          src={wideangleURL(IPDwarf)}
-          alt="livestream for wideangle camera"
-          className={styles.wideangle}
-        ></img>
+        <Image
+          className={`${
+            smallMediaScreenCameraStatus == "off" ? styles.wideangle : "d-none"
+          }`}
+          id="idImageWideCamera"
+          width="640"
+          height="360"
+          priority
+          src={defaultWideCameraSrc}
+          alt={
+            smallMediaScreenCameraSrc
+              ? `livestream for ${smallMediaScreenCameraName} camera`
+              : ""
+          }
+          onLoad={(event) => {
+            const img = event.currentTarget;
+            setDimensionsWide({
+              width: img.offsetWidth,
+              height: img.offsetHeight,
+            });
+            adjustIframeSizeWide();
+          }}
+          style={{
+            height: "auto", // Maintain the aspect ratio of the image
+          }}
+        />
+        <div
+          className={`${
+            smallMediaScreenCameraStatus == "on" ? styles.wideangle : "d-none"
+          }`}
+        >
+          {!connectionCtx.typeIdDwarf ||
+          connectionCtx.typeIdDwarf == 1 ||
+          smallMediaScreenStreamType == 2 ? (
+            <img
+              id="idImgWideCamera"
+              onLoad={() => {
+                handleWideImageLoad();
+              }}
+              src={smallMediaScreenCameraSrc}
+              alt={smallMediaScreenCameraSrc ? "" : ""}
+              style={{
+                width: "100%", // Customize as needed
+                height: "auto", // Customize as needed
+                border: "none", // No border for iframe
+              }}
+              ref={iImgRefWide} // Reference to the image element
+            />
+          ) : (
+            <iframe
+              id="idWideCamera"
+              onLoad={() => {
+                handleWideImageLoad();
+              }}
+              className="styles.wideangle"
+              src={smallMediaScreenCameraSrc}
+              style={{
+                width: "100%", // Customize as needed
+                height: "100%", // Customize as needed
+                border: "none", // No border for iframe
+              }}
+              ref={iframeRefWide} // Reference to the iframe element
+            ></iframe>
+          )}
+        </div>
       </div>
     );
   }
 
-  function renderMainCamera() {
-    // TODO: use rawPreviewURL
+  function renderMainScreen() {
+    let newRenderTime = Date.now();
+
+    if (
+      lastRenderTime.current === undefined ||
+      newRenderTime > lastRenderTime.current + 500
+    ) {
+      lastRenderTime.current = newRenderTime;
+      console.debug("Timer Render Main Screen : ", newRenderTime);
+    }
+
+    console.info("Render Main Screen SRC : ", mainMediaScreenCameraSrc);
     return (
-      <div>
-        <img
-          onLoad={() => setTelephotoCameraStatus("on")}
-          src={telephotoURL(IPDwarf)}
-          alt="livestream for telephoto camera"
-          className={styles.telephoto}
-        ></img>
+      <div className="camera-container">
+        {showControls && (
+          <Image
+            className={`${
+              mainMediaScreenCameraStatus == "off" ? "" : "d-none"
+            }`}
+            id="idImageTeleCamera"
+            src={defaultTeleCameraSrc}
+            width="1216"
+            height="684"
+            priority
+            alt={
+              mainMediaScreenCameraSrc
+                ? `livestream for ${mainMediaScreenCameraName} camera`
+                : ""
+            }
+            onLoad={(event) => {
+              const img = event.currentTarget;
+              setDimensionsTele({
+                width: img.offsetWidth,
+                height: img.offsetHeight,
+              });
+              adjustIframeSize();
+            }}
+          />
+        )}
+        {!showControls && (
+          <img
+            className={`${
+              mainMediaScreenCameraStatus == "off" ? "" : "d-none"
+            }`}
+            id="idImage2TeleCamera"
+            src={defaultTeleCameraSrc.src}
+            alt=""
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+            }}
+            onLoad={(event) => {
+              const img = event.target as HTMLImageElement;
+              if (mainMediaScreenStreamType == 1) {
+                setDimensionsTele({
+                  width: img.offsetWidth,
+                  height: img.offsetHeight,
+                });
+                adjustIframeSize();
+              }
+            }}
+          />
+        )}
+        <div
+          className={`${
+            mainMediaScreenCameraStatus == "on" ? styles.telephoto : "d-none"
+          }`}
+        >
+          {!connectionCtx.typeIdDwarf ||
+          connectionCtx.typeIdDwarf == 1 ||
+          mainMediaScreenStreamType == 2 ? (
+            <img
+              id="idImgTeleCamera"
+              onLoad={() => {
+                handleImageLoad();
+              }}
+              src={mainMediaScreenCameraSrc}
+              alt=""
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+              }}
+              ref={iImgRefTele} // Reference to the image element
+            />
+          ) : (
+            <iframe
+              id="idTeleCamera"
+              onLoad={() => handleImageLoad()}
+              scrolling="no"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+              }}
+              className=""
+              src={mainMediaScreenCameraSrc}
+              ref={iframeRefTele} // Reference to the iframe element
+            ></iframe>
+          )}
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className={styles.section}>
-      {wideangleCameraStatus === "off" && (
-        <div className="py-2 clearfix">
-          <div className="float-end">
-            <button
-              className="btn btn-primary"
-              onClick={() => turnOnCameraHandler(wideangleCamera)}
-            >
-              Turn on wideangle camera
-            </button>
-            <br />
-            <Link href={wideangleURL(IPDwarf)}>{wideangleURL(IPDwarf)}</Link>
+  const handleWideImageLoad = () => {
+    // Only hide the image and show the iframe after adjusting the size
+    if (!checkScreenCameraDefault(false)) {
+      adjustIframeSizeWide();
+      setSmallMediaScreenCameraStatus("on");
+    } else {
+      setSmallMediaScreenCameraStatus("off");
+    }
+  };
+
+  const handleImageLoad = () => {
+    // Only hide the image and show the iframe after adjusting the size
+    if (!checkScreenCameraDefault(true)) {
+      adjustIframeSize();
+      setMainMediaScreenCameraStatus("on");
+    } else {
+      setMainMediaScreenCameraStatus("off");
+    }
+  };
+
+  function exchangeCameras() {
+    if (!showWideangle) return;
+
+    if (
+      mainMediaScreenCameraStatus == "off" ||
+      smallMediaScreenCameraStatus == "off"
+    )
+      return;
+
+    console.debug(
+      "start exchange IsFullScreen:",
+      connectionCtx.isFullScreenCameraTele,
+    );
+
+    setWideangleCameraStatus("off");
+    setTelephotoCameraStatus("off");
+
+    connectionCtx.setIsFullScreenCameraTele((prev) => !prev);
+    console.debug(
+      "exchange IsFullScreen:",
+      connectionCtx.isFullScreenCameraTele,
+    );
+
+    let currentMainMediaScreenStreamType = mainMediaScreenStreamType;
+    setMainMediaScreenStreamType(smallMediaScreenStreamType);
+    setSmallMediaScreenStreamType(currentMainMediaScreenStreamType);
+
+    // not really used
+    let currentMainMediaScreenCamera = mainMediaScreenCamera;
+    let currentMainMediaScreenCameraName = mainMediaScreenCameraName;
+    setMainMediaScreenCamera(smallMediaScreenCamera);
+    setSmallMediaScreenCamera(currentMainMediaScreenCamera);
+    setMainMediaScreenCameraName(smallMediaScreenCameraName);
+    setSmallMediaScreenCameraName(currentMainMediaScreenCameraName);
+
+    // Not Recording
+    if (
+      !connectionCtx.imagingSession.isRecording &&
+      !connectionCtx.imagingSession.endRecording &&
+      !connectionCtx.imagingSession.isGoLive &&
+      connectionCtx.typeIdDwarf != 1
+    ) {
+      connectionCtx.setCurrentAstroCamera(
+        connectionCtx.currentAstroCamera == telephotoCamera
+          ? wideangleCamera
+          : telephotoCamera,
+      );
+    }
+  }
+
+  const Controls = () => {
+    const { resetTransform, zoomIn, zoomOut } = useControls();
+    return (
+      <div className={styles.previewControls}>
+        <button
+          type="button"
+          className="btn btn-more02 me-3 top-align"
+          onClick={() => resetTransform()}
+          aria-label="Reset camera zoom and position"
+        >
+          {buttonReset}
+        </button>
+        <button
+          type="button"
+          className="btn btn-more02 me-3 top-align"
+          onClick={() => zoomIn()}
+          aria-label="Zoom camera preview in"
+        >
+          Zoom +
+        </button>
+        <button
+          type="button"
+          className="btn btn-more02 me-3 top-align"
+          onClick={() => zoomOut()}
+          aria-label="Zoom camera preview out"
+        >
+          Zoom -
+        </button>
+        <button
+          type="button"
+          className="btn btn-more02 me-3 top-align"
+          onClick={() => exchangeCameras()}
+          disabled={
+            !showWideangle ||
+            mainMediaScreenCameraStatus === "off" ||
+            smallMediaScreenCameraStatus === "off"
+          }
+          aria-label="Switch main and overlay cameras"
+        >
+          {buttonSwap}
+        </button>
+      </div>
+    );
+  };
+
+  if (showControls)
+    return (
+      <div className={styles.cameraShell}>
+        {errorTxt && (
+          <p role="alert" className="text-danger">
+            {errorTxt}
+          </p>
+        )}
+        <TransformWrapper>
+          <div className={styles.previewToolbar}>
+            <Controls />
+            <div className={styles.streamControls}>
+              {wideangleCameraStatus === "off" &&
+                telephotoCameraStatus === "off" && (
+                  <div className={styles.streamButtons}>
+                    <button
+                      className="btn btn-more02 me-4"
+                      onClick={() =>
+                        turnOnCameraHandler(wideangleCamera, connectionCtx)
+                      }
+                    >
+                      Go live: wide-angle
+                    </button>
+                    <button
+                      className="btn btn-more02"
+                      onClick={() =>
+                        turnOnCameraHandler(telephotoCamera, connectionCtx)
+                      }
+                    >
+                      Go live: telephoto
+                    </button>
+                  </div>
+                )}
+              {wideangleCameraStatus === "off" &&
+                telephotoCameraStatus !== "off" && (
+                  <div className={styles.streamButtons}>
+                    <button
+                      className="btn btn-more02 me-4"
+                      onClick={() =>
+                        turnOnCameraHandler(wideangleCamera, connectionCtx)
+                      }
+                    >
+                      Go live: wide-angle
+                    </button>
+                  </div>
+                )}
+              {wideangleCameraStatus !== "off" &&
+                telephotoCameraStatus === "off" && (
+                  <div className={styles.streamButtons}>
+                    <button
+                      className="btn btn-more02"
+                      onClick={() =>
+                        turnOnCameraHandler(telephotoCamera, connectionCtx)
+                      }
+                    >
+                      Go live: telephoto
+                    </button>
+                  </div>
+                )}
+            </div>
           </div>
-        </div>
-      )}
-      {telephotoCameraStatus === "off" && (
-        <div className="py-2">
-          <div className="float-end">
-            <button
-              className="btn btn-primary"
-              onClick={() => turnOnCameraHandler(telephotoCamera)}
-            >
-              Turn on telephoto camera
-            </button>
-            <br />
-            <Link href={telephotoURL(IPDwarf)}>{telephotoURL(IPDwarf)}</Link>
-          </div>
-        </div>
-      )}
-      {renderWideAngle()}
-      {renderMainCamera()}
-    </div>
-  );
+          <TransformComponent>
+            <div className={styles.previewStage}>
+              {renderMainScreen()}
+              {renderSmallScreen()}
+            </div>
+          </TransformComponent>
+        </TransformWrapper>
+      </div>
+    );
+  else
+    return (
+      <div className={styles.cameraShell}>
+        <TransformWrapper>
+          <TransformComponent>
+            <div className={styles.previewStage}>
+              {renderMainScreen()}
+              {renderSmallScreen()}
+            </div>
+          </TransformComponent>
+        </TransformWrapper>
+      </div>
+    );
 }

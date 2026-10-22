@@ -1,0 +1,520 @@
+.cameraModalRoot {
+  --control-surface: color-mix(in srgb, var(--dw-surface) 88%, #070b12);
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.cameraDialog {
+  position: relative !important;
+  width: min(1120px, calc(100vw - 32px));
+  height: auto !important;
+  max-width: 1120px;
+  margin: 1.75rem auto !important;
+  padding: 0 !important;
+}
+
+.cameraDialog :global(.modal-content) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  max-height: min(820px, calc(100dvh - 32px));
+  color: var(--dw-text);
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 55%);
+}
+
+.cameraModalHeader {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: 0;
+  padding: 18px 20px 16px;
+  background: var(--dw-surface);
+  border-color: var(--dw-border);
+}
+
+.cameraModalHeader > div:first-child {
+  min-width: 0;
+}
+
+.cameraModalHeader :global(.modal-title) {
+  margin-top: 2px;
+  color: var(--dw-text);
+  font-size: 1.08rem;
+  font-weight: 720;
+  line-height: 1.25;
+}
+
+.cameraModalHeader p {
+  margin: 5px 0 0;
+  color: var(--dw-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.cameraModalHeader :global(.btn-close) {
+  margin: 0;
+  filter: invert(1) grayscale(1);
+  opacity: 0.68;
+}
+
+.eyebrow,
+.sectionHeading span {
+  color: var(--dw-accent);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.cameraModalBody {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  padding: 18px 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.controlLayout {
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 420px !important;
+  display: grid !important;
+  grid-template-columns: minmax(210px, 0.62fr) minmax(0, 1.75fr);
+  gap: 16px;
+  align-items: stretch !important;
+  margin: 0 !important;
+}
+
+.mountControls,
+.captureControls {
+  min-width: 0;
+  padding: 16px;
+  background: var(--control-surface);
+  border: 1px solid var(--dw-border);
+  border-radius: 12px;
+}
+
+.mountControls {
+  display: grid;
+  grid-template-rows: auto auto minmax(210px, 1fr);
+  align-content: start;
+  gap: 14px;
+}
+
+.captureControls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--dw-border);
+}
+
+.sectionHeading h3 {
+  margin: 2px 0 0;
+  color: var(--dw-text);
+  font-size: 0.94rem;
+  line-height: 1.2;
+}
+
+.sectionHeading > strong {
+  padding: 5px 8px;
+  color: var(--dw-accent-strong);
+  background: var(--dw-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--dw-accent) 28%, transparent);
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.controlLayout :global(.speed-meter) {
+  width: 100%;
+  display: block;
+  margin: 0;
+}
+
+.controlLayout :global(.speed-control) {
+  color: var(--dw-text);
+}
+
+.controlLayout :global(.speed-control__label),
+.controlLayout :global(.speed-control__limits) {
+  color: var(--dw-text-muted);
+}
+
+.joystickSlot {
+  min-height: 210px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.joystickSlot :global(.joystick-container) {
+  position: relative !important;
+  inset: auto !important;
+  align-self: center;
+  justify-self: center;
+  transform: none !important;
+}
+
+.joystickSlot :global(.joystick-button-up),
+.joystickSlot :global(.joystick-button-down),
+.joystickSlot :global(.joystick-button-left),
+.joystickSlot :global(.joystick-button-right) {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--dw-text);
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 8px;
+}
+
+.controlLayout :global(.containerCamera),
+.controlLayout :global(.pane) {
+  width: 100%;
+  height: auto;
+  display: grid;
+  margin: 0;
+}
+
+.controlLayout :global(.pane) {
+  gap: 14px;
+}
+
+.controlLayout :global(.columnAction) {
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.controlLayout :global(.columnAction .header-camera),
+.controlLayout :global(.columnAction .separator) {
+  display: none;
+}
+
+.controlLayout :global(.button-container-view) {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.controlLayout :global(.button-container-view .button) {
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 8px;
+  overflow: hidden;
+  color: var(--dw-text-muted);
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border) !important;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 680;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controlLayout :global(.button-container-view .button.active) {
+  color: var(--dw-accent-strong);
+  background: var(--dw-accent-soft);
+  border-color: color-mix(
+    in srgb,
+    var(--dw-accent) 42%,
+    transparent
+  ) !important;
+}
+
+.controlLayout :global(.column) {
+  width: 100%;
+  min-height: 250px;
+  display: grid;
+  grid-template-rows: auto 1px minmax(112px, 1fr) auto;
+  align-items: center;
+  padding: 18px;
+  color: var(--dw-text);
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border);
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.controlLayout :global(.header-camera) {
+  min-width: 0;
+}
+
+.controlLayout :global(.title) {
+  color: var(--dw-text);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.controlLayout :global(.separator) {
+  background: var(--dw-border);
+}
+
+.controlLayout :global(.cameraAddon-image) {
+  width: 82px;
+  max-height: 82px;
+  justify-self: center;
+  margin: 8px 0;
+  object-fit: contain;
+  opacity: 0.88;
+}
+
+.controlLayout :global(.button-container) {
+  gap: 8px;
+  margin: 0;
+}
+
+.controlLayout :global(.button-container .button),
+.controlLayout :global(.button-container .button-cent) {
+  min-width: 84px;
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 12px;
+  color: var(--dw-text-muted);
+  background: var(--dw-bg);
+  border: 1px solid var(--dw-border-strong) !important;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 680;
+}
+
+.controlLayout :global(.button-container .active) {
+  color: #06120f;
+  background: var(--dw-accent);
+  border-color: var(--dw-accent) !important;
+}
+
+.controlLayout :global(.cameraAddon-settings-button) {
+  width: 34px;
+  height: 34px;
+  color: var(--dw-text-muted);
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+}
+
+.settingsPopover {
+  position: fixed !important;
+  inset: 50% auto auto 50% !important;
+  width: min(440px, calc(100vw - 32px));
+  max-width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  transform: translate(-50%, -50%) !important;
+  color: var(--dw-text);
+  background: var(--dw-surface);
+  border-color: var(--dw-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 20px 55px rgb(0 0 0 / 48%);
+}
+
+.settingsPopover :global(.popover-header) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--dw-text);
+  background: var(--dw-surface);
+  border-color: var(--dw-border);
+  font-size: 0.86rem;
+  font-weight: 720;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settingsPopover :global(.popover-header) button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  margin: -6px -6px -6px 0;
+  padding: 0;
+  color: var(--dw-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+}
+
+.settingsPopover :global(.popover-header) button:hover,
+.settingsPopover :global(.popover-header) button:focus-visible {
+  color: var(--dw-text);
+  background: var(--dw-surface-soft);
+  outline: none;
+}
+
+.settingsPopover :global(.popover-body) {
+  padding: 14px;
+  color: var(--dw-text);
+}
+
+.settingsPopover :global(.popover-arrow) {
+  display: none;
+}
+
+.settingsPopover form {
+  display: grid;
+  gap: 10px;
+}
+
+.settingsPopover form :global(.row) {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin: 0 !important;
+}
+
+.settingsPopover form :global(.col-5),
+.settingsPopover form :global(.col-4) {
+  width: auto;
+  max-width: none;
+  margin: 0 !important;
+  padding: 0;
+}
+
+.settingsPopover form label {
+  color: var(--dw-text-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.settingsPopover form input,
+.settingsPopover form select {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 9px;
+  color: var(--dw-text);
+  background: var(--dw-bg);
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 7px;
+  font-size: 0.78rem;
+}
+
+.settingsPopover form button {
+  width: 100%;
+  height: auto;
+  min-height: 38px;
+  margin-top: 2px;
+  color: #06120f;
+  background: var(--dw-accent);
+  border: 1px solid var(--dw-accent);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.cameraModalFooter {
+  position: relative;
+  inset: auto;
+  height: auto;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--dw-surface);
+  border-color: var(--dw-border);
+}
+
+.cameraModalFooter > span {
+  color: var(--dw-text-muted);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 991.98px) {
+  .cameraDialog {
+    width: 100%;
+    height: 100% !important;
+    max-width: none;
+    margin: 0 !important;
+  }
+
+  .cameraDialog :global(.modal-content) {
+    max-height: none;
+    min-height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .controlLayout {
+    grid-template-columns: minmax(190px, 0.58fr) minmax(0, 1.42fr);
+  }
+
+  .controlLayout :global(.button-container-view) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .cameraModalHeader {
+    padding: 14px 16px;
+  }
+
+  .cameraModalHeader p {
+    max-width: 32rem;
+  }
+
+  .cameraModalBody {
+    padding: 12px 14px 18px;
+  }
+
+  .controlLayout {
+    min-height: 0 !important;
+    grid-template-columns: 1fr;
+  }
+
+  .mountControls {
+    min-height: 330px;
+    grid-template-rows: auto auto minmax(200px, 1fr);
+  }
+
+  .controlLayout :global(.button-container-view) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .controlLayout :global(.column) {
+    min-height: 235px;
+    padding: 14px;
+  }
+
+  .cameraModalFooter {
+    position: sticky;
+    bottom: 0;
+    align-items: stretch;
+    flex-direction: column;
+    padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .cameraModalFooter button {
+    width: 100%;
+  }
+
+  .settingsPopover form :global(.row) {
+    grid-template-columns: minmax(96px, 0.75fr) minmax(0, 1fr);
+  }
+}

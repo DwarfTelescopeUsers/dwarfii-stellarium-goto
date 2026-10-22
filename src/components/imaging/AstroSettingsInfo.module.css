@@ -1,4 +1,89 @@
 .settings {
-  overflow-y: scroll;
-  max-height: 70vh;
+  width: 100%;
+  display: grid;
+  gap: 18px;
+  color: var(--dw-text);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.header h2 {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.eyebrow {
+  color: var(--dw-accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  color: var(--dw-text-muted);
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.backButton:hover {
+  color: var(--dw-text);
+  border-color: var(--dw-accent);
+}
+
+.capabilityList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.capability {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1.3fr);
+  gap: 14px;
+  align-items: start;
+  padding: 11px 12px;
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border);
+  border-radius: 9px;
+}
+
+.capability dt {
+  color: var(--dw-text-muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.capability dd {
+  margin: 0;
+  color: var(--dw-text);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 520px) {
+  .header {
+    display: grid;
+  }
+
+  .backButton {
+    justify-self: start;
+  }
+
+  .capability {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
 }

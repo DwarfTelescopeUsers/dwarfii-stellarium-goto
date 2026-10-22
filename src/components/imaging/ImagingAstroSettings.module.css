@@ -1,0 +1,132 @@
+.settingsPanel {
+  width: 100%;
+  color: var(--dw-text);
+}
+
+.settingsPanel form {
+  display: grid;
+  gap: 10px;
+}
+
+.settingsPanel :global(.row) {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.72fr) minmax(180px, 1.28fr);
+  gap: 8px 16px;
+  align-items: center;
+  margin: 0 !important;
+}
+
+.settingsPanel :global(.row) > * {
+  width: auto;
+  padding: 0;
+}
+
+.settingsPanel label,
+.settingsPanel :global(.row) > :first-child {
+  margin: 0;
+  color: var(--dw-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.settingsPanel select,
+.settingsPanel input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 34px 7px 10px;
+  color: var(--dw-text);
+  background-color: var(--dw-bg);
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.settingsPanel select:focus,
+.settingsPanel input:focus {
+  border-color: var(--dw-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dw-accent) 18%, transparent);
+  outline: 0;
+}
+
+.settingsPanel :global(.text-danger) {
+  grid-column: 2;
+  margin: 0;
+  font-size: 0.74rem;
+}
+
+.sectionHeader {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--dw-border);
+}
+
+.sectionHeader span {
+  color: var(--dw-accent);
+  font-size: 0.66rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.sectionHeader h2 {
+  margin: 2px 0 0;
+  color: var(--dw-text);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  color: var(--dw-text-muted);
+  background: var(--dw-surface-soft);
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.infoButton:hover {
+  color: var(--dw-text);
+  border-color: var(--dw-accent);
+}
+
+.actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  padding-top: 10px;
+  margin-top: 4px !important;
+  border-top: 1px solid var(--dw-border);
+}
+
+.actions > div:last-child {
+  text-align: right;
+}
+
+.actions button {
+  min-height: 36px;
+  margin: 0 !important;
+  padding: 7px 12px !important;
+  font-size: 0.78rem !important;
+}
+
+@media (max-width: 520px) {
+  .settingsPanel :global(.row) {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .settingsPanel :global(.text-danger) {
+    grid-column: 1;
+  }
+
+  .sectionHeader {
+    align-items: flex-start;
+  }
+}

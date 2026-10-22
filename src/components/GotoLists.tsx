@@ -1,16 +1,69 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
+import { AstroObject } from "@/types";
 import DSOList from "@/components/astroObjects/DSOList";
 import PlanetsList from "@/components/astroObjects/PlanetsList";
 import dsoCatalog from "../../data/catalogs/dso_catalog.json";
 import { processObjectListOpenNGC } from "@/lib/observation_lists_utils";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { saveCurrentObjectListNameDb } from "@/db/db_utils";
+import {
+  saveCurrentObjectListNameDb,
+  fetchObjectListByNameDb,
+} from "@/db/db_utils";
 
-export default function AutoGoto() {
+let dsoObject = processObjectListOpenNGC(dsoCatalog);
+
+type PropType = {
+  objectFavoriteNames: string[];
+  setObjectFavoriteNames: Dispatch<SetStateAction<string[]>>;
+  objectPersonalList: AstroObject[];
+  setObjectPersonalList: Dispatch<SetStateAction<AstroObject[]>>;
+  setModule: Dispatch<SetStateAction<string | undefined>>;
+  setErrors: Dispatch<SetStateAction<string | undefined>>;
+  setSuccess: Dispatch<SetStateAction<string | undefined>>;
+};
+
+export default function AutoGoto(props: PropType) {
+  const { objectFavoriteNames, setObjectFavoriteNames } = props;
+  const { objectPersonalList, setObjectPersonalList } = props;
+  const { setModule, setErrors, setSuccess } = props;
+
+  const { t } = useTranslation();
+  // eslint-disable-next-line no-unused-vars
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+
   let connectionCtx = useContext(ConnectionContext);
-  let dsoObject = processObjectListOpenNGC(dsoCatalog);
+
+  useEffect(() => {
+    const storedLanguage = localStorage.getItem("language");
+    if (storedLanguage) {
+      setSelectedLanguage(storedLanguage);
+      i18n.changeLanguage(storedLanguage);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      // get objects lists from local storage on page load
+      console.log("Load personalObjecList on load");
+      let personalObjecList = fetchObjectListByNameDb("personal");
+      if (personalObjecList) {
+        setObjectPersonalList(personalObjecList);
+        console.log(
+          "Loaded  personalObjecList on load: ",
+          personalObjecList.length,
+        );
+      } else {
+        console.log("No personalObjecList found in DB");
+      }
+    } catch (error) {
+      console.error("Error personalObjecList on load", error);
+    }
+  }, []);
 
   function selectListHandler(e: ChangeEvent<HTMLSelectElement>) {
     connectionCtx.setCurrentObjectListName(e.target.value);
@@ -22,66 +75,83 @@ export default function AutoGoto() {
     connectionCtx.currentObjectListName === undefined;
 
   return (
-    <div>
-      {!connectionCtx.connectionStatusStellarium && (
-        <p className="text-danger">
-          You must connect to Stellarium for Center to work.
-        </p>
-      )}
-      {!connectionCtx.connectionStatus && (
-        <p className="text-danger">
-          You must connect to Dwarf II for Goto to work.
-        </p>
-      )}
+    <div className="dw-target-source">
+      <div className="dw-target-notices" aria-live="polite">
+        {!connectionCtx.connectionStatusStellarium && (
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>{t("cGoToListConnectStellarium")}</span>
+          </div>
+        )}
+        {!connectionCtx.connectionStatus && (
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>
+              {t("cGoToListConnectDwarf", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
+            </span>
+          </div>
+        )}
+      </div>
 
-      <select
-        className="form-select"
-        value={connectionCtx.currentObjectListName || "default"}
-        onChange={selectListHandler}
-      >
-        <option value="default">Select object lists</option>
-        <option value="dso">DSO</option>
-        <option value="planets">Planets and Moon</option>
-      </select>
+      <label className="dw-target-catalog-field" htmlFor="target-catalog">
+        <span>Target catalog</span>
+        <select
+          id="target-catalog"
+          className="form-select-dso"
+          value={connectionCtx.currentObjectListName || "default"}
+          onChange={selectListHandler}
+        >
+          <option value="default">{t("cGoToListdefault")}</option>
+          <option value="dso">DSO</option>
+          <option value="planets">{t("cGotoListplanets")}</option>
+        </select>
+      </label>
       {showInstructions && (
-        <>
-          <p className="mt-4">Please select an objects list.</p>
+        <section className="dw-target-guide">
+          <h2>{t("cGotoListSelectObject")}</h2>
 
           <ol>
             <li>
-              The DSO list has objects that are:
+              {t("cGotoListDSOList")}
               <ul>
-                <li>
-                  Large (&gt; 15 arcminutes) and relatively bright (under 10
-                  magnitude). 116 objects.
-                </li>
-                <li>
-                  Large (&gt; 15 arcminutes) and unknown brightness. 83 objects.
-                </li>
-                <li>
-                  Small (&lt; 15 arcminutes), relatively bright (under 10
-                  magnitude), with common names. 29 objects.
-                </li>
-                <li>50 of the brightest stars with common names.</li>
+                <li>{t("cGotoListDSOList1")}</li>
+                <li>{t("cGotoListDSOList2")}</li>
+                <li>{t("cGotoListDSOList3")}</li>
+                <li>{t("cGotoListDSOList4")}</li>
               </ul>
             </li>
             <li>
-              The Planets and Moon list has the planets in our solar system and
-              the Moon. Be aware, Dwarf II is not good for taking images of the
-              planets.
+              {t("cGotoListDSOList5", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
             </li>
           </ol>
           <p>
-            &quot;Center&quot; will show the selected object in Stellarium.
-            &quot;Goto&quot; will move Dwarf II to the selected object.
+            {t("cGotoListinfo", { DwarfType: connectionCtx.typeNameDwarf })}
           </p>
-        </>
+        </section>
       )}
       {connectionCtx.currentObjectListName === "dso" && (
-        <DSOList objects={dsoObject}></DSOList>
+        <DSOList
+          objects={dsoObject}
+          objectFavoriteNames={objectFavoriteNames}
+          setObjectFavoriteNames={setObjectFavoriteNames}
+          objectPersonalList={objectPersonalList}
+          setObjectPersonalList={setObjectPersonalList}
+          isInObjectPersonalList={false}
+          setModule={setModule}
+          setErrors={setErrors}
+          setSuccess={setSuccess}
+        ></DSOList>
       )}
       {connectionCtx.currentObjectListName === "planets" && (
-        <PlanetsList></PlanetsList>
+        <PlanetsList
+          setModule={setModule}
+          setErrors={setErrors}
+          setSuccess={setSuccess}
+        ></PlanetsList>
       )}
     </div>
   );

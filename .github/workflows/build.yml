@@ -1,0 +1,282 @@
+name: build
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Validate source
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Read application version
+        id: version
+        shell: bash
+        run: |
+          version=$(node --print "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Run project checks
+        run: npm run CI
+
+  standalone:
+    name: Standalone (${{ matrix.name }})
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            runner: ubuntu-22.04
+            mediamtx_target: linux-amd64
+            artifact: standalone-linux-x64
+            archive: Dwarfium.zip
+          - name: Linux ARM64
+            runner: ubuntu-22.04-arm
+            mediamtx_target: linux-arm64
+            artifact: standalone-linux-arm64
+            archive: Dwarfium-Arm64.zip
+          - name: Windows x64
+            runner: windows-latest
+            mediamtx_target: windows-amd64
+            artifact: standalone-windows-x64
+            archive: Dwarfium-Win.zip
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.0"
+          cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build DWARF-compatible MediaMTX
+        run: node scripts/build-mediamtx.js --target=${{ matrix.mediamtx_target }}
+
+      - name: Build standalone application
+        run: |
+          npm run build
+          npm run prepare:dist
+
+      - name: Create Linux archive
+        if: runner.os == 'Linux'
+        shell: bash
+        run: zip -r "${{ matrix.archive }}" Dwarfium
+
+      - name: Create Windows archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -LiteralPath Dwarfium -DestinationPath "${{ matrix.archive }}"
+
+      - name: Upload standalone archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.archive }}
+          if-no-files-found: error
+
+  release-standalone:
+    name: Publish standalone release
+    needs: [checks, standalone]
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v${{ needs.checks.outputs.version }}
+    steps:
+      - name: Download standalone archives
+        shell: bash
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'standalone-*' --dir artifacts
+
+      - name: Create or update standalone release
+        shell: bash
+        run: |
+          mapfile -d '' archives < <(find artifacts -type f -print0)
+          if [[ ${#archives[@]} -eq 0 ]]; then
+            echo "No standalone archives were downloaded." >&2
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${archives[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" "${archives[@]}" \
+              --generate-notes \
+              --title "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS Intel
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            mediamtx_target: darwin-amd64
+          - name: macOS Apple Silicon
+            runner: macos-15
+            target: aarch64-apple-darwin
+            mediamtx_target: darwin-arm64
+          - name: Linux x64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            mediamtx_target: linux-amd64
+          - name: Linux ARM64
+            runner: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            mediamtx_target: linux-arm64
+          - name: Windows x64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            mediamtx_target: windows-amd64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.0"
+          cache: false
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install Tauri dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            file \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            patchelf \
+            wget \
+            xdg-utils
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build DWARF-compatible MediaMTX
+        run: node scripts/build-mediamtx.js --target=${{ matrix.mediamtx_target }}
+
+      - name: Configure updater signing
+        id: updater
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        run: |
+          if [[ -n "$TAURI_SIGNING_PRIVATE_KEY" ]]; then
+            echo 'tauri_config={}' >> "$GITHUB_OUTPUT"
+            echo "upload_updater_json=true" >> "$GITHUB_OUTPUT"
+          else
+            echo 'tauri_config={"bundle":{"createUpdaterArtifacts":false}}' >> "$GITHUB_OUTPUT"
+            echo "upload_updater_json=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::TAURI_PRIVATE_KEY is not configured; publishing unsigned installers without updater artifacts."
+          fi
+
+      - name: Build and publish Tauri application
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAURI_CONFIG: ${{ steps.updater.outputs.tauri_config }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          args: --target ${{ matrix.target }}
+          tagName: app-v${{ needs.checks.outputs.version }}
+          releaseName: v${{ needs.checks.outputs.version }}-DesktopAPP
+          releaseBody: See the assets to download this version and install.
+          releaseDraft: false
+          prerelease: false
+          uploadUpdaterJson: ${{ steps.updater.outputs.upload_updater_json }}
+          updaterJsonPreferNsis: true
+
+  update-gist:
+    name: Publish updater manifest
+    needs: [checks, desktop]
+    runs-on: ubuntu-24.04
+    env:
+      GIST_ID: ${{ secrets.GIST_ID }}
+      GIST_TOKEN: ${{ secrets.TOKEN }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+    steps:
+      - name: Report disabled updater publication
+        if: env.TAURI_SIGNING_PRIVATE_KEY == '' || env.GIST_TOKEN == '' || env.GIST_ID == ''
+        run: echo "Updater gist publication is disabled because one or more required secrets are not configured."
+
+      - name: Download updater manifest
+        if: env.TAURI_SIGNING_PRIVATE_KEY != '' && env.GIST_TOKEN != '' && env.GIST_ID != ''
+        env:
+          RELEASE_TAG: app-v${{ needs.checks.outputs.version }}
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/latest.json" \
+            --output latest.json
+
+      - name: Update updater gist
+        if: env.TAURI_SIGNING_PRIVATE_KEY != '' && env.GIST_TOKEN != '' && env.GIST_ID != ''
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ env.GIST_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const content = fs.readFileSync('latest.json', 'utf8');
+
+            await github.rest.gists.update({
+              gist_id: process.env.GIST_ID,
+              files: {
+                'latest.json': { content }
+              }
+            });

@@ -1,0 +1,217 @@
+.page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px;
+  min-width: 0;
+  color: var(--dw-text, #dce7ef);
+  font-size: 14px;
+}
+.heading {
+  position: static;
+  inset: auto;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: none;
+  backdrop-filter: none;
+  padding: 0;
+  margin-bottom: 22px;
+  box-shadow: none;
+}
+.heading h1 {
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 6px 0 8px;
+}
+.page p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.heading p {
+  color: var(--dw-text-muted);
+  margin: 0;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--dw-text-muted);
+}
+.back {
+  font-size: 13px;
+  border: 1px solid var(--dw-border, #2a3b4b);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tip {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--dw-surface, #101a24);
+  border-left: 3px solid var(--dw-accent, #32d1b2);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.tip i {
+  color: var(--dw-accent);
+}
+.tip p {
+  margin: 0;
+  color: var(--dw-text-muted);
+  font-size: 13px;
+}
+.stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.section {
+  min-width: 0;
+  border: 1px solid var(--dw-border, #2a3b4b);
+  border-radius: 10px;
+  background: var(--dw-surface, #101a24);
+}
+.section > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+}
+.section > summary::-webkit-details-marker {
+  display: none;
+}
+.section > summary strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.section > summary small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+  color: var(--dw-text-muted);
+}
+.number {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--dw-accent);
+  border: 1px solid var(--dw-border);
+  background: var(--dw-bg);
+  border-radius: 8px;
+  font-size: 11px;
+}
+.chevron {
+  margin-left: auto;
+  color: var(--dw-text-muted);
+}
+.section[open] > summary .chevron {
+  transform: rotate(180deg);
+}
+.page .body {
+  padding: 20px;
+  overflow: visible;
+}
+.body :is(h1, h2, h3) {
+  font-size: 16px;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+.body :is(p, li) {
+  font-size: 13px !important;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.body :global(.dw-panel) {
+  padding: 14px;
+  box-shadow: none;
+}
+.body > :global(.dw-panel) {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.body :global(.btn) {
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 10px 14px;
+  min-height: 40px;
+  max-width: 100%;
+  white-space: normal;
+}
+.body :is(input, select, textarea) {
+  font-size: 14px;
+  min-width: 0;
+}
+.body :global(.form-label) {
+  font-size: 12px;
+}
+.body :global(.row) {
+  align-items: flex-start;
+}
+.body :is(ul, ol) {
+  padding-left: 20px;
+}
+.body :global(.small) {
+  font-size: 12px !important;
+}
+.body :global(.dw-proxy-settings) {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+}
+.body :global(.dw-proxy-settings) > summary {
+  font-size: 13px;
+  color: var(--dw-text-muted);
+  cursor: pointer;
+}
+.body :global(.dw-proxy-settings)[open] > summary {
+  margin-bottom: 16px;
+}
+.body :global(.dw-connection-form) {
+  margin-top: 18px;
+}
+.body :global(.dw-connection-form) > :global(.row) {
+  align-items: center;
+}
+.footnote {
+  color: var(--dw-text-muted);
+  font-size: 12px !important;
+  margin: 18px 0 0;
+}
+.page :is(summary, a, button, input, select):focus-visible {
+  outline: 2px solid var(--dw-accent, #32d1b2);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+  .heading h1 {
+    font-size: 23px;
+  }
+  .section > summary {
+    padding: 14px;
+    gap: 10px;
+  }
+  .page .body {
+    padding: 14px;
+  }
+  .body :global(.row) > * {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+}

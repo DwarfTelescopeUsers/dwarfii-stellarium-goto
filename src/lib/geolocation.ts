@@ -6,11 +6,11 @@ const geoOptions = {
 
 export function getCoordinates(
   successCallback: (position: GeolocationPosition) => void, // eslint-disable-line no-unused-vars, no-undef
-  errorCallback: (err: any) => void // eslint-disable-line no-unused-vars, no-undef
+  errorCallback: (err: any) => void, // eslint-disable-line no-unused-vars, no-undef
 ) {
   navigator.geolocation.getCurrentPosition(
     successCallback,
     errorCallback,
-    geoOptions
+    geoOptions,
   );
 }

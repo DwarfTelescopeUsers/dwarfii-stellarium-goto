@@ -1,0 +1,227 @@
+.dw-moon-panel .input-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.dw-moon-panel .city-input,
+.dw-moon-panel .month-input {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.dw-moon-panel .city-input {
+  flex: 1 1 300px;
+  max-width: 440px;
+}
+
+.dw-moon-panel .month-input {
+  flex: 0 1 190px;
+}
+
+.dw-moon-panel .city-input label,
+.dw-moon-panel .month-input label {
+  color: var(--dw-text-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.dw-moon-panel .city-search-box {
+  display: flex;
+  gap: 10px;
+}
+
+.dw-moon-panel .city-search-box input {
+  min-width: 0;
+  text-align: left;
+}
+
+.dw-moon-panel .city-search-box button {
+  flex: 0 0 auto;
+}
+
+.dw-moon-panel > .dw-muted {
+  margin: 0 0 16px;
+  color: var(--dw-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.dw-moon-panel .calendar {
+  max-width: none;
+  padding: 0;
+}
+
+.dw-moon-panel .calendar table {
+  width: 100%;
+  min-width: 840px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-family: inherit;
+}
+
+.dw-moon-panel .calendar th,
+.dw-moon-panel .calendar td {
+  width: 14.285%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--dw-border);
+  border-bottom: 1px solid var(--dw-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.dw-moon-panel .calendar th:last-child,
+.dw-moon-panel .calendar td:last-child {
+  border-right: 0;
+}
+
+.dw-moon-panel .calendar tr:last-child td {
+  border-bottom: 0;
+}
+
+.dw-moon-panel .calendar th {
+  padding: 12px 13px;
+  color: var(--dw-text-muted);
+  background: var(--dw-surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dw-moon-panel .calendar td {
+  min-height: 190px;
+  background: var(--dw-surface);
+}
+
+.dw-moon-panel .calendar td:empty {
+  background: rgba(7, 11, 18, 0.35);
+}
+
+.dw-moon-panel .moon-phase {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+}
+
+.dw-moon-panel .moon-phase time {
+  color: var(--dw-text);
+  font-size: 0.88rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.dw-moon-panel .prosA {
+  display: flex;
+  width: 100%;
+  min-height: 83px;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.dw-moon-panel .prosP {
+  color: var(--dw-text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.dw-moon-panel .moonimg {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 50%;
+}
+
+.dw-moon-panel .moon-times {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--dw-border);
+}
+
+.dw-moon-panel .moon-times div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dw-moon-panel .moon-times dt,
+.dw-moon-panel .moon-times dd {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.dw-moon-panel .moon-times dt {
+  overflow: hidden;
+  color: var(--dw-text-muted);
+  text-overflow: ellipsis;
+}
+
+.dw-moon-panel .moon-times dd {
+  color: var(--dw-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .dw-moon-panel .city-input,
+  .dw-moon-panel .month-input {
+    width: 100%;
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .dw-moon-panel .calendar table {
+    display: block;
+    min-width: 0;
+  }
+
+  .dw-moon-panel .calendar thead,
+  .dw-moon-panel .calendar td:empty {
+    display: none;
+  }
+
+  .dw-moon-panel .calendar tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .dw-moon-panel .calendar tr {
+    display: contents;
+  }
+
+  .dw-moon-panel .calendar td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    border: 1px solid var(--dw-border);
+    border-radius: 8px;
+  }
+
+  .dw-moon-panel .moon-phase {
+    padding: 10px;
+  }
+}

@@ -19,10 +19,10 @@ export function raDecToAltAz(ra, dec, lat, lon, jd_ut) {
 
   let az = Math.atan2(
     Math.sin(H),
-    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat),
   );
   let a = Math.asin(
-    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H)
+    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H),
   );
   az -= Math.PI;
 

@@ -1,83 +1,208 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 import { deleteLogMessagesDb, saveLoggerStatusDb } from "@/db/db_utils";
-import DebugMessageItem from "./LogMessageItem";
+import LogMessageItem from "./LogMessageItem";
+import styles from "@/styles/logs.module.css";
 
-export default function DebugMessages() {
+const PAGE_SIZE = 50;
+
+export default function LogMessages() {
+  const connection = useContext(ConnectionContext);
   useLoadIntialValues();
-  let connectionCtx = useContext(ConnectionContext);
-  let [messages, setMessages] = useState(connectionCtx.logger);
+  const [messages, setMessages] = useState<unknown[]>([]);
+  const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // React context cannot update state between different browser tabs.
-  // Use local storage events instead of React context to show new messages
-  // whenever messages are added to local storage.
-  // https://dev.to/cassiolacerda/how-to-syncing-react-state-across-multiple-tabs-with-usestate-hook-4bdm
   useEffect(() => {
-    const onStorageUpdate = (e: any) => {
-      const { key, newValue } = e;
-      if (key === "logMessages") {
-        setMessages(JSON.parse(newValue));
+    setMessages(Array.isArray(connection.logger) ? connection.logger : []);
+  }, [connection.logger]);
+
+  useEffect(() => {
+    const onStorageUpdate = (event: StorageEvent) => {
+      if (event.key !== "logMessages") return;
+      try {
+        const next = event.newValue ? JSON.parse(event.newValue) : [];
+        setMessages(Array.isArray(next) ? next : []);
+      } catch {
+        setMessages([]);
       }
     };
-
     window.addEventListener("storage", onStorageUpdate);
-    return () => {
-      window.removeEventListener("storage", onStorageUpdate);
-    };
+    return () => window.removeEventListener("storage", onStorageUpdate);
   }, []);
 
-  function deleteHandler() {
-    connectionCtx.setLogger(undefined);
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase();
+    return messages
+      .map((message, index) => ({ message, sequence: index + 1 }))
+      .reverse()
+      .filter(
+        ({ message }) =>
+          !needle ||
+          String(JSON.stringify(message) ?? message)
+            .toLocaleLowerCase()
+            .includes(needle),
+      );
+  }, [messages, query]);
+
+  const toggleLogger = () => {
+    const next = !connection.loggerStatus;
+    saveLoggerStatusDb(String(next));
+    connection.setLoggerStatus(next);
+  };
+
+  const deleteMessages = () => {
     deleteLogMessagesDb();
-    setMessages(undefined);
-  }
+    connection.setLogger(undefined);
+    setMessages([]);
+    setQuery("");
+    setConfirmDelete(false);
+  };
 
-  function toggleLogger() {
-    if (connectionCtx.loggerStatus) {
-      saveLoggerStatusDb("false");
-    } else {
-      saveLoggerStatusDb("true");
-    }
-
-    connectionCtx.setLoggerStatus((prev) => !prev);
-  }
-
-  let displayMessages = messages?.length ? messages : connectionCtx.logger;
+  const exportMessages = () => {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(messages, null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `dwarfium-device-log-${new Date().toISOString().replaceAll(":", "-")}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   return (
-    <div>
-      <h1>Message Log</h1>
-      <p>
-        If turn on the logger, this app will save and display all the messages
-        sent between this app and Dwarf II. The messages are ordered from oldest
-        to newest.
-      </p>
-      <div className="mb-3">
-        Log status: {connectionCtx.loggerStatus ? "on" : "off"}
-        {connectionCtx.loggerStatus && (
-          <span>, {displayMessages?.length || 0} messages</span>
-        )}
+    <div className={styles.logs}>
+      <div className={styles.intro}>
+        <div>
+          <h2>Message log</h2>
+          <p>
+            Device commands and responses are saved on this computer for
+            troubleshooting. Newest messages appear first.
+          </p>
+        </div>
+        <div className={styles.status}>
+          <span
+            className={
+              connection.loggerStatus ? styles.active : styles.inactive
+            }
+          >
+            <span className={styles.statusDot} />
+            Logger {connection.loggerStatus ? "on" : "off"}
+          </span>
+          <strong>{messages.length.toLocaleString()} messages</strong>
+        </div>
       </div>
-      {!connectionCtx.loggerStatus && (
-        <button className="btn btn-primary" onClick={toggleLogger}>
-          Turn on logger
-        </button>
-      )}
-      {connectionCtx.loggerStatus && (
-        <>
-          <button className="btn btn-primary me-3" onClick={toggleLogger}>
-            Turn off logger
+
+      <p>
+        Device messages are stored in this browser or app. Export them below to
+        include with a bug report. Both editions also save service output in{" "}
+        <code>DwarfiumProxy.log</code> and <code>mediamtx.log</code>. In the
+        Windows desktop app, find them in{" "}
+        <code>%LOCALAPPDATA%\com.Dwarfium.build\logs</code>. In standalone, open{" "}
+        <code>var/log</code> in the extracted folder.
+      </p>
+
+      <div className={styles.toolbar}>
+        <label className={styles.search}>
+          <i className="bi bi-search" aria-hidden="true" />
+          <span className="visually-hidden">Search messages</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setVisibleCount(PAGE_SIZE);
+            }}
+            placeholder="Search commands, codes or payloads"
+          />
+        </label>
+        <div className={styles.actions}>
+          <button
+            className="dw-button is-secondary"
+            disabled={messages.length === 0}
+            onClick={exportMessages}
+          >
+            Export logs
           </button>
-          <button className="btn btn-primary" onClick={deleteHandler}>
-            Delete all messages
+          <button className="dw-button is-secondary" onClick={toggleLogger}>
+            {connection.loggerStatus ? "Pause logging" : "Start logging"}
           </button>
-        </>
+          <button
+            className="dw-button is-secondary"
+            disabled={messages.length === 0}
+            onClick={() => setConfirmDelete(true)}
+          >
+            Clear logs
+          </button>
+        </div>
+      </div>
+
+      {confirmDelete && (
+        <div className={styles.confirm} role="alert">
+          <p>
+            Delete all {messages.length.toLocaleString()} saved messages from
+            this computer?
+          </p>
+          <div className={styles.actions}>
+            <button
+              className="dw-button is-secondary"
+              onClick={() => setConfirmDelete(false)}
+            >
+              Cancel
+            </button>
+            <button className="dw-button" onClick={deleteMessages}>
+              Delete messages
+            </button>
+          </div>
+        </div>
       )}
-      {connectionCtx.loggerStatus &&
-        displayMessages &&
-        displayMessages.map((m, i) => <DebugMessageItem key={i} message={m} />)}
+
+      <p className={styles.hint}>
+        Logs can contain network or device details. Review payloads before
+        sharing them.
+      </p>
+
+      {filtered.length ? (
+        <div className={styles.list}>
+          <div className={styles.listHeading}>
+            <h3>Messages</h3>
+            <span>
+              Showing {Math.min(visibleCount, filtered.length).toLocaleString()}{" "}
+              of {filtered.length.toLocaleString()}
+            </span>
+          </div>
+          {filtered.slice(0, visibleCount).map(({ message, sequence }) => (
+            <LogMessageItem
+              key={sequence}
+              message={message}
+              sequence={sequence}
+            />
+          ))}
+          {visibleCount < filtered.length && (
+            <button
+              className="dw-button is-secondary"
+              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            >
+              Show 50 more
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className={styles.empty}>
+          <i className="bi bi-terminal" aria-hidden="true" />
+          <h3>{query ? "No matching messages" : "No messages yet"}</h3>
+          <p>
+            {query
+              ? "Try a command name, numeric code, or another search term."
+              : "Start logging, then connect to a DWARF to record commands and responses."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

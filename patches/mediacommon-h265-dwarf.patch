@@ -1,0 +1,32 @@
+diff --git a/pkg/codecs/h265/dts_extractor.go b/pkg/codecs/h265/dts_extractor.go
+index ca52e6c..f002c05 100644
+--- a/pkg/codecs/h265/dts_extractor.go
++++ b/pkg/codecs/h265/dts_extractor.go
+@@ -115 +115 @@ func getPTSDTSDiff(buf []byte, sps *SPS, pps *PPS) (int, error) {
+-				return 0, fmt.Errorf("invalid DeltaPocS0")
++				return -len(rps.DeltaPocS1), nil
+@@ -124 +124 @@ func getPTSDTSDiff(buf []byte, sps *SPS, pps *PPS) (int, error) {
+-			return 0, fmt.Errorf("invalid DeltaPocS0")
++			return 0, nil
+diff --git a/pkg/codecs/h265/sps.go b/pkg/codecs/h265/sps.go
+index 44fda20..3f744ae 100644
+--- a/pkg/codecs/h265/sps.go
++++ b/pkg/codecs/h265/sps.go
+@@ -917,2 +917,15 @@ func (s *SPS) Unmarshal(buf []byte) error {
+-		if numLongTermRefPicsSPS > 0 {
+-			return fmt.Errorf("long term ref pics inside SPS are not supported yet")
++		if numLongTermRefPicsSPS > 32 {
++			return fmt.Errorf("num_long_term_ref_pics_sps exceeds 32")
++		}
++
++		pocLsbBits := int(s.Log2MaxPicOrderCntLsbMinus4 + 4)
++		for range numLongTermRefPicsSPS {
++			_, err = bits.ReadBits(buf, &pos, pocLsbBits)
++			if err != nil {
++				return err
++			}
++
++			_, err = bits.ReadFlag(buf, &pos)
++			if err != nil {
++				return err
++			}

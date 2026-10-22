@@ -4,7 +4,7 @@ export const isDstObserved = function (date: Date): boolean {
   var jul = new Date(date.getFullYear(), 6, 1);
   let stdTimezoneOffset = Math.max(
     jan.getTimezoneOffset(),
-    jul.getTimezoneOffset()
+    jul.getTimezoneOffset(),
   );
   return date.getTimezoneOffset() < stdTimezoneOffset;
 };
@@ -24,7 +24,7 @@ function convertSecondsToHMS(totalSeconds: number) {
 
 export function calculateImagingTime(
   count: number | undefined,
-  exposure: number | undefined
+  exposure: number | undefined,
 ) {
   if (count === undefined || exposure === undefined) {
     return;
@@ -36,7 +36,7 @@ export function calculateImagingTime(
 
 export function calculateElapsedTime(
   startTime: number | undefined,
-  now = Date.now()
+  now = Date.now(),
 ) {
   if (startTime === undefined) {
     return;
@@ -44,4 +44,10 @@ export function calculateElapsedTime(
 
   let total = (now - startTime) / 1000;
   return convertSecondsToHMS(total);
+}
+
+export function toIsoStringInLocalTime(date: Date) {
+  return new Date(
+    date.getTime() + -date.getTimezoneOffset() * 60000,
+  ).toISOString();
 }

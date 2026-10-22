@@ -8,6 +8,9 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 /** @type {import('jest').Config} */
 const config = {
+  // The nested SDK owns its own runner and must not shadow the Git dependency.
+  testPathIgnorePatterns: ["<rootDir>/dwarfii_api/"],
+  modulePathIgnorePatterns: ["<rootDir>/dwarfii_api/"],
   // Add more setup options before each test is run
   // setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 
