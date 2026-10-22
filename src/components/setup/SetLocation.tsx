@@ -11,10 +11,10 @@ import { logger } from "@/lib/logger";
 export default function SetLocation() {
   let connectionCtx = useContext(ConnectionContext);
   const [latitude, setLatitude] = useState<string | undefined>(
-    connectionCtx.latitude?.toString()
+    connectionCtx.latitude?.toString(),
   );
   const [longitude, setLongitude] = useState<string | undefined>(
-    connectionCtx.longitude?.toString()
+    connectionCtx.longitude?.toString(),
   );
   const [errors, setErrors] = useState<string | undefined>();
 
@@ -40,7 +40,7 @@ export default function SetLocation() {
       (err) => {
         logger("getCoordinates err:", err, connectionCtx);
         setErrors("Could not detect location.");
-      }
+      },
     );
   }
 

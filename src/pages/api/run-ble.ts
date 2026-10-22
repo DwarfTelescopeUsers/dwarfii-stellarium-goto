@@ -3,7 +3,11 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import unzipper from "unzipper"; // Install with `npm install unzipper`
-import { getLocalIPAddress } from "@/lib/getLocalIp";
+import {
+  buildBleCommandArguments,
+  getBleDeviceNames,
+  parseBleHelperOutput,
+} from "../../../server/ble-helper";
 
 interface Config {
   DWARF_IP?: string;
@@ -65,7 +69,7 @@ const normalizeIP = (ip: string | undefined) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -78,14 +82,11 @@ export default async function handler(
     const clientIp =
       normalizeIP(
         (req.headers["x-forwarded-for"] as string)?.split(",")[0] || // If behind a proxy
-          req.socket.remoteAddress
+          req.socket.remoteAddress,
       ) || // Direct connection
       "Unknown IP";
 
     console.log(`Received request from IP: ${clientIp}`);
-
-    const on_server =
-      clientIp === "127.0.0.1" || getLocalIPAddress().includes(clientIp);
 
     const exePath =
       process.platform === "win32"
@@ -103,43 +104,32 @@ export default async function handler(
       auto_select = "0",
     } = req.body;
 
-    const command_line = on_server
-      ? ["--psd", ble_psd, "--ssid", ble_STA_ssid, "--pwd", ble_STA_pwd]
-      : [
-          "--psd",
-          ble_psd,
-          "--ssid",
-          ble_STA_ssid,
-          "--pwd",
-          ble_STA_pwd,
-          "--select",
-          auto_select,
-          "--cmd",
-        ];
+    const command_line = buildBleCommandArguments({
+      blePassword: ble_psd,
+      wifiSsid: ble_STA_ssid,
+      wifiPassword: ble_STA_pwd,
+      selectedDevice: auto_select,
+    });
 
     console.log("run_exe_path : " + exePath);
     console.log("run_exe_instal_path : " + EXTERN_DIR);
-    const childProcess = spawn(`"${exePath}"`, command_line, {
+    const childProcess = spawn(exePath, command_line, {
       cwd: EXTERN_DIR,
-      shell: true,
+      shell: false,
+      windowsHide: true,
     });
-
-    interface DwarfScanResult {
-      step: string;
-      dwarf_devices?: string[]; // Optional, since it might not be present in every step
-      dwarf_device?: string | null;
-      error?: string | null;
-      is_connected?: boolean;
-      connecting?: boolean;
-      device_dwarf_id?: number;
-      device_dwarf_name?: string;
-      device_dwarf_uid?: string;
-      ip_address?: string;
-    }
 
     let stdoutData = "";
     let stderrData = "";
-    let stdMessageData = {};
+    let responseSent = false;
+
+    childProcess.on("error", (error) => {
+      if (responseSent) return;
+      responseSent = true;
+      res
+        .status(500)
+        .json({ error: `Bluetooth helper failed to start: ${error.message}` });
+    });
 
     childProcess.stdout.on("data", (data) => {
       stdoutData += data.toString().trim();
@@ -149,40 +139,17 @@ export default async function handler(
     childProcess.stderr.on("data", (data) => {
       const text = data.toString().trim();
       console.info("Info:", text);
-      stderrData += text;
-
-      // Try parsing JSON immediately if the data contains a valid JSON object
-      try {
-        let jsonString = text;
-        if (text.startsWith("{")) {
-          jsonString = text.slice(0, text.indexOf("}") + 1);
-        }
-        const sanitizedJson = jsonString
-          .replace(/None/g, "null")
-          .replace(/True/g, "true")
-          .replace(/False/g, "false")
-          .replace(/([{,]\s*)'([^']+)'(\s*[:])/g, '$1"$2"$3') // Convert keys to double quotes
-          .replace(/(:\s*)'([^']+)'/g, '$1"$2"') // Convert string values to double quotes
-          .replace(/BLEDevice\(([^)]+)\)/g, '"$1"'); // Convert Python-style objects
-        console.info("sanitizedJson:", sanitizedJson);
-        const parsedJson = JSON.parse(sanitizedJson);
-        stdMessageData = parsedJson; // Store the last JSON object
-        console.info("MessageData:", stdMessageData);
-      } catch (err) {
-        // Ignore non-JSON data
-        console.log("Ignore non JSPN data");
-      }
+      stderrData += `${text}\n`;
     });
 
     childProcess.on("close", (code) => {
+      if (responseSent) return;
+      responseSent = true;
       if (code !== 0) {
         return res.status(500).json({ error: `Process failed: ${stderrData}` });
       }
 
-      let jsonResult: DwarfScanResult | null = null;
-
-      jsonResult = stdMessageData as DwarfScanResult;
-      console.info("Final jsonResult:", stdMessageData);
+      const jsonResult = parseBleHelperOutput(stderrData);
       console.log("Final jsonResult:", JSON.stringify(jsonResult, null, 2));
 
       if (jsonResult) {
@@ -199,10 +166,7 @@ export default async function handler(
           Array.isArray(jsonResult.dwarf_devices) &&
           jsonResult.dwarf_devices.length > 1
         ) {
-          const deviceNames = jsonResult.dwarf_devices.map((device: string) => {
-            // Split by comma and take the second part (the device name)
-            return device.split(", ")[1]; // This will give "DWARF3_3C2E2A" and "DWARF3_3AD246"
-          });
+          const deviceNames = getBleDeviceNames(jsonResult.dwarf_devices);
           return res.status(202).json({
             message: "Multiple devices found, user selection needed",
             devices: deviceNames,
@@ -239,6 +203,13 @@ export default async function handler(
       } catch (configError) {
         return res.status(500).json({ error: (configError as Error).message });
       }
+    });
+
+    // Keep the API request alive until the helper has produced and returned
+    // its structured result. Otherwise Next.js reports a stalled response.
+    await new Promise<void>((resolve) => {
+      childProcess.once("close", () => resolve());
+      childProcess.once("error", () => resolve());
     });
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message });

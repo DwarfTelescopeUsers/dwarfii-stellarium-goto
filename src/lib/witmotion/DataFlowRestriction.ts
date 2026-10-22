@@ -3,7 +3,7 @@ import { ArraySensorDataInterface } from "./Interfaces";
 
 export const dataFlowRestriction = (
   inputData: ArraySensorDataInterface,
-  data: SensorData
+  data: SensorData,
 ) => {
   if (inputData.ang.x.length >= 50) {
     inputData.axc.x.splice(0, 1);

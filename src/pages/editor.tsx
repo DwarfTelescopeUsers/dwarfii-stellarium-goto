@@ -1,16 +1,19 @@
 import React from "react";
 import ImageEditor from "@/components/ImageEditor";
+import PageHeader from "@/components/shared/PageHeader";
 
 const Editor: React.FC = () => {
   return (
-    <section className="d-inline-block w-100">
-      <div className="container">
-        <div className="page-container">
-          <h1 className="page-title">Image Editor</h1>
-          <ImageEditor />
-        </div>
-      </div>
-    </section>
+    <div className="dw-page">
+      <PageHeader
+        eyebrow="Create"
+        title="Image editor"
+        description="Make focused adjustments to captured images without leaving Dwarfium."
+      />
+      <section className="dw-panel dw-tool-panel">
+        <ImageEditor />
+      </section>
+    </div>
   );
 };
 

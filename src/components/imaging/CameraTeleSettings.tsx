@@ -2,7 +2,11 @@ import React from "react";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { modeManual, modeAuto, whiteBalanceScenesIDValue } from "dwarfii_api";
+import {
+  modeManual,
+  modeAuto,
+  whiteBalanceScenesIDValue,
+} from "@/services/dwarf";
 import { Formik } from "formik";
 import { allowedWBColorTemp } from "@/lib/data_utils";
 
@@ -65,7 +69,7 @@ export default function CameraTeleSettings(props: PropTypes) {
     setTeleWBMode(parseInt(targetValue, 10));
   }
   function changeWBColorTempIndexValueHandler(
-    e: ChangeEvent<HTMLSelectElement>
+    e: ChangeEvent<HTMLSelectElement>,
   ) {
     let targetValue = e.target.value;
     setTeleWBColorTempIndexValue(parseInt(targetValue, 10));
@@ -139,11 +143,11 @@ export default function CameraTeleSettings(props: PropTypes) {
     ));
   };
   const allowedTeleWBColorTempOptions = generateWBColorTempOptions(
-    connectionCtx.typeIdDwarf
+    connectionCtx.typeIdDwarf,
   ); //DwarfModelId
 
   const allowedTeleWBSceneOptions = Object.entries(
-    whiteBalanceScenesIDValue
+    whiteBalanceScenesIDValue,
   ).map(([index, name]) => (
     <option key={index} value={index}>
       {name}
@@ -166,7 +170,7 @@ export default function CameraTeleSettings(props: PropTypes) {
       teleContrastValue,
       teleHueValue,
       teleSaturationValue,
-      teleSharpnessValue
+      teleSharpnessValue,
     );
   }
 

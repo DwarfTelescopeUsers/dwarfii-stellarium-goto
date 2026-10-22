@@ -1,18 +1,25 @@
 import type { Dispatch, SetStateAction } from "react";
+import {
+  deviceOperationIsCurrent,
+  scheduleDeviceAction,
+} from "@/services/dwarf/operationScope";
 import { AstroObject, ConnectionContextType } from "@/types";
-import { focusPath, focusPosPath } from "@/lib/stellarium_utils";
-import { getProxyUrl } from "@/lib/get_proxy_url";
+import {
+  focusPath,
+  focusPosPath,
+  stellariumRequestUrl,
+} from "@/lib/stellarium_utils";
 
 import {
   Dwarfii_Api,
   messageSystemSetTime,
   messageSystemSetTimezone,
   messageAstroStartCalibration,
-  messageAstroStartGotoSolarSystem,
-  messageAstroStartGotoDso,
-  messageAstroStopGoto,
-  messageCameraTeleCloseCamera,
-  messageCameraWideCloseCamera,
+  createV3OneClickGotoSolarPacket,
+  createV3OneClickGotoDsoPacket,
+  messageV3AstroGotoDone,
+  messageV3CameraTeleCloseCamera,
+  messageV3CameraWideCloseCamera,
   messageRgbPowerReboot,
   messageRgbPowerDown,
   messageRgbPowerCloseRGB,
@@ -25,10 +32,15 @@ import {
   messageAstroStartEqSolving,
   //  messageCameraTeleGetAllFeatureParams,
   WebSocketHandler,
-} from "dwarfii_api";
+} from "@/services/dwarf";
 import { get_error } from "@/lib/dwarf_utils";
 import eventBus from "@/lib/event_bus";
 import { logger } from "@/lib/logger";
+import {
+  calibrationCoordinates,
+  mountOperationLabel,
+  oneClickGotoPhase,
+} from "@/services/dwarf/mountState";
 import {
   convertHMSToDecimalHours,
   convertHMSToDecimalDegrees,
@@ -54,8 +66,10 @@ export async function calibrationHandler(
   connectionCtx: ConnectionContextType,
   setErrors: Dispatch<SetStateAction<string | undefined>>,
   setSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
+  const current = deviceOperationIsCurrent(connectionCtx);
+  if (!current()) return;
   if (connectionCtx.IPDwarf === undefined) {
     return;
   }
@@ -68,14 +82,17 @@ export async function calibrationHandler(
 
   if (connectionCtx.timezone) timezone = connectionCtx.timezone;
 
-  let lat = connectionCtx.latitude;
-  /////////////////////////////////////////
-  // Reverse the Longitude for the dwarf : positive for WEST
-  /////////////////////////////////////////
-  let lon = 0;
-  if (connectionCtx.longitude) lon = -connectionCtx.longitude;
-  if (lat === undefined) return;
-  if (lon === undefined) return;
+  if (
+    connectionCtx.latitude === undefined ||
+    connectionCtx.longitude === undefined ||
+    !Number.isFinite(connectionCtx.latitude) ||
+    !Number.isFinite(connectionCtx.longitude) ||
+    Math.abs(connectionCtx.latitude) > 90 ||
+    Math.abs(connectionCtx.longitude) > 180
+  ) {
+    setErrors("Set a valid observing location before calibration.");
+    return;
+  }
   let calibration_status = false;
 
   connectionCtx.setAstroSettings((prev) => ({
@@ -154,46 +171,21 @@ export async function calibrationHandler(
     } else if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_CALIBRATION
     ) {
-      if (
-        calibration_status == false &&
-        result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
-      ) {
-        getAllTelescopeISPSetting(connectionCtx);
-        setErrors("");
-        setSuccess(txt_info + " Done");
-        if (callback) {
-          callback(txt_info + " Successfully");
-        }
-      } else if (
-        calibration_status == true &&
-        result_data.data.state == Dwarfii_Api.AstroState.ASTRO_STATE_IDLE
-      ) {
-        getAllTelescopeISPSetting(connectionCtx);
-        setErrors("");
-        setSuccess("");
-        setErrors(txt_info + " Failure");
-        if (callback) {
-          callback(txt_info + " Failure");
-        }
-      } else {
-        setErrors("");
-        setSuccess(
-          txt_info +
-            " Phase #" +
-            result_data.data.plateSolvingTimes +
-            " " +
-            result_data.data.statePlainTxt
-        );
-        if (callback) {
-          callback(
-            txt_info +
-              " Phase #" +
-              result_data.data.plateSolvingTimes +
-              " " +
-              result_data.data.statePlainTxt
-          );
-        }
-      }
+      const state = result_data.data.state ?? 0;
+      // Idle is not successful calibration; only solved coordinates prove it.
+      const message = `Calibration: ${mountOperationLabel(state)}. Waiting for solved coordinates.`;
+      if (!calibration_status) setSuccess(message);
+      callback?.(message);
+    } else if (
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CALIBRATION_RESULT &&
+      result_data.type === 2
+    ) {
+      const coordinates = calibrationCoordinates(result_data.data);
+      if (!coordinates || calibration_status) return;
+      const message = `Calibration solved: azimuth ${coordinates.azimuth.toFixed(2)}°, altitude ${coordinates.altitude.toFixed(2)}°.`;
+      setErrors(undefined);
+      setSuccess(message);
+      callback?.(message);
     } else {
       logger("", result_data, connectionCtx);
       return;
@@ -217,7 +209,7 @@ export async function calibrationHandler(
     WS_Packet1,
     txtInfoCommand1,
     [Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME],
-    customMessageHandler
+    customMessageHandler,
   );
 
   if (!webSocketHandler.run()) {
@@ -225,6 +217,7 @@ export async function calibrationHandler(
   }
 
   await sleep(500);
+  if (!current()) return;
 
   // Send Command : messageSystemSetTimezone
   let WS_Packet2 = messageSystemSetTimezone(timezone);
@@ -234,13 +227,23 @@ export async function calibrationHandler(
     WS_Packet2,
     txtInfoCommand2,
     [Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_TIME_ZONE],
-    customMessageHandler
+    customMessageHandler,
   );
 
   await sleep(500);
+  if (!current()) return;
 
   // Send Command : messageAstroStartCalibration
-  let WS_Packet3 = messageAstroStartCalibration();
+  if (
+    connectionCtx.longitude === undefined ||
+    connectionCtx.latitude === undefined
+  ) {
+    throw new Error("A location is required before starting V3 calibration");
+  }
+  let WS_Packet3 = messageAstroStartCalibration(
+    connectionCtx.longitude,
+    connectionCtx.latitude,
+  );
   let txtInfoCommand3 = "Calibration";
   webSocketHandler.prepare(
     WS_Packet3,
@@ -248,8 +251,9 @@ export async function calibrationHandler(
     [
       Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CALIBRATION,
       Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_CALIBRATION,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_CALIBRATION_RESULT,
     ],
-    customMessageHandler
+    customMessageHandler,
   );
 }
 
@@ -262,9 +266,10 @@ export async function startGotoHandler(
   declination: string | undefined | null,
   objectName: string | undefined,
   callback?: (options: any) => void, // eslint-disable-line no-unused-vars
-  stopGoto: boolean = false
+  stopGoto: boolean = false,
 ) {
   if (connectionCtx.IPDwarf === undefined) {
+    setGotoErrors("The connected DWARF has no network address.");
     return;
   }
   setGotoErrors(undefined);
@@ -278,21 +283,28 @@ export async function startGotoHandler(
     if (beginStr) targetName = beginStr.trim().replace(/ /g, "_");
     else targetName = objectName.trim().replace(/ /g, "_");
   }
-  let lat = 0;
-  if (connectionCtx.latitude) lat = connectionCtx.latitude;
-  /////////////////////////////////////////
-  // Reverse the Longitude for the dwarf : positive for WEST
-  /////////////////////////////////////////
-  let lon = 0;
-  if (connectionCtx.longitude) lon = -connectionCtx.longitude;
-  if (lat === undefined) return;
-  if (lon === undefined) return;
+  const lat = connectionCtx.latitude;
+  const lon = connectionCtx.longitude;
+  if (
+    typeof lat !== "number" ||
+    typeof lon !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon)
+  ) {
+    setGotoErrors("Set an observing location before starting GOTO.");
+    return;
+  }
   let goto_status = false;
 
   const customMessageHandler = (txt_info, result_data) => {
     if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_DSO ||
-      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM
+      result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM ||
+      result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_ONE_CLICK_GOTO_DSO ||
+      result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_ONE_CLICK_GOTO_SOLAR_SYSTEM
     ) {
       if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
         setGotoSuccess("");
@@ -317,9 +329,22 @@ export async function startGotoHandler(
       }
     } else if (
       !goto_status &&
+      result_data.cmd ==
+        Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_ONE_CLICK_GOTO
+    ) {
+      const phase = oneClickGotoPhase(result_data.data);
+      if (!phase) return;
+      setGotoSuccess(
+        `${phase.phase}${phase.targetName ? ` ${phase.targetName}` : ""}: ${mountOperationLabel(phase.state)}`,
+      );
+      setGotoErrors(undefined);
+    } else if (
+      !goto_status &&
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO
     ) {
-      setGotoSuccess(result_data.data.statePlainTxt);
+      setGotoSuccess(
+        `GOTO: ${mountOperationLabel(result_data.data.state ?? 0)}`,
+      );
       setGotoErrors("");
       if (callback) {
         callback("Info GoTo");
@@ -349,7 +374,7 @@ export async function startGotoHandler(
             connectionCtx,
             setGotoErrors,
             setGotoSuccess,
-            callback
+            callback,
           );
         }
         resetCameraData(connectionCtx);
@@ -407,28 +432,25 @@ export async function startGotoHandler(
     // Send Command : cmdAstroStartGotoDso
     if (Dwarfii_Api.SolarSystemTarget[planet]) {
       targetName = Dwarfii_Api.SolarSystemTarget[planet];
-      WS_Packet = messageAstroStartGotoSolarSystem(
+      WS_Packet = createV3OneClickGotoSolarPacket(
         planet,
         lon,
         lat,
-        Dwarfii_Api.SolarSystemTarget[planet]
+        Dwarfii_Api.SolarSystemTarget[planet],
       );
     } else if (targetName) {
-      WS_Packet = messageAstroStartGotoSolarSystem(
-        planet,
-        lon,
-        lat,
-        targetName
-      );
+      WS_Packet = createV3OneClickGotoSolarPacket(planet, lon, lat, targetName);
     } else {
-      WS_Packet = messageAstroStartGotoSolarSystem(planet, lon, lat, "-");
+      WS_Packet = createV3OneClickGotoSolarPacket(planet, lon, lat, "-");
     }
   } else if (targetName) {
     // Send Command : messageAstroStartGotoDso
-    WS_Packet = messageAstroStartGotoDso(
+    WS_Packet = createV3OneClickGotoDsoPacket(
       RA_number,
       declination_number,
-      targetName
+      targetName,
+      lon,
+      lat,
     );
   }
   connectionCtx.setAstroSettings((prev) => ({
@@ -448,68 +470,72 @@ export async function startGotoHandler(
   // Send Command
   let txtInfoCommand = "Start Goto";
 
-  webSocketHandler.prepare(
+  if (!WS_Packet) {
+    setGotoErrors("Select a named target before starting GOTO.");
+    return;
+  }
+
+  await webSocketHandler.prepare(
     WS_Packet,
     txtInfoCommand,
     [
-      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_DSO,
-      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM,
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_ONE_CLICK_GOTO_DSO,
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_ONE_CLICK_GOTO_SOLAR_SYSTEM,
+      Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_ONE_CLICK_GOTO,
       Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO,
       Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_TRACKING,
     ],
-    customMessageHandler
+    customMessageHandler,
   );
   if (!webSocketHandler.run()) {
-    console.error(" Can't launch Web Socket Run Action!");
+    setGotoErrors("Could not start the DWARF command connection.");
+    return;
   }
+  setGotoSuccess(`GOTO command sent for ${objectName || targetName}.`);
 }
 
 function resetCameraData(connectionCtx) {
-  setTimeout(() => {
-    turnOnTeleCameraFn(connectionCtx);
-  }, 1000);
-  setTimeout(() => {
+  scheduleDeviceAction(connectionCtx, 1000, (scoped) => {
+    turnOnTeleCameraFn(scoped);
+  });
+  scheduleDeviceAction(connectionCtx, 1500, (scoped) => {
     updateTelescopeISPSetting(
       "gainMode",
-      connectionCtx.astroSettings.gainMode as number,
-      connectionCtx
+      scoped.astroSettings.gainMode as number,
+      scoped,
     );
-  }, 1500);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 2000, (scoped) => {
     updateTelescopeISPSetting(
       "exposureMode",
-      connectionCtx.astroSettings.exposureMode as number,
-      connectionCtx
+      scoped.astroSettings.exposureMode as number,
+      scoped,
     );
-  }, 2000);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 2500, (scoped) => {
     updateTelescopeISPSetting(
       "gain",
-      connectionCtx.astroSettings.gain as number,
-      connectionCtx
+      scoped.astroSettings.gain as number,
+      scoped,
     );
-  }, 2500);
-  setTimeout(() => {
+  });
+  scheduleDeviceAction(connectionCtx, 3000, (scoped) => {
     updateTelescopeISPSetting(
       "exposure",
-      connectionCtx.astroSettings.exposure as number,
-      connectionCtx
+      scoped.astroSettings.exposure as number,
+      scoped,
     );
-  }, 3000);
-  setTimeout(() => {
-    updateTelescopeISPSetting(
-      "IR",
-      connectionCtx.astroSettings.IR as number,
-      connectionCtx
-    );
-  }, 3500);
+  });
+  scheduleDeviceAction(connectionCtx, 3500, (scoped) => {
+    updateTelescopeISPSetting("IR", scoped.astroSettings.IR as number, scoped);
+  });
 }
 
 export function savePositionHandler(
   connectionCtx: ConnectionContextType,
   setPosition: Dispatch<SetStateAction<string | undefined>>,
   current_position = "Recorded Position: ",
-  no_position = "No Recorded Position"
+  no_position = "No Recorded Position",
 ) {
   //Save Position
 
@@ -525,7 +551,7 @@ export function savePositionHandler(
       connectionCtx.astroSavePosition.rightAscension! * 15,
       connectionCtx.astroSavePosition.declination!,
       connectionCtx.astroSavePosition.strLocalTime,
-      connectionCtx.timezone
+      connectionCtx.timezone,
     );
 
     if (results) {
@@ -548,7 +574,7 @@ export function savePositionHandler(
           "alt: " +
           ConvertStrDeg(formatFloatToDecimalPlaces(results.alt, 4)) +
           ",az: " +
-          ConvertStrDeg(formatFloatToDecimalPlaces(results.az, 4))
+          ConvertStrDeg(formatFloatToDecimalPlaces(results.az, 4)),
       );
     }
   } else setPosition(no_position);
@@ -561,7 +587,7 @@ export function gotoPositionHandler(
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
   callback?: (options: any) => void, // eslint-disable-line no-unused-vars
   info_txt = "Initial Position",
-  no_position = "No Recorded Position"
+  no_position = "No Recorded Position",
 ) {
   //get Save Position
   let today = new Date();
@@ -576,7 +602,7 @@ export function gotoPositionHandler(
       connectionCtx.astroSavePosition.altitude!,
       connectionCtx.astroSavePosition.azimuth!,
       toIsoStringInLocalTime(today),
-      connectionCtx.timezone
+      connectionCtx.timezone,
     );
 
     if (results) {
@@ -586,20 +612,20 @@ export function gotoPositionHandler(
           ConvertStrDeg(
             formatFloatToDecimalPlaces(
               connectionCtx.astroSavePosition.altitude,
-              4
-            )
+              4,
+            ),
           ) +
           ",az: " +
           ConvertStrDeg(
             formatFloatToDecimalPlaces(
               connectionCtx.astroSavePosition.azimuth,
-              4
-            )
+              4,
+            ),
           ) +
           " => RA: " +
           ConvertStrHours(results.ra / 15) +
           ", Declination: " +
-          ConvertStrDeg(results.dec)
+          ConvertStrDeg(results.dec),
       );
       startGotoHandler(
         connectionCtx,
@@ -610,7 +636,7 @@ export function gotoPositionHandler(
         ConvertStrDeg(results.dec),
         info_txt,
         callback,
-        true
+        true,
       );
     }
   } else setPosition(no_position);
@@ -620,7 +646,7 @@ export async function stopGotoHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -631,21 +657,17 @@ export async function stopGotoHandler(
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
   const customMessageHandler = (txt_info, result_data) => {
-    if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_GOTO) {
+    if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_ONE_CLICK_GOTO) {
       if (result_data.data.code == Dwarfii_Api.DwarfErrorCode.OK) {
-        setGotoSuccess("Stopping Goto");
+        setGotoSuccess("GOTO stop accepted. Waiting for telescope state.");
         setGotoErrors("");
-        connectionCtx.setAstroSettings((prev) => ({
-          ...prev, // Spread the previous state
-          target: undefined!, // Update the target property
-        }));
-        connectionCtx.setAstroSettings((prev) => ({
-          ...prev, // Spread the previous state
-          status: undefined, // Update the status property
-        }));
+        // A command ACK does not prove that motion or tracking has stopped.
+        // Preserve the last authoritative target/state until device telemetry.
         if (callback) {
-          callback("Stopping Goto");
+          callback("GOTO stop accepted");
         }
+      } else {
+        get_error("Unable to stop GOTO: ", result_data, setGotoErrors);
       }
     } else if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO
@@ -673,19 +695,18 @@ export async function stopGotoHandler(
     ? connectionCtx.socketIPDwarf
     : new WebSocketHandler(connectionCtx.IPDwarf);
 
-  // Send Command : messageAstroStopGoto
-  let WS_Packet = messageAstroStopGoto();
-  //  let WS_Packet = messageCameraTeleGetAllFeatureParams();
+  // Stop the one-click operation started by startGotoHandler (command 11015).
+  let WS_Packet = messageV3AstroGotoDone();
   let txtInfoCommand = "Stop Goto";
 
   webSocketHandler.prepare(
     WS_Packet,
     txtInfoCommand,
     [
-      Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_GOTO,
+      Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_ONE_CLICK_GOTO,
       Dwarfii_Api.DwarfCMD.CMD_NOTIFY_STATE_ASTRO_GOTO,
     ],
-    customMessageHandler
+    customMessageHandler,
   );
   if (!webSocketHandler.run()) {
     console.error(" Can't launch Web Socket Run Action!");
@@ -696,7 +717,7 @@ export async function PowerLightsHandlerFn(
   setOff: boolean,
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -731,7 +752,7 @@ export async function RingLightsHandlerFn(
   setOff: boolean,
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -766,7 +787,7 @@ export async function shutDownHandler(
   reboot: boolean,
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -778,8 +799,8 @@ export async function shutDownHandler(
     if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN ||
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_REBOOT ||
-      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_CLOSE_CAMERA ||
-      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA ||
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_TELE_OPEN_CAMERA ||
+      result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_WIDE_OPEN_CAMERA ||
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF
     ) {
       if (callback) {
@@ -797,8 +818,8 @@ export async function shutDownHandler(
   let WS_Packet3 = {};
   let txtInfoCommand = "Shutdown";
   if (reboot) {
-    WS_Packet1 = messageCameraTeleCloseCamera();
-    WS_Packet2 = messageCameraWideCloseCamera();
+    WS_Packet1 = messageV3CameraTeleCloseCamera();
+    WS_Packet2 = messageV3CameraWideCloseCamera();
     WS_Packet3 = messageRgbPowerReboot();
     txtInfoCommand = "Reboot";
   } else WS_Packet1 = messageRgbPowerDown();
@@ -817,11 +838,11 @@ export async function shutDownHandler(
       [
         Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_REBOOT,
         Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_CLOSE_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_TELE_OPEN_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_WIDE_OPEN_CAMERA,
         Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF,
       ],
-      customMessageHandler
+      customMessageHandler,
     );
   } else {
     webSocketHandler.prepare(
@@ -829,11 +850,11 @@ export async function shutDownHandler(
       txtInfoCommand,
       [
         Dwarfii_Api.DwarfCMD.CMD_RGB_POWER_POWER_DOWN,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_TELE_CLOSE_CAMERA,
-        Dwarfii_Api.DwarfCMD.CMD_CAMERA_WIDE_CLOSE_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_TELE_OPEN_CAMERA,
+        Dwarfii_Api.DwarfCMD.CMD_V3_CAMERA_WIDE_OPEN_CAMERA,
         Dwarfii_Api.DwarfCMD.CMD_NOTIFY_POWER_OFF,
       ],
-      customMessageHandler
+      customMessageHandler,
     );
   }
 
@@ -849,7 +870,7 @@ export async function dwarfResetMotorHandlerFn(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -911,7 +932,7 @@ export async function dwarfResetMotorHandlerFn(
         WS_Packet[indCommand],
         txtInfoCommand,
         [Dwarfii_Api.DwarfCMD.CMD_STEP_MOTOR_RESET],
-        customMessageHandler
+        customMessageHandler,
       );
     }
     if (indCommand == maxCommand && polarAlign)
@@ -919,7 +940,7 @@ export async function dwarfResetMotorHandlerFn(
         connectionCtx,
         setGotoErrors,
         setGotoSuccess,
-        callback
+        callback,
       );
   };
   // Send Command : messageStepMotorReset
@@ -942,7 +963,7 @@ export async function polarAlignHandlerFn(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -1029,7 +1050,7 @@ export async function polarAlignHandlerFn(
         WS_Packet[indCommand],
         txtInfoCommand,
         [Dwarfii_Api.DwarfCMD.CMD_STEP_MOTOR_RUN_TO],
-        customMessageHandler
+        customMessageHandler,
       );
     }
   };
@@ -1056,7 +1077,7 @@ export async function polarAlignPositionHandlerFn(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -1126,7 +1147,7 @@ export async function polarAlignPositionHandlerFn(
     WS_Packet,
     txtInfoCommand,
     [Dwarfii_Api.DwarfCMD.CMD_STEP_MOTOR_RUN_TO],
-    customMessageHandler
+    customMessageHandler,
   );
 
   if (!webSocketHandler.run()) {
@@ -1138,23 +1159,25 @@ export async function EQSolvingHandlerFn(
   connectionCtx: ConnectionContextType,
   setErrors: Dispatch<SetStateAction<string | undefined>>,
   setSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
+    setErrors("Connect your DWARF before starting EQ calibration.");
+    callback?.({ error: true });
     return;
   }
 
-  let lat = 0;
-  if (connectionCtx.latitude) lat = connectionCtx.latitude;
-  /////////////////////////////////////////
-  // Reverse the Longitude for the dwarf : positive for WEST
-  /////////////////////////////////////////
-  let lon = 0;
-  if (connectionCtx.longitude) lon = -connectionCtx.longitude;
-  if (lat === undefined || lon === undefined) {
-    setErrors("Longitude or Lattitude are not defined");
+  if (
+    connectionCtx.latitude === undefined ||
+    connectionCtx.longitude === undefined
+  ) {
+    setErrors("Set your observing location before starting EQ calibration.");
     return;
   }
+
+  const lat = connectionCtx.latitude;
+  // Current firmware uses east-positive longitude, matching saved locations.
+  const lon = connectionCtx.longitude;
 
   setErrors(undefined);
   setSuccess("Start EQ Solving Process");
@@ -1178,7 +1201,7 @@ export async function EQSolvingHandlerFn(
           " azi_err = " +
             result_data.data.aziErr +
             " , alt_err = " +
-            result_data.data.altErr
+            result_data.data.altErr,
         );
         if (callback) {
           callback(
@@ -1186,37 +1209,17 @@ export async function EQSolvingHandlerFn(
               " Result: azi_err = " +
               result_data.data.aziErr +
               " , alt_err = " +
-              result_data.data.altErr
+              result_data.data.altErr,
           );
         }
       } else find_error = true;
     } else if (
       result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_NOTIFY_EQ_SOLVING_STATE
     ) {
-      console.log("Notification CMD_NOTIFY_EQ_SOLVING_STATE");
-      setSuccess("EQ Solving State");
-      setErrors("");
-      if (callback) {
-        callback("EQ Solving State");
-      }
-
-      setErrors("");
-      setSuccess(
-        txt_info +
-          " Phase #" +
-          result_data.data.step +
-          " " +
-          result_data.data.statePlainTxt
-      );
-      if (callback) {
-        callback(
-          txt_info +
-            " Phase #" +
-            result_data.data.step +
-            " " +
-            result_data.data.statePlainTxt
-        );
-      }
+      const message = `EQ calibration: ${mountOperationLabel(result_data.data.state ?? 0)}. Waiting for the adjustment result.`;
+      setSuccess(message);
+      setErrors(undefined);
+      callback?.(message);
     } else {
       logger("", result_data, connectionCtx);
       return;
@@ -1261,10 +1264,13 @@ export async function EQSolvingHandlerFn(
       Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_EQ_SOLVING,
       Dwarfii_Api.DwarfCMD.CMD_NOTIFY_EQ_SOLVING_STATE,
     ],
-    customMessageHandler
+    customMessageHandler,
   );
 
   if (!webSocketHandler.run()) {
+    setSuccess(undefined);
+    setErrors("DWARF EQ calibration could not be started.");
+    callback?.({ error: true });
     console.error(" Can't launch Web Socket Run Action!");
   }
 }
@@ -1273,7 +1279,7 @@ export async function stopEQSolvingHandler(
   connectionCtx: ConnectionContextType,
   setGotoErrors: Dispatch<SetStateAction<string | undefined>>,
   setGotoSuccess: Dispatch<SetStateAction<string | undefined>>,
-  callback?: (options: any) => void // eslint-disable-line no-unused-vars
+  callback?: (options: any) => void, // eslint-disable-line no-unused-vars
 ) {
   if (connectionCtx.IPDwarf === undefined) {
     return;
@@ -1320,7 +1326,7 @@ export async function stopEQSolvingHandler(
     WS_Packet,
     txtInfoCommand,
     [Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_EQ_SOLVING],
-    customMessageHandler
+    customMessageHandler,
   );
   if (!webSocketHandler.run()) {
     console.error(" Can't launch Web Socket Run Action!");
@@ -1329,7 +1335,7 @@ export async function stopEQSolvingHandler(
 
 export function stellariumErrorHandler(
   err: any,
-  setErrors: Dispatch<SetStateAction<string | undefined>>
+  setErrors: Dispatch<SetStateAction<string | undefined>>,
 ) {
   if (
     err.name === "AbortError" ||
@@ -1348,7 +1354,7 @@ export function centerCoordinatesHandler(
   RA: string | undefined,
   declination: string | undefined,
   connectionCtx: ConnectionContextType,
-  setErrors: Dispatch<SetStateAction<string | undefined>>
+  setErrors: Dispatch<SetStateAction<string | undefined>>,
 ) {
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
@@ -1369,12 +1375,7 @@ export function centerCoordinatesHandler(
     console.log(`coordinates found: ${str_coord}`);
 
     let focusUrl = `${url}${focusPosPath}${str_coord}`;
-    if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
-      const targetUrl = new URL(focusUrl);
-      focusUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-        targetUrl.href
-      )}`;
-    }
+    focusUrl = stellariumRequestUrl(focusUrl, connectionCtx);
     console.log("focusUrl : " + focusUrl);
     fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
       // res.json don't work here
@@ -1397,7 +1398,7 @@ export function centerHandler(
   object: AstroObject,
   connectionCtx: ConnectionContextType,
   setErrors: Dispatch<SetStateAction<string | undefined>>,
-  functionSuccess?: () => void // eslint-disable-line no-unused-vars
+  functionSuccess?: () => void, // eslint-disable-line no-unused-vars
 ) {
   eventBus.dispatch("clearErrors", { message: "clear errors" });
 
@@ -1419,12 +1420,7 @@ export function centerHandler(
       console.log(`coordinates found: ${str_coord}`);
 
       let focusUrl = `${url}${focusPosPath}${str_coord}`;
-      if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
-        const targetUrl = new URL(focusUrl);
-        focusUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-          targetUrl.href
-        )}`;
-      }
+      focusUrl = stellariumRequestUrl(focusUrl, connectionCtx);
       console.log("focusUrl : " + focusUrl);
       fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
         // res.json don't work here
@@ -1441,12 +1437,7 @@ export function centerHandler(
     } else {
       console.log("select object by name in stellarium...");
       let focusUrl = `${url}${focusPath}${object.designation}`;
-      if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
-        const targetUrl = new URL(focusUrl);
-        focusUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-          targetUrl.href
-        )}`;
-      }
+      focusUrl = stellariumRequestUrl(focusUrl, connectionCtx);
       console.log("focusUrl : " + focusUrl);
       fetch(focusUrl, { method: "POST", signal: AbortSignal.timeout(2000) })
         .then((res) => {
@@ -1469,12 +1460,7 @@ export function centerHandler(
             console.log(`coordinates found: ${str_coord}`);
 
             focusUrl = `${url}${focusPosPath}${str_coord}`;
-            if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
-              const targetUrl = new URL(focusUrl);
-              focusUrl = `${getProxyUrl(
-                connectionCtx
-              )}?target=${encodeURIComponent(targetUrl.href)}`;
-            }
+            focusUrl = stellariumRequestUrl(focusUrl, connectionCtx);
             console.log("focusUrl : " + focusUrl);
             fetch(focusUrl, {
               method: "POST",
@@ -1488,14 +1474,14 @@ export function centerHandler(
                 console.log(data);
                 if (data != "ok") {
                   setErrors(
-                    `Could not find object by coordinates : ${object.designation}`
+                    `Could not find object by coordinates : ${object.designation}`,
                   );
                 }
               })
               .catch((err) => stellariumErrorHandler(err, setErrors));
           } else if (data != "true" && object.type == "Asteroid") {
             setErrors(
-              `Could not find Asteroid : ${object.designation} in Stellarium`
+              `Could not find Asteroid : ${object.designation} in Stellarium`,
             );
           } else if (functionSuccess) functionSuccess();
         })

@@ -1,29 +1,42 @@
-import React, { useState, useEffect } from "react";
-import DatePicker from "react-date-picker/dist/entry.nostyle";
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useState } from "react";
 
 export interface DaypickerProps {
   selectedDate: Date;
-  setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
+  setSelectedDate: (date: Date) => void;
 }
 
-const Daypicker = ({ selectedDate, setSelectedDate }: DaypickerProps) => {
-  const [finalDay, setFinalDay] = useState(new Date());
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
-  useEffect(() => {
+const Daypicker = ({ selectedDate, setSelectedDate }: DaypickerProps) => {
+  const [dateRange] = useState(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const fiveDaysAway = new Date();
+    fiveDaysAway.setHours(0, 0, 0, 0);
     fiveDaysAway.setDate(today.getDate() + 4);
-    setFinalDay(fiveDaysAway);
-  }, []);
+    return { today, fiveDaysAway };
+  });
 
   return (
-    <DatePicker
-      value={selectedDate}
-      onChange={setSelectedDate}
-      minDate={new Date()}
-      maxDate={finalDay}
-    />
+    <label className="dw-date-field">
+      <span>Forecast date</span>
+      <input
+        type="date"
+        value={toDateInputValue(selectedDate)}
+        min={toDateInputValue(dateRange.today)}
+        max={toDateInputValue(dateRange.fiveDaysAway)}
+        onChange={(event) => {
+          if (event.target.value) {
+            setSelectedDate(new Date(`${event.target.value}T12:00:00`));
+          }
+        }}
+      />
+    </label>
   );
 };
 

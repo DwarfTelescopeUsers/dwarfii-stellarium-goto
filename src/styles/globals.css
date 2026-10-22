@@ -302,10 +302,10 @@ body {
 
 .sethostmode-dwarf {
     display: flex;
-    justify-content: flex-end; /* Align button to the right */
-    /*justify-content: space-between;*/
-    width: 40rem;
-    float: right !important;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+    float: none !important;
     height: fit-content;
     margin-right: 30%;
     margin-top: 0px;
@@ -674,10 +674,48 @@ img {
 .speed-meter {
     align-items: center;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     margin-left: 50px;
     margin-right: 19px;
     width: 180px;
+}
+
+.speed-control {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem 0.75rem;
+    width: 100%;
+    color: var(--bs-body-color);
+}
+
+.speed-control__label {
+    align-self: center;
+    color: var(--bs-secondary-color);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.speed-control__value {
+    color: var(--bs-body-color);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.speed-control__range {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: #00bfbd;
+    cursor: pointer;
+}
+
+.speed-control__limits {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    color: var(--bs-secondary-color);
+    font-size: 0.7rem;
 }
 
 .joystick-button-up {
@@ -1302,9 +1340,9 @@ img {
 
 @media (max-width: 1400px) {
     .sethostmode-dwarf {
-        justify-content: flex-end;
-        width: 30rem;
-        margin-right: 5%;
+        justify-content: flex-start;
+        width: 100%;
+        margin-right: 0;
     }
 }
 
@@ -1633,27 +1671,6 @@ img {
         background-color: #0b604b;
     }
 
-.bg-standard {
-    background-image: url('/images/bg-bannerpic.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-}
-
-.bg-stars {
-    background-image: url('/images/stars.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-}
-
-.bg-stars2 {
-    background-image: url('/images/stars2.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-}
-
 .theme-options label {
     display: block;
     margin-bottom: 10px;
@@ -1893,4 +1910,38 @@ img {
 
 .help-msg {
   margin-top: -3rem;
+}
+
+.cameraAddon-settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 0.375rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cameraAddon-settings-button:hover,
+.cameraAddon-settings-button:focus-visible {
+  color: var(--dw-accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.camera-action-status {
+  position: fixed;
+  z-index: 1100;
+  top: 5rem;
+  left: 50%;
+  width: min(42rem, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(62, 207, 177, 0.45);
+  border-radius: 0.5rem;
+  color: var(--dw-text);
+  background: rgba(8, 24, 28, 0.96);
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.4);
+  text-align: center;
+  transform: translateX(-50%);
 }

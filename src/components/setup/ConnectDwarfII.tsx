@@ -4,12 +4,14 @@ import { useEffect, useContext, useState } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { connectionHandler } from "@/lib/connect_utils";
 import { fetchIPDwarfDB } from "@/db/db_utils";
+import { useFleetHostGuard } from "@/stores/FleetContext";
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default function ConnectDwarfII() {
+  const fleetOwnsHost = useFleetHostGuard();
   const connectionCtx = useContext(ConnectionContext);
 
   const [connecting, setConnecting] = useState(false);
@@ -22,6 +24,13 @@ export default function ConnectDwarfII() {
 
     let IPDwarf = connectionCtx.IPDwarf;
     if (IPDwarf === undefined || !IPDwarf) IPDwarf = fetchIPDwarfDB();
+    if (fleetOwnsHost(IPDwarf)) {
+      setErrorTxt(
+        "Already connected in Fleet. This telescope is now selected; open Dashboard or Camera.",
+      );
+      connectionCtx.setConnectionStatus(false);
+      return;
+    }
     setConnecting(true);
     setErrorTxt("");
     connectionHandler(
@@ -31,7 +40,7 @@ export default function ConnectDwarfII() {
       setConnecting,
       setSlavemode,
       setGoLive,
-      setErrorTxt
+      setErrorTxt,
     );
   }
   const { t } = useTranslation();

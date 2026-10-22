@@ -1,17 +1,14 @@
 ﻿import { useContext, useState, useEffect } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { useSetupConnection } from "@/hooks/useSetupConnection";
-import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
 
-import StatusBar from "@/components/shared/StatusBar";
 import DwarfCameras from "@/components/DwarfCameras";
 import ImagingMenu from "@/components/imaging/ImagingMenu";
-import OBSWebSocket from "obs-websocket-js";
-import { getProxyUrl, isModeHttps } from "@/lib/get_proxy_url";
+import SessionPreview from "@/components/imaging/SessionPreview";
 
 export default function AstroPhoto() {
   const { t } = useTranslation();
@@ -27,11 +24,10 @@ export default function AstroPhoto() {
   }, []);
 
   let connectionCtx = useContext(ConnectionContext);
-  useSetupConnection();
-  useLoadIntialValues();
-
   const [exchangeCamerasStatus, setExchangeCamerasStatus] = useState(false);
-  const [showWideangle, setShowWideangle] = useState(false);
+  // The wide camera is the framing overlay for the telephoto preview. Keep it
+  // visible by default so starting the wide stream cannot succeed invisibly.
+  const [showWideangle, setShowWideangle] = useState(true);
   const [useRawPreviewURL, setUseRawPreviewURL] = useState(false);
 
   let notConnected =
@@ -41,179 +37,121 @@ export default function AstroPhoto() {
     connectionCtx.latitude === undefined ||
     connectionCtx.longitude === undefined;
   let hasErrors = notConnected || noCoordinates;
-  const [obs, setObs] = useState<OBSWebSocket | null>(null);
-  const [obsError, setObsError] = useState<string | null>(null);
-  const [isObsConnected, setIsObsConnected] = useState<boolean>(false);
-  const [isStreaming, setIsStreaming] = useState<boolean>(false);
-
-  useEffect(() => {
-    const obsInstance = new OBSWebSocket();
-    setObs(obsInstance);
-
-    const checkConnection = async () => {
-      try {
-        const urlSocketOBS = "ws://localhost:4455";
-        console.log("urlSocketOBS: ", urlSocketOBS);
-
-        if (!isModeHttps())
-          await obsInstance.connect(urlSocketOBS, "ZesqL9dGu2Uv3XlE");
-        else {
-          const urlProxySocketOBS = `${getProxyUrl(
-            connectionCtx
-          )}?target=${urlSocketOBS}&token=ZesqL9dGu2Uv3XlE`;
-          console.log("urlSocketOBS: ", urlProxySocketOBS);
-          const wssProxySocketOBS = urlProxySocketOBS.replace("http", "ws");
-          console.log("wssProxySocketOBS: ", wssProxySocketOBS);
-          await obsInstance.connect(wssProxySocketOBS);
-        }
-        setIsObsConnected(true);
-        setObsError(null);
-        console.log("Verbonden met OBS WebSocket!");
-      } catch (error: any) {
-        console.warn("OBS WebSocket niet beschikbaar:", error.message);
-        setIsObsConnected(false);
-        setObsError(t("cOBSNotFound"));
-      }
-    };
-
-    checkConnection(); // Probeer te verbinden
-
-    obsInstance.on("ConnectionClosed", () => {
-      setIsObsConnected(false);
-      setObsError(t("cOBSSocketClose"));
-    });
-
-    return () => {
-      obsInstance.disconnect().catch(() => {}); // Voorkom fouten bij disconnect
-    };
-  }, []);
-
-  const toggleStreaming = async () => {
-    if (!obs) {
-      setObsError(t("cOBSSocketNotConnect"));
-      return;
-    }
-
-    try {
-      // Controleer eerst of OBS verbonden is
-      const status = await obs.call("GetStreamStatus");
-
-      if (!isStreaming && !status.outputActive) {
-        // Start de stream
-        await obs.call("StartStream");
-        console.log("Stream gestart!");
-        setIsStreaming(true);
-      } else if (isStreaming && status.outputActive) {
-        // Stop de stream
-        await obs.call("StopStream");
-        console.log("Stream gestopt!");
-        setIsStreaming(false);
-      } else {
-        console.warn("Geen actie nodig, streamstatus is al correct.");
-      }
-    } catch (error: any) {
-      console.error("Fout bij streamen:", error);
-      setObsError(t("cOBSErrorStream"));
-    }
-  };
 
   if (hasErrors) {
     return (
-      <>
-        {" "}
-        <section className="d-inline-block w-100 w-100-small">
-          <div className="container">
-            <br />
-            <br />
-            <br />
-            <br />
-            <Head>
-              <title>{t("cCameraTitle")}</title>
-            </Head>
-            <StatusBar />
-            <hr />
-            <h1>{t("cCameraTitle")}</h1>
-
-            {notConnected && (
-              <p className="text-danger">
-                {t("cCameraConnection", {
-                  DwarfType: connectionCtx.typeNameDwarf,
-                })}
-              </p>
-            )}
-
-            {noCoordinates && (
-              <p className="text-danger">{t("cCameraLocation")}</p>
-            )}
+      <div className="dw-page">
+        <Head>
+          <title>{t("cCameraTitle")}</title>
+        </Head>
+        <header className="dw-page-header">
+          <div>
+            <p className="dw-eyebrow">Observe</p>
+            <h1>Camera workspace</h1>
+            <p>
+              Live preview, framing, focus and capture controls for your DWARF.
+            </p>
+          </div>
+        </header>
+        <section className="dw-empty-state" role="status">
+          <div className="dw-empty-state-icon">
+            <i className="bi bi-camera-video-off" aria-hidden="true" />
+          </div>
+          <h2>Camera workspace is not ready</h2>
+          <p>
+            Complete the items below, then return here to start the live
+            preview.
+          </p>
+          <ul className="dw-check-list">
+            <li>
+              <i
+                className={`bi ${notConnected ? "bi-exclamation-circle" : "bi-check-circle"}`}
+                aria-hidden="true"
+              />
+              <span>
+                {notConnected
+                  ? t("cCameraConnection", {
+                      DwarfType: connectionCtx.typeNameDwarf,
+                    })
+                  : `${connectionCtx.typeNameDwarf} is connected.`}
+              </span>
+            </li>
+            <li>
+              <i
+                className={`bi ${noCoordinates ? "bi-exclamation-circle" : "bi-check-circle"}`}
+                aria-hidden="true"
+              />
+              <span>
+                {noCoordinates
+                  ? t("cCameraLocation")
+                  : "Observing location is set."}
+              </span>
+            </li>
+          </ul>
+          <div className="dw-action-row" style={{ justifyContent: "center" }}>
+            <Link href="/setup-scope" className="dw-button">
+              <i className="bi bi-router" aria-hidden="true" />
+              Open connection setup
+            </Link>
+            <Link href="/" className="dw-button is-secondary">
+              Back to dashboard
+            </Link>
           </div>
         </section>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      {" "}
-      <section className="d-inline-block w-100 w-100-small">
-        <div className="container">
-          <br />
-          <br />
-          <br />
-          <br />
-          <Head>
-            <title>{t("cCameraTitle")}</title>
-          </Head>
-          <StatusBar />
-          <hr></hr>
+    <div className="dw-page">
+      <Head>
+        <title>{t("cCameraTitle")}</title>
+      </Head>
+      <header className="dw-page-header">
+        <div>
+          <p className="dw-eyebrow">Observe</p>
+          <h1>Camera workspace</h1>
+          <p>
+            Frame your target, tune the optics and control the active capture.
+          </p>
+        </div>
+      </header>
+      <div className="dw-camera-layout">
+        <section
+          className="dw-camera-stage"
+          aria-label={
+            connectionCtx.imagingSession.isRecording
+              ? "Live session preview"
+              : "Live camera preview"
+          }
+        >
           <div className="container">
             <div className="row px-0">
-              <div className="live-stream-container">
-                <button
-                  onClick={toggleStreaming}
-                  disabled={!isObsConnected}
-                  className={isStreaming ? "stop-button" : "start-button"}
-                >
-                  {isStreaming ? "Stop Stream" : "Start Stream"}
-                </button>
-              </div>
-              {obsError && <p className="text-danger">{obsError}</p>}
-
               <main className="col">
-                <DwarfCameras
-                  setExchangeCamerasStatus={setExchangeCamerasStatus}
-                  showWideangle={showWideangle}
-                  useRawPreviewURL={useRawPreviewURL}
-                  showControls={true}
-                />
-
-                <br />
-                <br />
-                <br />
-                <br />
+                {connectionCtx.imagingSession.isRecording ? (
+                  <SessionPreview />
+                ) : (
+                  <DwarfCameras
+                    setExchangeCamerasStatus={setExchangeCamerasStatus}
+                    showWideangle={showWideangle}
+                    useRawPreviewURL={useRawPreviewURL}
+                    showControls={true}
+                  />
+                )}
               </main>
-
-              <div className="dropdown-wrapper px-0">
-                <br />
-                <br />
-                <ImagingMenu
-                  exchangeCamerasStatus={exchangeCamerasStatus}
-                  setShowWideangle={setShowWideangle}
-                  setUseRawPreviewURL={setUseRawPreviewURL}
-                />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </>
+        </section>
+        <section className="dw-camera-controls" aria-label="Camera controls">
+          <div className="dropdown-wrapper px-0">
+            <ImagingMenu
+              exchangeCamerasStatus={exchangeCamerasStatus}
+              setShowWideangle={setShowWideangle}
+              setUseRawPreviewURL={setUseRawPreviewURL}
+            />
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

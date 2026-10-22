@@ -3,7 +3,7 @@ import { CoordinatesData } from "@/types";
 export function saveCoordinatesDB(
   latitude: number,
   longitude: number,
-  timezone: string
+  timezone: string,
 ) {
   localStorage.setItem("latitude", latitude.toString());
   localStorage.setItem("longitude", longitude.toString());
@@ -48,10 +48,8 @@ export function saveConnectionStatusDB(status: boolean) {
 
 export function fetchConnectionStatusDB(): boolean | undefined {
   let status = localStorage.getItem("connectionStatus");
-  if (status) {
-    // Initial Value deconnected
-    return false;
-  }
+  if (status === null) return undefined;
+  return status === "true";
 }
 
 export function saveInitialConnectionTimeDB() {
@@ -181,10 +179,8 @@ export function saveConnectionStatusStellariumDB(status: boolean) {
 
 export function fetchConnectionStatusStellariumDB(): boolean | undefined {
   let status = localStorage.getItem("connectionStatusStellarium");
-  if (status) {
-    // Initial Value deconnected
-    return false;
-  }
+  if (status === null) return undefined;
+  return status === "true";
 }
 
 export function saveIPStellariumDB(ip: string) {
@@ -464,7 +460,7 @@ export function saveLogMessagesDb(value: { [k: string]: any }): void {
   let data = fetchLogMessagesDb();
   if (data) {
     data.push(value);
-    localStorage.setItem("logMessages", JSON.stringify(data));
+    localStorage.setItem("logMessages", JSON.stringify(data.slice(-1000)));
   } else {
     localStorage.setItem("logMessages", JSON.stringify([value]));
   }

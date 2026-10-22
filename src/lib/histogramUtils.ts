@@ -2,7 +2,7 @@
 //import { fabric } from "fabric";
 
 export const calculateHistogram = (
-  imageElement: HTMLImageElement | HTMLCanvasElement
+  imageElement: HTMLImageElement | HTMLCanvasElement,
 ): number[][] => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");

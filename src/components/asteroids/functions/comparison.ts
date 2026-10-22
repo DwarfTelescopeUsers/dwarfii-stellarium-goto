@@ -1,24 +1,24 @@
 import { StaticImageData } from "next/image";
 
-import img5StoreyBuilding from "/public/images/5-storey-building.png";
-import img10StoreyBuilding from "/public/images/10-storey-building.png";
-import imgAeroplane from "/public/images/aeroplane.png";
-import imgBurjKhalifa from "/public/images/burj-khalifa.png";
-import imgCar from "/public/images/car.png";
-import imgDoor from "/public/images/door.png";
-import imgEiffelTower from "/public/images/eiffel-tower.png";
-import imgElectricPole from "/public/images/electric-pole.png";
-import imgFootballField from "/public/images/football-field.png";
-import imgGiraffe from "/public/images/giraffe.png";
-import imgPyramids from "/public/images/great-pyramids-of-giza.png";
-import imgGuitar from "/public/images/guitar.png";
-import imgKilimanjaro from "/public/images/kilimanjaro.png";
-import imgPisaTower from "/public/images/leaning-tower-of-pisa.png";
-import imgLondonBus from "/public/images/london-bus.png";
-import imgMountEverest from "/public/images/mount-everest.png";
-import imgSemiTrailerTruck from "/public/images/semi-trailer-truck.png";
-import imgStatueLiberty from "/public/images/statue-of-liberty.png";
-import imgTajMahal from "/public/images/taj-mahal.png";
+import img5StoreyBuilding from "../../../../public/images/5-storey-building.png";
+import img10StoreyBuilding from "../../../../public/images/10-storey-building.png";
+import imgAeroplane from "../../../../public/images/aeroplane.png";
+import imgBurjKhalifa from "../../../../public/images/burj-khalifa.png";
+import imgCar from "../../../../public/images/car.png";
+import imgDoor from "../../../../public/images/door.png";
+import imgEiffelTower from "../../../../public/images/eiffel-tower.png";
+import imgElectricPole from "../../../../public/images/electric-pole.png";
+import imgFootballField from "../../../../public/images/football-field.png";
+import imgGiraffe from "../../../../public/images/giraffe.png";
+import imgPyramids from "../../../../public/images/great-pyramids-of-giza.png";
+import imgGuitar from "../../../../public/images/guitar.png";
+import imgKilimanjaro from "../../../../public/images/kilimanjaro.png";
+import imgPisaTower from "../../../../public/images/leaning-tower-of-pisa.png";
+import imgLondonBus from "../../../../public/images/london-bus.png";
+import imgMountEverest from "../../../../public/images/mount-everest.png";
+import imgSemiTrailerTruck from "../../../../public/images/semi-trailer-truck.png";
+import imgStatueLiberty from "../../../../public/images/statue-of-liberty.png";
+import imgTajMahal from "../../../../public/images/taj-mahal.png";
 
 export type TComparison = {
   img: StaticImageData | any;

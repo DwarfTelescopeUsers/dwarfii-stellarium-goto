@@ -40,7 +40,12 @@ export function useLoadIntialValues() {
     }
     if (connectionCtx.latitude === undefined) {
       let data = fetchCoordinatesDB();
-      if (data.latitude) {
+      if (
+        data.latitude !== undefined &&
+        data.longitude !== undefined &&
+        Number.isFinite(data.latitude) &&
+        Number.isFinite(data.longitude)
+      ) {
         connectionCtx.setLatitude(data.latitude);
         connectionCtx.setLongitude(data.longitude);
       }

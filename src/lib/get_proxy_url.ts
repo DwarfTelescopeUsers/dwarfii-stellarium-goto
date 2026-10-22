@@ -1,4 +1,5 @@
 import { ConnectionContextType } from "@/types";
+import { isTauri } from "@tauri-apps/api/core";
 
 export async function checkHealth(url, timeout = 5000, externalSignal) {
   const timeoutSignal = AbortSignal.timeout(timeout);
@@ -34,12 +35,12 @@ export async function checkHealth(url, timeout = 5000, externalSignal) {
     if (error instanceof Error) {
       if (timeoutSignal.aborted) {
         console.log(
-          `checkHealth ${url} Operation timed out after ${timeout} ms`
+          `checkHealth ${url} Operation timed out after ${timeout} ms`,
         );
       } else if (externalSignal.aborted) {
         console.log(`Request aborted: ${url}`);
       } else {
-        console.error("Error:", error);
+        console.warn(`Health service ${url} is unavailable:`, error.message);
       }
     } else {
       console.error("An unknown error occurred:", error);
@@ -50,8 +51,7 @@ export async function checkHealth(url, timeout = 5000, externalSignal) {
 
 export function isModeHttps() {
   // don't change if using Tauri
-  const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
-  if (isTauri) {
+  if (isTauri()) {
     return false;
   } else if (typeof window !== "undefined") {
     const port = window.location.protocol;
@@ -69,9 +69,8 @@ export function getServerIp() {
 
 export function getServerUrl() {
   // don't change if using /api/proxy or Tauri
-  const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
   if (
-    isTauri ||
+    isTauri() ||
     (process.env.NEXT_PUBLIC_URL_PROXY_CORS &&
       process.env.NEXT_PUBLIC_URL_PROXY_CORS.includes("api"))
   ) {
@@ -90,30 +89,52 @@ export function getServerUrl() {
   return server_url;
 }
 
+export function proxyHostname(
+  selected: string | undefined,
+  pageHostname: string,
+  pageProtocol: string,
+): string {
+  if (!selected) return pageHostname;
+  try {
+    const configured = new URL(
+      selected.includes("://") ? selected : `http://${selected}`,
+    );
+    const localPage = ["localhost", "127.0.0.1"].includes(pageHostname);
+    return localPage &&
+      pageProtocol === "https:" &&
+      selected.startsWith("http://")
+      ? pageHostname
+      : configured.hostname;
+  } catch {
+    return pageHostname;
+  }
+}
+
 export function getProxyUrl(connectionCtx: ConnectionContextType) {
   // don't change if using Tauri
-  const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
-  if (isTauri) {
+  if (isTauri()) {
     console.debug(`PROXY-1 is : ${process.env.NEXT_PUBLIC_URL_PROXY_CORS}`);
-    return process.env.NEXT_PUBLIC_URL_PROXY_CORS;
+    return process.env.NEXT_PUBLIC_URL_PROXY_CORS || "http://127.0.0.1:8860";
     // don't change if using api/proxy and not using an external Proxy
   } else if (
     process.env.NEXT_PUBLIC_URL_PROXY_CORS &&
-    process.env.NEXT_PUBLIC_URL_PROXY_CORS.includes("api") &&
-    connectionCtx &&
-    !connectionCtx.proxyIP
+    process.env.NEXT_PUBLIC_URL_PROXY_CORS.startsWith("/api/")
   ) {
-    console.debug(`PROXY-1 is : ${process.env.NEXT_PUBLIC_URL_PROXY_CORS}`);
+    // The Next server is the proxy for this build. A stale saved LAN proxy
+    // must not turn an HTTPS page into an insecure cross-origin request.
     return process.env.NEXT_PUBLIC_URL_PROXY_CORS;
   } else if (typeof window !== "undefined") {
-    let hostname = "";
-
-    // if already defined use it
-    if (connectionCtx && connectionCtx.proxyInLan && connectionCtx.proxyLocalIP)
-      hostname = connectionCtx.proxyLocalIP;
-    else if (connectionCtx && connectionCtx.proxyIP)
-      hostname = connectionCtx.proxyIP;
-    else hostname = window.location.hostname;
+    const selected =
+      connectionCtx?.proxyInLan && connectionCtx.proxyLocalIP
+        ? connectionCtx.proxyLocalIP
+        : connectionCtx?.proxyIP;
+    // A legacy HTTP URL saved for a remote proxy cannot be used by a local
+    // HTTPS standalone page. Prefer its bundled local proxy instead.
+    const hostname = proxyHostname(
+      selected,
+      window.location.hostname,
+      window.location.protocol,
+    );
 
     if (hostname) {
       const protocol = window.location.protocol;
@@ -137,100 +158,48 @@ export function getProxyUrl(connectionCtx: ConnectionContextType) {
 }
 
 export function getMediaMTXUrl(connectionCtx: ConnectionContextType): string {
-  const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
-  if (isTauri) {
+  if (isTauri()) {
     return process.env.NEXT_PUBLIC_IP_MEDIAMTX || "localhost";
   } else if (typeof window !== "undefined") {
-    let hostname = "";
-
-    // If already defined, use it
-    if (connectionCtx?.proxyLocalIP) {
-      hostname = connectionCtx.proxyLocalIP;
-      console.debug("proxyLocalIP:", hostname);
-    } else if (connectionCtx?.proxyIP) {
-      hostname = connectionCtx.proxyIP;
-      console.debug("proxyIP:", hostname);
-    } else {
-      hostname = window.location.hostname;
-    }
-    console.debug("Final getMediaMTXUrl:", hostname);
-
-    return hostname || process.env.NEXT_PUBLIC_IP_MEDIAMTX || "localhost";
+    const proxy = getProxyUrl(connectionCtx);
+    return proxy?.startsWith("http")
+      ? new URL(proxy).hostname
+      : window.location.hostname;
   }
   return process.env.NEXT_PUBLIC_IP_MEDIAMTX || "localhost"; // Default for server-side
 }
 
 export function getIpServerMTX() {
-  if (typeof window !== "undefined" && "__TAURI__" in window) {
-    return process.env.NEXT_PUBLIC_IP_MEDIAMTX;
+  if (isTauri()) {
+    return process.env.NEXT_PUBLIC_IP_MEDIAMTX || "localhost";
   }
-  return "0.0.0.0";
+  // This address is reached by the proxy process. A listener's wildcard bind
+  // address is not a portable destination, particularly on Windows.
+  return "127.0.0.1";
 }
 
 export async function checkMediaMtxStreamUrls(
   connectionCtx: ConnectionContextType,
   timeout = 5000,
-  externalSignal: AbortSignal
+  externalSignal: AbortSignal,
 ) {
-  const url1 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_wide`;
-  const url2 = `http://${getIpServerMTX()}:9997/v3/config/paths/get/dwarf_tele`;
-
-  const timeoutSignal1 = AbortSignal.timeout(timeout);
-  const timeoutSignal2 = AbortSignal.timeout(timeout);
-
-  const combinedSignal = AbortSignal.any([
-    timeoutSignal1,
-    timeoutSignal2,
-    externalSignal,
-  ]);
-
+  // Configuration health is independent of legacy singleton stream names and
+  // does not claim the telescope's RTSP source is actually producing frames.
+  const target = `http://${getIpServerMTX()}:9997/v3/config/global/get`;
+  const timeoutSignal = AbortSignal.timeout(timeout);
+  const combinedSignal = AbortSignal.any([timeoutSignal, externalSignal]);
   try {
-    const proxyUrl1 = `${getProxyUrl(
-      connectionCtx
-    )}?target=${encodeURIComponent(url1)}`;
-    const proxyUrl2 = `${getProxyUrl(
-      connectionCtx
-    )}?target=${encodeURIComponent(url2)}`;
-
-    const [response1, response2] = await Promise.all([
-      fetch(proxyUrl1, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        redirect: "follow",
-        signal: combinedSignal,
-      }),
-      fetch(proxyUrl2, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        redirect: "follow",
-        signal: combinedSignal,
-      }),
-    ]);
-
-    if (!response1.ok) {
-      throw new Error(`HTTP error! Status: ${response1.status}`);
-    }
-
-    if (!response2.ok) {
-      throw new Error(`HTTP error! Status: ${response2.status}`);
-    }
-
-    return true; // Both requests were successful
-  } catch (error) {
-    if (error instanceof Error) {
-      if (timeoutSignal1.aborted || timeoutSignal2.aborted) {
-        console.log(
-          `checkMediaMtxStreamUrls Operation timed out after ${timeout} ms`
-        );
-      } else if (externalSignal.aborted) {
-        console.log(`Media Mtx Request aborted`);
-      } else {
-        console.error("Error:", error);
-      }
-    } else {
-      console.error("Error verifying stream info:", error);
-    }
-    return false; // An error occurred, return false
+    const response = await fetch(
+      `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(target)}`,
+      { signal: combinedSignal },
+    );
+    if (!response.ok) return false;
+    const config = await response.json();
+    return (
+      config !== null && typeof config === "object" && !Array.isArray(config)
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -255,26 +224,34 @@ export const isLocalIp = (url) => {
   return islocalIp.test(url);
 };
 
+export function shouldUseHttpsPreview(
+  forceHttps: boolean,
+  configuredHttps: boolean | undefined,
+  pageProtocol: string,
+) {
+  return forceHttps && (configuredHttps === true || pageProtocol === "https:");
+}
+
 export function getTransfomProxyImageUrl(
   imageUrl,
   proxyUrl: string | undefined = undefined,
   connectionCtx: ConnectionContextType,
-  forceHttps: boolean = false
+  forceHttps: boolean = false,
 ) {
-  if (connectionCtx && !connectionCtx.useHttps && connectionCtx.proxyInLan) {
+  const previewHttps = shouldUseHttpsPreview(
+    forceHttps,
+    connectionCtx?.useHttps,
+    typeof window === "undefined" ? "" : window.location.protocol,
+  );
+  if (connectionCtx && !previewHttps && connectionCtx.proxyInLan) {
     console.debug("getTransfomProxyImageUrl - Local Lan.");
     return imageUrl;
-  } else if (
-    connectionCtx &&
-    connectionCtx.useHttps &&
-    forceHttps &&
-    connectionCtx.proxyInLan
-  ) {
+  } else if (connectionCtx && previewHttps && connectionCtx.proxyInLan) {
     console.debug("getTransfomProxyImageUrl - Local Lan Force Https.");
     return imageUrl.replace("http:", "https:");
   } else {
     if (!proxyUrl) proxyUrl = getProxyUrl(connectionCtx);
-    if (connectionCtx && connectionCtx.useHttps && forceHttps) {
+    if (previewHttps) {
       imageUrl = imageUrl.replace("http:", "https:");
     }
     if (!proxyUrl && !connectionCtx.proxyIP) return imageUrl;

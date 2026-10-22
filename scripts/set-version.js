@@ -19,7 +19,7 @@ if (!semverRegex.test(version)) {
 const config = JSON.parse(fs.readFileSync(tauriConfigPath, 'utf8'));
 
 // Update the version in the Tauri config
-config.package.version = version;
+config.version = version;
 
 // Write the updated config back
 fs.writeFileSync(tauriConfigPath, JSON.stringify(config, null, 2));

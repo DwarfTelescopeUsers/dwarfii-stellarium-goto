@@ -12,6 +12,7 @@ import * as esbuild from "esbuild";
     entryPoints: ["./server/server.ts"],
     bundle: true,
     platform: "node", // Targeting Node.js environment
+    external: ["express"],
     target: [targetVersion], // Dynamically set target version
     outfile: "./server/server.js",
     plugins: [],

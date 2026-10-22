@@ -4,7 +4,9 @@
   position: relative;
 }
 
-.box a {
+.box a,
+.toolbarButton,
+.statusLabel {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -13,22 +15,126 @@
   color: #fff;
 }
 
-.box a:hover {
+.toolbarButton {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.toolbarButton:hover {
   color: #aaa;
 }
 
-@media (max-width: 1024px) {
-    
-    .dropdown-wrapper.jsx-1b9225df978cd56a {
-        width: auto;
-    }
-    
+.toolbarButton:focus-visible {
+  outline: 2px solid var(--dw-accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.statusLabel {
+  width: max-content;
+}
+
+.focusFeedback {
+  align-self: center;
+  max-width: 13rem;
+  padding: 0 0.75rem;
+  color: var(--dw-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.settingsModalRoot {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.settingsDialog {
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: min(680px, calc(100vw - 32px));
+  margin: 1.75rem auto !important;
+  padding: 0 !important;
+}
+
+.settingsDialog :global(.modal-content) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 3.5rem);
+  color: var(--dw-text);
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border-strong);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 48%);
+}
+
+.settingsModalHeader {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: 58px;
+  padding: 14px 18px;
+  background: var(--dw-surface);
+  border-color: var(--dw-border);
+}
+
+.settingsModalHeader :global(.modal-title) {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.settingsModalHeader :global(.btn-close) {
+  filter: invert(1) grayscale(1);
+  opacity: 0.72;
+}
+
+.settingsModalBody {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  padding: 18px;
+  overflow-y: auto;
+}
+
+@media (max-width: 575.98px) {
+  .settingsDialog {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none;
+    margin: 0;
+  }
+
+  .settingsDialog :global(.modal-content) {
+    max-height: none;
+    min-height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .settingsModalBody {
+    padding: 16px;
+  }
 }
 
 @media (max-width: 1024px) {
-    .nav-item {
-        width: 100%; /* Makes each item take the full width */
-        text-align: center; /* Centers the content */
-    }
+  .dropdown-wrapper.jsx-1b9225df978cd56a {
+    width: auto;
+  }
 }
 
+@media (max-width: 1024px) {
+  .nav-item {
+    width: 100%; /* Makes each item take the full width */
+    text-align: center; /* Centers the content */
+  }
+}

@@ -1,25 +1,10 @@
-import { useContext, useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import Popover from "react-bootstrap/Popover";
-import Tooltip from "react-bootstrap/Tooltip";
-import Link from "next/link";
+import { useContext, useState, useEffect, useRef } from "react";
+import type { Dispatch, SetStateAction, MouseEvent } from "react";
+import Modal from "react-bootstrap/Modal";
 
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import {
-  Dwarfii_Api,
-  messageAstroStartCaptureRawLiveStacking,
-  messageAstroStopCaptureRawLiveStacking,
-  messageAstroStartWideCaptureLiveStacking,
-  messageAstroStopWideCaptureLiveStacking,
-  messageAstroGoLive,
-  messageFocusStartAstroAutoFocus,
-  messageFocusStopAstroAutoFocus,
-  messageFocusManualSingleStepFocus,
-  messageFocusStartManualContinuFocus,
-  messageFocusStopManualContinuFocus,
-  WebSocketHandler,
-} from "dwarfii_api";
+import { startCurrentAstroCapture } from "@/services/dwarf";
+import { captureWarning } from "@/services/dwarf/captureCommands";
 import ImagingAstroSettings from "@/components/imaging/ImagingAstroSettings";
 import RecordingButton from "@/components/icons/RecordingButton";
 import RecordButton from "@/components/icons/RecordButton";
@@ -48,12 +33,26 @@ export default function ImagingMenu(props: PropType) {
   let connectionCtx = useContext(ConnectionContext);
   const [showWideAngle, setShowWideAngle] = useState(false);
   const [astroFocus, setAstroFocus] = useState(false);
+  const [focusRequested, setFocusRequested] = useState(false);
+  const [focusStatus, setFocusStatus] = useState("");
+  const [captureStatus, setCaptureStatus] = useState("");
+  const [warning, setWarning] = useState<string>();
+  const [captureBusy, setCaptureBusy] = useState(false);
+  const capturePending = useRef(false);
+  const stopCapturePending = useRef(false);
+  const pendingCaptureTime = useRef<number | undefined>(undefined);
+  const continuousFocusHeld = useRef(false);
+  const pendingFocusCommands = useRef(new Set<string>());
+  const focusStopRequested = useRef(false);
+  const focusNotificationRevision = useRef(0);
+  const captureNotificationRevision = useRef(0);
+  const sessionRevision = useRef(0);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [validSettings, setValidSettings] = useState(isValid());
   const [showModal, setShowModal] = useState(false);
-  const [showOnlyControls, setShowOnlyControls] = useState(false);
-  const [showOnlyActions, setShowOnlyActions] = useState(false);
-  const [screenWidth, setScreenWidth] = useState<number>(window.innerWidth);
+  const [screenWidth, setScreenWidth] = useState<number>(() =>
+    typeof window === "undefined" ? 1024 : window.innerWidth,
+  );
 
   let timerSession: ReturnType<typeof setInterval>;
   let timerSessionInit: boolean = connectionCtx.timerGlobal !== undefined;
@@ -65,9 +64,123 @@ export default function ImagingMenu(props: PropType) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Dynamic placement
+  useEffect(() => {
+    const socket = connectionCtx.socketIPDwarf;
+    const sender = "ImagingMenu:operation-state";
+    let mounted = true;
+    const reset = () => {
+      sessionRevision.current += 1;
+      pendingFocusCommands.current.clear();
+      continuousFocusHeld.current = false;
+      focusStopRequested.current = false;
+      capturePending.current = false;
+      stopCapturePending.current = false;
+      pendingCaptureTime.current = undefined;
+      setFocusRequested(false);
+      setAstroFocus(false);
+      setCaptureBusy(false);
+      setWarning(undefined);
+    };
+    reset();
+    setFocusStatus("");
+    setCaptureStatus("");
+    if (socket?.prepare) {
+      void socket.prepare(
+        undefined,
+        sender,
+        [15278, 15280, 15257, 15208, 15236, 11005, 11016, 11050],
+        (_sender, packet) => {
+          if (
+            mounted &&
+            packet.known &&
+            packet.type === 1 &&
+            [11005, 11016, 11050].includes(packet.cmd)
+          ) {
+            const warning = captureWarning(packet.data.code);
+            if (warning) setWarning(warning);
+            return;
+          }
+          if (!mounted || !packet.known || ![2, 3].includes(packet.type))
+            return;
+          const data = packet.data;
+          if ([15278, 15280].includes(packet.cmd)) {
+            focusNotificationRevision.current += 1;
+            const state = data.state ?? 0;
+            if (state === 1) {
+              setAstroFocus(true);
+              setFocusStatus("Autofocus in progress.");
+            } else if (state === 2) {
+              setAstroFocus(true);
+              setFocusStatus("Autofocus is stopping.");
+            } else if (state === 0 || state === 3) {
+              setAstroFocus(false);
+              setFocusRequested(false);
+              setFocusStatus(
+                state === 0
+                  ? "Autofocus idle."
+                  : focusStopRequested.current
+                    ? "Autofocus stopped."
+                    : "Autofocus complete.",
+              );
+              focusStopRequested.current = false;
+            }
+          } else if (packet.cmd === 15257) {
+            focusNotificationRevision.current += 1;
+            connectionCtx.setValueFocusDwarf(data.pos ?? 0);
+          } else {
+            captureNotificationRevision.current += 1;
+            const state = data.state ?? 0;
+            if (state === 1) {
+              setCaptureStatus("Capture running.");
+              const startTime = pendingCaptureTime.current;
+              if (startTime !== undefined) {
+                pendingCaptureTime.current = undefined;
+                connectionCtx.setImagingSession((previous) => ({
+                  ...previous,
+                  startTime,
+                }));
+                saveImagingSessionDb("startTime", String(startTime));
+              }
+            } else if (state === 2) setCaptureStatus("Capture is stopping.");
+            else if (state === 3 || state === 0) {
+              setWarning(undefined);
+              setCaptureStatus("Capture stopped.");
+            }
+          }
+        },
+        (ready) => {
+          if (!mounted || ready) return;
+          reset();
+          setFocusStatus("Focus state unavailable while disconnected.");
+          setCaptureStatus("Capture state unavailable while disconnected.");
+        },
+      );
+    }
+    return () => {
+      mounted = false;
+      sessionRevision.current += 1;
+      socket?.stopCallbacks?.(sender);
+      if (continuousFocusHeld.current) {
+        continuousFocusHeld.current = false;
+        void socket?.request?.("stopFocus").catch(() => undefined);
+      }
+    };
+  }, [
+    connectionCtx.IPDwarf,
+    connectionCtx.socketIPDwarf,
+    connectionCtx.setImagingSession,
+    connectionCtx.setValueFocusDwarf,
+  ]);
+
+  useEffect(() => {
+    setValidSettings(isValid());
+  }, [
+    connectionCtx.astroSettings,
+    connectionCtx.currentAstroCamera,
+    connectionCtx.typeIdDwarf,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const sizeSmallScreen = 768;
-  const popoverPlacement = screenWidth < 1024 ? "auto" : "left";
 
   useEffect(() => {
     let testTimer: string | any = "";
@@ -135,7 +248,11 @@ export default function ImagingMenu(props: PropType) {
   }, [connectionCtx.imagingSession.isGoLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function isValid() {
-    let errors = validateAstroSettings(connectionCtx.astroSettings as any);
+    const isWideCamera = connectionCtx.currentAstroCamera == wideangleCamera;
+    let errors = validateAstroSettings(connectionCtx.astroSettings as any, {
+      camera: isWideCamera ? "wide" : "telephoto",
+      requireLegacyFields: false,
+    });
     return (
       Object.keys(errors).length === 0 &&
       Object.keys(connectionCtx.astroSettings).length > 0
@@ -166,225 +283,108 @@ export default function ImagingMenu(props: PropType) {
     return timer;
   }
 
-  function takeAstroPhotoHandler() {
-    if (connectionCtx.IPDwarf == undefined) {
+  async function takeAstroPhotoHandler() {
+    if (capturePending.current || !isValid()) return;
+    const socket = connectionCtx.socketIPDwarf;
+    if (!connectionCtx.connectionStatus || !socket?.request) {
+      setCaptureStatus(
+        "Connect the telescope and wait for device status first.",
+      );
       return;
     }
-    if (validSettings === false) {
-      return;
-    }
-
-    let testTimer: string | any = "";
-    if (!timerSessionInit) {
-      timerSession = startTimer();
-      if (timerSession) {
-        timerSessionInit = true;
-        testTimer = timerSession.toString();
-        console.debug("startTimer timer:", testTimer, connectionCtx);
-        connectionCtx.setTimerGlobal(timerSession);
-      } else timerSessionInit = false;
-    }
-
-    if (timerSessionInit && timerSession) {
-      testTimer = timerSession.toString();
-      console.debug("startImagingSession timer:", testTimer, connectionCtx);
-
-      let now = Date.now();
-      connectionCtx.setImagingSession((prev) => {
-        prev["startTime"] = now;
-        return { ...prev };
-      });
-      connectionCtx.setImagingSession((prev) => {
-        prev["isRecording"] = true;
-        return { ...prev };
-      });
-      connectionCtx.setImagingSession((prev) => {
-        prev["endRecording"] = false;
-        return { ...prev };
-      });
-      connectionCtx.setImagingSession((prev) => {
-        prev["isStackedCountStart"] = false;
-        return { ...prev };
-      });
-      connectionCtx.setImagingSession((prev) => {
-        prev["astroCamera"] = connectionCtx.currentAstroCamera;
-        return { ...prev };
-      });
-      saveImagingSessionDb("isRecording", true.toString());
-      saveImagingSessionDb("endRecording", false.toString());
-      saveImagingSessionDb("isStackedCountStart", false.toString());
-      saveImagingSessionDb("startTime", now.toString());
-      saveImagingSessionDb(
-        "astroCamera",
-        connectionCtx.currentAstroCamera.toString()
-      );
-
-      //startAstroPhotoHandler
-
-      console.debug(
-        "startAstroPhotoHandler current ST:",
-        testTimer,
-        connectionCtx
-      );
-      connectionCtx.setImagingSession((prev) => {
-        prev["imagesTaken"] = 0;
-        return { ...prev };
-      });
-      connectionCtx.setImagingSession((prev) => {
-        prev["imagesStacked"] = 0;
-        return { ...prev };
-      });
-
-      const customMessageHandler = (txt_info, result_data) => {
-        // CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING -> Start Capture
-        // CMD_ASTRO_START_CAPTURE_WIDE_RAW_LIVE_STACKING -> Start Capture Wide angle
-        if (
-          result_data.cmd ==
-            Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING ||
-          result_data.cmd ==
-            Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_WIDE_RAW_LIVE_STACKING
-        ) {
-          if (
-            result_data.data.code ==
-            Dwarfii_Api.DwarfErrorCode.CODE_ASTRO_NEED_GOTO
-          ) {
-            console.error("Capture Need Goto");
-            console.debug("Capture Need Goto ", {}, connectionCtx);
-            return false;
-          } else if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
-            console.error("Capture error:", result_data.data.code);
-            console.debug("Start Capture error", {}, connectionCtx);
-            endImagingSession();
-            return false;
-          } else {
-            console.debug("Start Capture ok", {}, connectionCtx);
-          }
-        } else {
-          console.debug("", result_data, connectionCtx);
-        }
-        console.debug(txt_info, result_data, connectionCtx);
-      };
-
-      console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-      const webSocketHandler = connectionCtx.socketIPDwarf
-        ? connectionCtx.socketIPDwarf
-        : new WebSocketHandler(connectionCtx.IPDwarf);
-
-      // Send Command : messageAstroStartCaptureRawLiveStacking or messageAstroStartWideCaptureLiveStacking
-      let WS_Packet;
-      if (connectionCtx.currentAstroCamera != wideangleCamera)
-        WS_Packet = messageAstroStartCaptureRawLiveStacking();
-      else WS_Packet = messageAstroStartWideCaptureLiveStacking();
-      let txtInfoCommand = "takeAstroPhoto";
-
-      webSocketHandler.prepare(
-        WS_Packet,
-        txtInfoCommand,
-        [
-          Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING,
-          Dwarfii_Api.DwarfCMD.CMD_ASTRO_START_CAPTURE_WIDE_RAW_LIVE_STACKING,
-        ],
-        customMessageHandler
-      );
-
-      if (!webSocketHandler.run()) {
-        console.error(" Can't launch Web Socket Run Action!");
-      }
-    }
-  }
-
-  function stopAstroPhotoHandler() {
-    if (connectionCtx.IPDwarf === undefined) {
-      return;
-    }
-
-    const customMessageHandler = (txt_info, result_data) => {
-      // CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING -> Stop Capture
-      // CMD_ASTRO_STOP_WIDE_CAPTURE_LIVE_STACKING -> Stop Capture Wide angle
+    capturePending.current = true;
+    setCaptureBusy(true);
+    setCaptureStatus("Requesting capture…");
+    const revision = sessionRevision.current;
+    const previousNotification = captureNotificationRevision.current;
+    pendingCaptureTime.current = Date.now();
+    try {
+      await startCurrentAstroCapture(connectionCtx);
       if (
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING ||
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_WIDE_CAPTURE_LIVE_STACKING
+        sessionRevision.current === revision &&
+        captureNotificationRevision.current === previousNotification
       ) {
-        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
-          console.debug("Stop Capture error", {}, connectionCtx);
-        } else {
-          console.debug("Stop Capture ok", {}, connectionCtx);
-        }
-        endImagingSession();
-      } else {
-        console.debug("", result_data, connectionCtx);
+        setCaptureStatus(
+          "Capture request accepted. Waiting for telescope progress.",
+        );
       }
-      console.debug(txt_info, result_data, connectionCtx);
-    };
-
-    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    // Send Command : messageAstroStopCaptureRawLiveStacking or messageAstroStopWideCaptureLiveStacking
-    let WS_Packet;
-    if (connectionCtx.currentAstroCamera != wideangleCamera)
-      WS_Packet = messageAstroStopCaptureRawLiveStacking();
-    else WS_Packet = messageAstroStopWideCaptureLiveStacking();
-    let txtInfoCommand = "stopAstroPhoto";
-
-    webSocketHandler.prepare(
-      WS_Packet,
-      txtInfoCommand,
-      [
-        Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING,
-        Dwarfii_Api.DwarfCMD.CMD_ASTRO_STOP_WIDE_CAPTURE_LIVE_STACKING,
-      ],
-      customMessageHandler
-    );
-
-    if (!webSocketHandler.run()) {
-      console.error(" Can't launch Web Socket Run Action!");
+      // Recording, counters and completion are owned by device notifications.
+      // A start ACK cannot manufacture a recording session or successful image.
+    } catch (error) {
+      if (sessionRevision.current === revision) {
+        pendingCaptureTime.current = undefined;
+        setCaptureStatus(
+          error instanceof Error ? error.message : "Capture request failed.",
+        );
+      }
+    } finally {
+      if (sessionRevision.current === revision) {
+        capturePending.current = false;
+        setCaptureBusy(false);
+      }
     }
   }
 
-  function goLiveHandler() {
-    if (connectionCtx.IPDwarf === undefined) {
+  async function stopAstroPhotoHandler() {
+    if (stopCapturePending.current) return;
+    const socket = connectionCtx.socketIPDwarf;
+    if (!connectionCtx.connectionStatus || !socket?.request) {
+      setCaptureStatus(
+        "Reconnect to request a capture stop; telescope state is unknown.",
+      );
       return;
     }
-
-    const customMessageHandler = (txt_info, result_data) => {
-      //
-      // -> Stop Capture
-      if (result_data.cmd == Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE) {
-        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
-          console.debug("Go Live error", {}, connectionCtx);
-        } else {
-          console.debug("Go Live ok", {}, connectionCtx);
-        }
-        endPreview();
-      } else {
-        console.debug("", result_data, connectionCtx);
+    stopCapturePending.current = true;
+    const revision = sessionRevision.current;
+    const previousNotification = captureNotificationRevision.current;
+    setCaptureStatus("Requesting capture stop…");
+    try {
+      await socket.request(
+        connectionCtx.currentAstroCamera === wideangleCamera
+          ? "stopWideCapture"
+          : "stopTeleCapture",
+      );
+      if (
+        sessionRevision.current === revision &&
+        captureNotificationRevision.current === previousNotification
+      ) {
+        setCaptureStatus(
+          "Stop request accepted. Waiting for the telescope to stop.",
+        );
       }
-      console.debug(txt_info, result_data, connectionCtx);
-    };
+    } catch (error) {
+      if (sessionRevision.current === revision) {
+        setCaptureStatus(
+          error instanceof Error
+            ? error.message
+            : "Capture stop request failed.",
+        );
+      }
+    } finally {
+      if (sessionRevision.current === revision)
+        stopCapturePending.current = false;
+    }
+    // Never mark idle/end the session on a rejected stop or on its ACK alone.
+  }
 
-    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    // Send Command : messageAstroGoLive
-    let WS_Packet = messageAstroGoLive();
-    let txtInfoCommand = "goLive";
-
-    webSocketHandler.prepare(
-      WS_Packet,
-      txtInfoCommand,
-      [Dwarfii_Api.DwarfCMD.CMD_ASTRO_GO_LIVE],
-      customMessageHandler
-    );
-
-    if (!webSocketHandler.run()) {
-      console.error(" Can't launch Web Socket Run Action!");
+  async function goLiveHandler() {
+    const socket = connectionCtx.socketIPDwarf;
+    if (!connectionCtx.connectionStatus || !socket?.request) {
+      setCaptureStatus("Connect the telescope to return to preview.");
+      return;
+    }
+    try {
+      await socket.request(
+        connectionCtx.currentAstroCamera === wideangleCamera
+          ? "goLiveWide"
+          : "goLiveTele",
+      );
+      endPreview();
+      setCaptureStatus("Live preview requested.");
+    } catch (error) {
+      setCaptureStatus(
+        error instanceof Error ? error.message : "Could not return to preview.",
+      );
     }
   }
 
@@ -395,7 +395,7 @@ export default function ImagingMenu(props: PropType) {
       console.debug(
         "ImagingSession tS clearInterval:",
         testTimer,
-        connectionCtx
+        connectionCtx,
       );
     }
 
@@ -405,7 +405,7 @@ export default function ImagingMenu(props: PropType) {
       console.debug(
         "ImagingSession tG clearInterval:",
         testTimer,
-        connectionCtx
+        connectionCtx,
       );
     }
     if (connectionCtx.timerGlobal) clearInterval(connectionCtx.timerGlobal);
@@ -414,24 +414,6 @@ export default function ImagingMenu(props: PropType) {
     if (timerSession) clearInterval(timerSession);
 
     timerSessionInit = false;
-  }
-
-  function endImagingSession() {
-    stopTimer();
-    if (connectionCtx.imagingSession.isRecording) {
-      connectionCtx.setImagingSession((prev) => {
-        prev["isRecording"] = false;
-        return { ...prev };
-      });
-      saveImagingSessionDb("isRecording", false.toString());
-    }
-    if (!connectionCtx.imagingSession.endRecording) {
-      connectionCtx.setImagingSession((prev) => {
-        prev["endRecording"] = true;
-        return { ...prev };
-      });
-      saveImagingSessionDb("endRecording", true.toString());
-    }
   }
 
   function endPreview() {
@@ -470,14 +452,14 @@ export default function ImagingMenu(props: PropType) {
         updateTelescopeISPSetting(
           "gainMode",
           connectionCtx.astroSettings.gainMode as number,
-          connectionCtx
+          connectionCtx,
         );
       }, 1000);
       setTimeout(() => {
         updateTelescopeISPSetting(
           "IR",
           connectionCtx.astroSettings.IR as number,
-          connectionCtx
+          connectionCtx,
         );
       }, 3500);
     } else {
@@ -493,7 +475,7 @@ export default function ImagingMenu(props: PropType) {
       updateTelescopeISPSetting(
         exposureMode,
         exposureModeValue as number,
-        connectionCtx
+        connectionCtx,
       );
     }, 2000);
     setTimeout(() => {
@@ -503,242 +485,140 @@ export default function ImagingMenu(props: PropType) {
       updateTelescopeISPSetting(
         exposure,
         exposureValue as number,
-        connectionCtx
+        connectionCtx,
       );
     }, 3000);
   }
 
   function focusMinus() {
-    focusAction(false, false, false, 1);
+    void focusAction(false, false, false, 1);
   }
-
-  function focusMinusLong() {
-    focusAction(false, true, false, 1);
-  }
-
-  function focusLongStop() {
-    focusAction(false, true, true, 0);
-  }
-
   function focusPlus() {
-    focusAction(false, false, false, 0);
+    void focusAction(false, false, false, 0);
   }
-
+  function focusMinusLong() {
+    continuousFocusHeld.current = true;
+    void focusAction(false, true, false, 1);
+  }
   function focusPlusLong() {
-    focusAction(false, true, false, 0);
+    continuousFocusHeld.current = true;
+    void focusAction(false, true, false, 0);
   }
-
+  function focusLongStop() {
+    if (!continuousFocusHeld.current) return;
+    continuousFocusHeld.current = false;
+    void focusAction(false, true, true, 0);
+  }
   function focusAutoAstro() {
-    console.log("Astro click");
-    setAstroFocus(true);
-    focusAction(true, false, false, 0, 1);
+    void focusAction(true, false, false, 0);
   }
-
   function focusAutoAstroStop() {
-    setAstroFocus(false);
-    focusAction(true, false, true, 0);
+    void focusAction(true, false, true, 0);
   }
-
-  const handleRightClick = (event) => {
-    event.preventDefault(); // Prevent default context menu
-    console.log("Right-click detected!");
-    // Your custom logic for right-click event
-    console.log("Astro Right click");
-    setAstroFocus(true);
-    focusAction(true, false, false, 0, 0);
+  const handleRightClick = (event: MouseEvent) => {
+    event.preventDefault();
+    focusAutoAstro();
   };
 
-  function focusAction(Astro, Continu, Stop, Direction, ModeAstro = 1) {
-    if (connectionCtx.IPDwarf === undefined) {
+  async function focusAction(
+    astro: boolean,
+    continuous: boolean,
+    stop: boolean,
+    direction: 0 | 1,
+  ) {
+    const socket = connectionCtx.socketIPDwarf;
+    if (!connectionCtx.connectionStatus || !socket?.request) {
+      setFocusStatus("Connect the telescope to use focus controls.");
+      continuousFocusHeld.current = false;
       return;
     }
-
-    const customMessageHandler = (txt_info, result_data) => {
-      // CMD_FOCUS_START_ASTRO_AUTO_FOCUS
-      // CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS
-      // CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS
-      // CMD_FOCUS_START_MANUAL_CONTINU_FOCUS
-      // CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS
-      if (
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_ASTRO_AUTO_FOCUS ||
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS ||
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS ||
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_MANUAL_CONTINU_FOCUS ||
-        result_data.cmd ==
-          Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS
-      ) {
-        if (result_data.data.code != Dwarfii_Api.DwarfErrorCode.OK) {
-          console.debug("Focus error", {}, connectionCtx);
-        } else {
-          console.debug("Focus ok", {}, connectionCtx);
-        }
-      } else {
-        console.debug("", result_data, connectionCtx);
-      }
-      console.debug(txt_info, result_data, connectionCtx);
-    };
-
-    console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    // Send Command : messageFocusStartAstroAutoFocus
-    let WS_Packet;
-    let txtInfoCommand;
-    let Cmd;
-    if (Astro && !Continu && !Stop) {
-      WS_Packet = messageFocusStartAstroAutoFocus(ModeAstro);
-      txtInfoCommand = "AstroFocus";
-      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_ASTRO_AUTO_FOCUS];
-      console.log("Focus : CMD_FOCUS_START_ASTRO_AUTO_FOCUS");
+    const operation = astro
+      ? stop
+        ? "stopAstroAutoFocus"
+        : "astroAutoFocus"
+      : continuous
+        ? stop
+          ? "stopFocus"
+          : "focusContinuous"
+        : "focusStep";
+    if (pendingFocusCommands.current.has(operation)) return;
+    pendingFocusCommands.current.add(operation);
+    const revision = sessionRevision.current;
+    const previousNotification = focusNotificationRevision.current;
+    if (astro && !stop) {
+      setFocusRequested(true);
+      focusStopRequested.current = false;
     }
-    if (Astro && !Continu && Stop) {
-      WS_Packet = messageFocusStopAstroAutoFocus();
-      txtInfoCommand = "AstroFocus";
-      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS];
-      console.log("Focus : CMD_FOCUS_STOP_ASTRO_AUTO_FOCUS");
-    }
-    if (!Astro && Continu && !Stop) {
-      WS_Packet = messageFocusStartManualContinuFocus(Direction);
-      txtInfoCommand = "AstroFocus";
-      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_START_MANUAL_CONTINU_FOCUS];
-      console.log("Focus : CMD_FOCUS_START_MANUAL_CONTINU_FOCUS");
-    }
-    if (!Astro && Continu && Stop) {
-      WS_Packet = messageFocusStopManualContinuFocus();
-      txtInfoCommand = "AstroFocus";
-      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS];
-      console.log("Focus : CMD_FOCUS_STOP_MANUAL_CONTINU_FOCUS");
-    }
-    if (!Astro && !Continu) {
-      WS_Packet = messageFocusManualSingleStepFocus(Direction);
-      txtInfoCommand = "AstroFocus";
-      Cmd = [Dwarfii_Api.DwarfCMD.CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS];
-      console.log("Focus : CMD_FOCUS_MANUAL_SINGLE_STEP_FOCUS");
-    }
-
-    webSocketHandler.prepare(
-      WS_Packet,
-      txtInfoCommand,
-      Cmd,
-      customMessageHandler
+    if (astro && stop) focusStopRequested.current = true;
+    setFocusStatus(
+      stop ? "Requesting focus stop…" : "Requesting focus adjustment…",
     );
+    try {
+      const values =
+        astro && !stop ? { mode: 1 } : !astro && !stop ? { direction } : {};
+      await socket.request(operation, values);
+      if (
+        sessionRevision.current !== revision ||
+        focusNotificationRevision.current !== previousNotification
+      )
+        return;
+      setFocusStatus(
+        stop
+          ? "Focus stop accepted. Waiting for the telescope."
+          : astro
+            ? "Autofocus request accepted. Waiting for telescope focus state."
+            : continuous
+              ? "Continuous focus request accepted. Release to request stop."
+              : "Focus step accepted. Waiting for telescope position.",
+      );
+      // 15011 reads saved infinity position; it is NOT motor initialization.
+    } catch (error) {
+      if (sessionRevision.current === revision) {
+        if (astro && !stop) setFocusRequested(false);
+        setFocusStatus(
+          error instanceof Error ? error.message : "The focus request failed.",
+        );
+      }
+    } finally {
+      if (sessionRevision.current === revision)
+        pendingFocusCommands.current.delete(operation);
+    }
+  }
 
-    if (!webSocketHandler.run()) {
-      console.error(" Can't launch Web Socket Run Action!");
+  function captureControlHandler() {
+    if (showSettingsMenu) return;
+    if (!validSettings) {
+      setShowSettingsMenu(true);
+      return;
+    }
+    if (
+      connectionCtx.imagingSession.isRecording &&
+      !connectionCtx.imagingSession.endRecording
+    ) {
+      void stopAstroPhotoHandler();
+    } else if (
+      connectionCtx.imagingSession.isGoLive ||
+      connectionCtx.imagingSession.endRecording
+    ) {
+      void goLiveHandler();
+    } else {
+      void takeAstroPhotoHandler();
     }
   }
 
   function renderRecordButton() {
-    console.log("Record Button");
-    // don't have clickable record button if the setting menu is shown
-    if (showSettingsMenu) {
-      console.log("Record Button1");
-      return <RecordButton />;
-      // display clickable record button if all fields are completed
-    } else if (validSettings) {
-      console.log("Record Button2");
-      if (
-        connectionCtx.imagingSession.isRecording &&
-        !connectionCtx.imagingSession.endRecording
-      ) {
-        console.log("Record Button3");
-        return (
-          <RecordingButton
-            onClick={stopAstroPhotoHandler}
-            color_stroke={"red"}
-            title="Stop Recording"
-          />
-        );
-      } else if (connectionCtx.imagingSession.isGoLive) {
-        console.log("Record Button5");
-        // Live Button is on
-        return (
-          <RecordButton
-            onClick={() => {
-              goLiveHandler();
-            }}
-            title="End Current Session"
-          />
-        );
-      } else if (connectionCtx.imagingSession.endRecording) {
-        console.log("Record Button4");
-        return (
-          <RecordingButton
-            onClick={() => {
-              goLiveHandler();
-            }}
-            color_stroke={"currentColor"}
-            title="Wait till the End of Stacking"
-          />
-        );
-      } else {
-        console.log("Record Button OK");
-        return (
-          <RecordButton
-            onClick={takeAstroPhotoHandler}
-            title="Start Recording"
-          />
-        );
-      }
-      // if fields are not filled in, display warning
-    } else {
-      return (
-        <>
-          <OverlayTrigger
-            placement="left"
-            delay={{ show: 100, hide: 200 }}
-            overlay={renderRecordButtonWarning}
-          >
-            <svg
-              height="100%"
-              version="1.1"
-              viewBox="0 0 64 64"
-              width="100%"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2 32C2 15.4317 15.4317 2 32 2C48.5683 2 62 15.4317 62 32C62 48.5683 48.5683 62 32 62C15.4317 62 2 48.5683 2 32Z"
-                fill="none"
-                opacity="1"
-                stroke="currentColor"
-                strokeLinecap="butt"
-                strokeLinejoin="round"
-                strokeWidth="4"
-              />
-              <path
-                d="M21 32C21 25.9249 25.9249 21 32 21C38.0751 21 43 25.9249 43 32C43 38.0751 38.0751 43 32 43C25.9249 43 21 38.0751 21 32Z"
-                fill="currentColor"
-                fillRule="nonzero"
-                opacity="1"
-                stroke="currentColor"
-                strokeLinecap="butt"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-            </svg>
-          </OverlayTrigger>
-        </>
-      );
+    if (
+      connectionCtx.imagingSession.isRecording &&
+      !connectionCtx.imagingSession.endRecording
+    ) {
+      return <RecordingButton color_stroke="red" title="Stop Recording" />;
     }
-  }
-
-  const renderRecordButtonWarning = (props: any) => {
-    if (showSettingsMenu) {
-      return <></>;
-    }
-
     return (
-      <Tooltip id="button-tooltip" {...props}>
-        You must set the camera settings.
-      </Tooltip>
+      <RecordButton
+        title={captureBusy ? "Capture request pending" : "Start Recording"}
+      />
     );
-  };
+  }
 
   /*
   let startTime;
@@ -771,7 +651,7 @@ export default function ImagingMenu(props: PropType) {
   */
   function anim_close() {
     const joystickContainer = document.querySelector(
-      ".joystick-container"
+      ".joystick-container",
     ) as HTMLElement;
     // Check if the element is found
     if (joystickContainer) {
@@ -802,9 +682,9 @@ export default function ImagingMenu(props: PropType) {
     ) {
       if (showModal) setShowModal(false);
       return (
-        <Link href="#" className="" onClick={() => {}}>
+        <span className={styles.statusLabel} aria-live="polite">
           {getAstroText()}
-        </Link>
+        </span>
       );
     }
     return "";
@@ -820,78 +700,84 @@ export default function ImagingMenu(props: PropType) {
     return strAstroText;
   }
 
-  return (
-    <ul className="nav nav-pills flex-column mb-auto border">
+  const toolbar = (
+    <ul
+      className="nav nav-pills dw-imaging-toolbar"
+      aria-label="Imaging controls"
+    >
       {screenWidth >= sizeSmallScreen && (
         <li className={`nav-item ${styles.box}`}>
           {checkPhotoMode()}
           {!showModal &&
             !connectionCtx.imagingSession.isRecording &&
             !connectionCtx.imagingSession.endRecording && (
-              <Link
-                href="#"
-                className=""
+              <button
+                type="button"
+                className={styles.toolbarButton}
                 onClick={() => {
                   setShowModal(true);
                 }}
+                aria-label={`Open ${getAstroText()} camera controls`}
               >
                 {getAstroText()}
-              </Link>
+              </button>
             )}
           {showModal &&
             !connectionCtx.imagingSession.isRecording &&
             !connectionCtx.imagingSession.endRecording && (
-              <Link
-                href="#"
-                className=""
+              <button
+                type="button"
+                className={styles.toolbarButton}
                 onClick={() => {
                   setShowModal(false);
                   anim_close();
                 }}
+                aria-label="Close camera controls"
               >
-                Photo
-              </Link>
+                Close
+              </button>
             )}
         </li>
       )}
       <li className={`nav-item ${styles.box}`}>
-        <Link href="#" className="" title="Show Settings">
-          <OverlayTrigger
-            trigger="click"
-            placement={popoverPlacement}
-            show={showSettingsMenu}
-            onToggle={() => setShowSettingsMenu((p) => !p)}
-            overlay={
-              <Popover id="popover-positioned" className="custom-popover">
-                <Popover.Body>
-                  <ImagingAstroSettings
-                    setValidSettings={setValidSettings}
-                    validSettings={validSettings}
-                    setShowSettingsMenu={setShowSettingsMenu}
-                  />
-                </Popover.Body>
-              </Popover>
-            }
-          >
-            <i className="bi bi-sliders" style={{ fontSize: "1.75rem" }}></i>
-          </OverlayTrigger>
-        </Link>
+        <button
+          type="button"
+          className={styles.toolbarButton}
+          title="Astrophotography settings"
+          aria-label="Open astrophotography settings"
+          onClick={() => setShowSettingsMenu(true)}
+        >
+          <i className="bi bi-sliders" style={{ fontSize: "1.75rem" }}></i>
+        </button>
       </li>
       <li className={`nav-item ${styles.box}`}>
-        <Link href="#" className="">
+        <button
+          type="button"
+          className={styles.toolbarButton}
+          onClick={captureControlHandler}
+          disabled={captureBusy && !connectionCtx.imagingSession.isRecording}
+          aria-label={
+            validSettings
+              ? connectionCtx.imagingSession.isRecording
+                ? "Stop astrophotography capture"
+                : "Start astrophotography capture"
+              : "Configure required astrophotography settings"
+          }
+        >
           {renderRecordButton()}
-        </Link>
+        </button>
       </li>
       <li className={`nav-item ${styles.box}`}>
         {!showWideAngle && (
-          <Link
-            href="#"
-            className=""
+          <button
+            type="button"
+            className={styles.toolbarButton}
             onClick={() => {
               setShowWideangle((prev) => !prev);
               setShowWideAngle((prev) => !prev);
             }}
             title="Show Wideangle"
+            aria-label="Show wide-angle overlay"
           >
             <i
               className="bi bi-pip"
@@ -901,17 +787,18 @@ export default function ImagingMenu(props: PropType) {
                 display: "inline-block",
               }}
             ></i>
-          </Link>
+          </button>
         )}
         {showWideAngle && !exchangeCamerasStatus && (
-          <Link
-            href="#"
-            className=""
+          <button
+            type="button"
+            className={styles.toolbarButton}
             onClick={() => {
               setShowWideangle((prev) => !prev);
               setShowWideAngle((prev) => !prev);
             }}
             title="Hide Wideangle"
+            aria-label="Hide wide-angle overlay"
           >
             <i
               className="bi bi-pip"
@@ -921,35 +808,37 @@ export default function ImagingMenu(props: PropType) {
                 display: "inline-block",
               }}
             ></i>
-          </Link>
+          </button>
         )}
       </li>
       {!connectionCtx.imagingSession.isRecording &&
         connectionCtx.imagingSession.isGoLive && (
           <li className={`nav-item ${styles.box}`}>
-            <Link
-              href="#"
-              className=""
+            <button
+              type="button"
+              className={styles.toolbarButton}
               onClick={() => {
                 goLiveHandler();
               }}
               title="End Current Session"
             >
               Live
-            </Link>
+            </button>
           </li>
         )}
       <hr />
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording &&
-        !astroFocus && (
+        !astroFocus &&
+        !focusRequested && (
           <div onContextMenu={handleRightClick}>
             <li className={`nav-item ${styles.box}`}>
-              <Link
-                href="#"
-                className=""
+              <button
+                type="button"
+                className={styles.toolbarButton}
                 onClick={focusAutoAstro}
-                title="Astro Infinite Focus, Right Click Auto Focus"
+                title="Start astrophotography autofocus"
+                aria-label="Start astrophotography autofocus"
               >
                 <i
                   className="icon-bullseye"
@@ -957,7 +846,7 @@ export default function ImagingMenu(props: PropType) {
                     fontSize: "2rem",
                   }}
                 ></i>
-              </Link>
+              </button>
             </li>
             {connectionCtx.valueFocusDwarf !== undefined && (
               <span style={{ display: "block", textAlign: "center" }}>
@@ -968,14 +857,15 @@ export default function ImagingMenu(props: PropType) {
         )}
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording &&
-        astroFocus && (
+        (astroFocus || focusRequested) && (
           <div>
             <li className={`nav-item ${styles.box}`}>
-              <Link
-                href="#"
-                className=""
+              <button
+                type="button"
+                className={styles.toolbarButton}
                 onClick={focusAutoAstroStop}
-                title="Astro Focus Stop"
+                title="Stop astrophotography autofocus"
+                aria-label="Stop astrophotography autofocus"
               >
                 <i
                   className="icon-bullseye"
@@ -983,7 +873,7 @@ export default function ImagingMenu(props: PropType) {
                     fontSize: "2rem",
                   }}
                 ></i>
-              </Link>
+              </button>
             </li>
             {connectionCtx.valueFocusDwarf !== undefined && (
               <span style={{ display: "block", textAlign: "center" }}>
@@ -996,11 +886,12 @@ export default function ImagingMenu(props: PropType) {
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording && (
           <li className={`nav-item ${styles.box}`}>
-            <Link
-              href="#"
-              className=""
+            <button
+              type="button"
+              className={styles.toolbarButton}
               onClick={focusPlus}
-              title="Focus + Click"
+              title="Move focus one step forward"
+              aria-label="Focus one step forward"
             >
               <i
                 className="icon-plus-squared-alt"
@@ -1008,18 +899,19 @@ export default function ImagingMenu(props: PropType) {
                   fontSize: "2rem",
                 }}
               ></i>
-            </Link>
+            </button>
           </li>
         )}
       <hr />
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording && (
           <li className={`nav-item ${styles.box}`}>
-            <Link
-              href="#"
-              className=""
+            <button
+              type="button"
+              className={styles.toolbarButton}
               onClick={focusMinus}
-              title="Focus - Click"
+              title="Move focus one step backward"
+              aria-label="Focus one step backward"
             >
               <i
                 className="icon-minus-squared-alt"
@@ -1027,19 +919,22 @@ export default function ImagingMenu(props: PropType) {
                   fontSize: "2rem",
                 }}
               ></i>
-            </Link>
+            </button>
           </li>
         )}
       <hr />
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording && (
           <li className={`nav-item ${styles.box}`}>
-            <Link
-              href="#"
-              className=""
-              onMouseDown={focusPlusLong}
-              onMouseUp={focusLongStop}
-              title="Focus + Long Press"
+            <button
+              type="button"
+              className={styles.toolbarButton}
+              onPointerDown={focusPlusLong}
+              onPointerUp={focusLongStop}
+              onPointerLeave={focusLongStop}
+              onPointerCancel={focusLongStop}
+              title="Hold to move focus forward"
+              aria-label="Hold to focus forward"
             >
               <i
                 className="icon-plus-squared"
@@ -1047,19 +942,22 @@ export default function ImagingMenu(props: PropType) {
                   fontSize: "2rem",
                 }}
               ></i>
-            </Link>
+            </button>
           </li>
         )}
       <hr />
       {!connectionCtx.imagingSession.isRecording &&
         !connectionCtx.imagingSession.endRecording && (
           <li className={`nav-item ${styles.box}`}>
-            <Link
-              href="#"
-              className=""
-              onMouseDown={focusMinusLong}
-              onMouseUp={focusLongStop}
-              title="Focus - Long Press"
+            <button
+              type="button"
+              className={styles.toolbarButton}
+              onPointerDown={focusMinusLong}
+              onPointerUp={focusLongStop}
+              onPointerLeave={focusLongStop}
+              onPointerCancel={focusLongStop}
+              title="Hold to move focus backward"
+              aria-label="Hold to focus backward"
             >
               <i
                 className="icon-minus-squared"
@@ -1067,7 +965,7 @@ export default function ImagingMenu(props: PropType) {
                   fontSize: "2rem",
                 }}
               ></i>
-            </Link>
+            </button>
           </li>
         )}
       {screenWidth < sizeSmallScreen && (
@@ -1078,74 +976,102 @@ export default function ImagingMenu(props: PropType) {
             {!showModal &&
               !connectionCtx.imagingSession.isRecording &&
               !connectionCtx.imagingSession.endRecording && (
-                <Link
-                  href="#"
-                  className=""
-                  onClick={() => {
-                    setShowModal(true);
-                    setShowOnlyActions(true);
-                  }}
+                <button
+                  type="button"
+                  className={styles.toolbarButton}
+                  aria-label={`Open ${getAstroText()} capture controls`}
+                  onClick={() => setShowModal(true)}
                 >
                   {getAstroText()}
-                </Link>
+                </button>
               )}
             {showModal &&
               !connectionCtx.imagingSession.isRecording &&
               !connectionCtx.imagingSession.endRecording && (
-                <Link
-                  href="#"
-                  className=""
+                <button
+                  type="button"
+                  className={styles.toolbarButton}
+                  aria-label="Close capture controls"
                   onClick={() => {
                     setShowModal(false);
-                    setShowOnlyActions(false);
                     anim_close();
                   }}
                 >
-                  Photo
-                </Link>
-              )}
-          </li>
-          <hr />
-          <li className={`nav-item ${styles.box}`}>
-            {checkPhotoMode()}
-            {!showModal &&
-              !connectionCtx.imagingSession.isRecording &&
-              !connectionCtx.imagingSession.endRecording && (
-                <Link
-                  href="#"
-                  className=""
-                  onClick={() => {
-                    setShowModal(true);
-                    setShowOnlyControls(true);
-                  }}
-                >
-                  Show Controls
-                </Link>
-              )}
-            {showModal &&
-              !connectionCtx.imagingSession.isRecording &&
-              !connectionCtx.imagingSession.endRecording && (
-                <Link
-                  href="#"
-                  className=""
-                  onClick={() => {
-                    setShowModal(false);
-                    setShowOnlyControls(false);
-                    anim_close();
-                  }}
-                >
-                  Hide Controls
-                </Link>
+                  Close
+                </button>
               )}
           </li>
         </>
       )}
-      <CameraAddOn
-        showModal={showModal}
-        setShowModal={setShowModal}
-        showOnlyActions={showOnlyActions}
-        showOnlyControls={showOnlyControls}
-      />
+      {focusStatus && (
+        <li className={styles.focusFeedback} aria-live="polite">
+          {focusStatus}
+        </li>
+      )}
+      {captureStatus && (
+        <li className={styles.focusFeedback} aria-live="polite">
+          {captureStatus}
+        </li>
+      )}
+      {warning && (
+        <div role="alert">
+          <p>{warning}</p>
+          <button
+            type="button"
+            disabled={captureBusy || !connectionCtx.connectionStatus}
+            onClick={async () => {
+              setCaptureBusy(true);
+              try {
+                if (!connectionCtx.socketIPDwarf)
+                  throw new Error("Reconnect before continuing capture.");
+                await connectionCtx.socketIPDwarf.request("continueCapture");
+                setWarning(undefined);
+                setCaptureStatus(
+                  "Continue requested; awaiting device progress.",
+                );
+              } catch (error) {
+                setCaptureStatus(
+                  error instanceof Error ? error.message : String(error),
+                );
+              } finally {
+                setCaptureBusy(false);
+              }
+            }}
+          >
+            Continue despite dark-frame warning
+          </button>
+        </div>
+      )}
+      <CameraAddOn showModal={showModal} setShowModal={setShowModal} />
     </ul>
+  );
+
+  return (
+    <>
+      {toolbar}
+      <Modal
+        show={showSettingsMenu}
+        onHide={() => setShowSettingsMenu(false)}
+        className={styles.settingsModalRoot}
+        centered
+        scrollable
+        fullscreen="sm-down"
+        dialogClassName={styles.settingsDialog}
+        aria-labelledby="astro-settings-title"
+      >
+        <Modal.Header closeButton className={styles.settingsModalHeader}>
+          <Modal.Title id="astro-settings-title">
+            Astrophotography settings
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className={styles.settingsModalBody}>
+          <ImagingAstroSettings
+            setValidSettings={setValidSettings}
+            validSettings={validSettings}
+            setShowSettingsMenu={setShowSettingsMenu}
+          />
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

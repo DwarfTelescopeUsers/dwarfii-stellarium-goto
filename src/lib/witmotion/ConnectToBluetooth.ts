@@ -25,10 +25,10 @@ export class UsingBluetooth implements DeviceInterface {
 
     this.service = await this.server?.getPrimaryService(this.serviceUUID);
     const readCharacteristic = await this.service?.getCharacteristic(
-      this.readUUID
+      this.readUUID,
     );
     this.writeCharacteristic = await this.service?.getCharacteristic(
-      this.writeUUID
+      this.writeUUID,
     );
 
     readCharacteristic?.addEventListener(
@@ -39,7 +39,7 @@ export class UsingBluetooth implements DeviceInterface {
           const byteData = new Uint8Array(value.buffer);
           onDataReceived && onDataReceived(extractDataFromRaw(byteData));
         }
-      }
+      },
     );
 
     await readCharacteristic?.startNotifications();
@@ -51,28 +51,28 @@ export class UsingBluetooth implements DeviceInterface {
 
   public accelerometerCalibration = async () => {
     await defaultAccelerometerCalibration(
-      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic)
+      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic),
     );
   };
 
   public magnetometerCalibration = async (command: String) => {
     await defaultMagnetometerCalibration(
       command,
-      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic)
+      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic),
     );
   };
 
   public dofSelect = async (command: String) => {
     await defaultDofSelect(
       command,
-      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic)
+      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic),
     );
   };
 
   public rateSelect = async (command: Number) => {
     await defaultRateSelect(
       command,
-      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic)
+      this.writeCharacteristic?.writeValue.bind(this.writeCharacteristic),
     );
   };
 }

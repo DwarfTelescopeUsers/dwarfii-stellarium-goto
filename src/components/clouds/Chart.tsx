@@ -3,7 +3,6 @@ import "chart.js/auto";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import i18n from "@/i18n";
-import AstroWeather from "./AstroWeather"; // 🚀 Astro weerdata naast de grafiek
 
 export interface ChartDataProps {
   forecastTimes: string[];
@@ -30,10 +29,38 @@ const Chart = ({
     }
   }, []);
 
+  const average = (values: string[]) =>
+    values.length
+      ? Math.round(
+          values.reduce((total, value) => total + Number(value), 0) /
+            values.length,
+        )
+      : 0;
+  const maximumWind = windArray.length
+    ? Math.max(...windArray.map(Number)).toFixed(1)
+    : "0.0";
+
   return (
     <div className="chart-weather-wrapper">
-      <div className="astro-weather-container">
-        <AstroWeather />
+      <div className="dw-forecast-summary" aria-label="Forecast summary">
+        <div className="dw-metric-card">
+          <span>Average cloud cover</span>
+          <strong>{average(cloudArray)}%</strong>
+        </div>
+        <div className="dw-metric-card">
+          <span>Average humidity</span>
+          <strong>{average(humidityArray)}%</strong>
+        </div>
+        <div className="dw-metric-card">
+          <span>Maximum wind</span>
+          <strong>{maximumWind} m/s</strong>
+        </div>
+        <div className="dw-metric-card">
+          <span>Observing window</span>
+          <strong>
+            {forecastTimes[0]}–{forecastTimes[forecastTimes.length - 1]}
+          </strong>
+        </div>
       </div>
       <div className="chart-container">
         <Line

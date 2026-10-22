@@ -186,7 +186,7 @@ describe("getRiseSetTimeLocal", () => {
       lon,
       jd,
       timezone,
-      useDaylightSavings
+      useDaylightSavings,
     );
 
     expect(res).toEqual(expected);
@@ -213,7 +213,7 @@ describe("getRiseSetTimeLocal", () => {
       jd,
       timezone,
       useDaylightSavings,
-      use24Hour
+      use24Hour,
     );
 
     expect(res).toEqual(expected);

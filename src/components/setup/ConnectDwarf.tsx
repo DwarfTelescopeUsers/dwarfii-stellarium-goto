@@ -9,13 +9,19 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 import { saveIPDwarfDB, saveIPConnectDB } from "@/db/db_utils";
 
 import { connectionHandler } from "@/lib/connect_utils";
+import { useFleetHostGuard } from "@/stores/FleetContext";
 
 const DwarfClientID_original = "0000DAF2-0000-1000-8000-00805F9B34FB";
 const DwarfClientID_base = "0000DAF2-0000-1000-8000-00805F9B35";
 
-import { DwarfClientID, setDwarfClientID, WebSocketHandler } from "dwarfii_api";
+import {
+  DwarfClientID,
+  setDwarfClientID,
+  WebSocketHandler,
+} from "@/services/dwarf";
 
 export default function ConnectDwarf() {
+  const fleetOwnsHost = useFleetHostGuard();
   let connectionCtx = useContext(ConnectionContext);
   const [currentDwarfClientID, setCurrentDwarfClientID] =
     useState(DwarfClientID); // Store initial DwarfClientID
@@ -75,6 +81,13 @@ export default function ConnectDwarf() {
     const formData = new FormData(e.currentTarget);
     const formIP = formData.get("ip");
     let IPDwarf = formIP?.toString();
+    if (fleetOwnsHost(IPDwarf)) {
+      setErrorTxt(
+        "Already connected in Fleet. This telescope is now selected; open Dashboard or Camera.",
+      );
+      connectionCtx.setConnectionStatus(false);
+      return;
+    }
 
     if (IPDwarf == undefined) {
       return;
@@ -84,7 +97,7 @@ export default function ConnectDwarf() {
     connectionCtx.setIPDwarf(IPDwarf);
     saveIPDwarfDB(IPDwarf);
     console.log(
-      "Start connection with " + IPDwarf + " using ClientID: " + DwarfClientID
+      "Start connection with " + IPDwarf + " using ClientID: " + DwarfClientID,
     );
     console.log("Current ClientID: " + currentDwarfClientID);
     connectionHandler(
@@ -94,7 +107,7 @@ export default function ConnectDwarf() {
       setConnecting,
       setSlavemode,
       setGoLive,
-      setErrorTxt
+      setErrorTxt,
     );
   }
 
@@ -240,15 +253,18 @@ export default function ConnectDwarf() {
         })}
       </p>
 
-      <div
+      <button
+        type="button"
         title={showHelp ? t("pHideHelp") : t("pShowHelp")}
-        className={`help-msg nav-link me-2`}
+        className="dw-help-toggle"
         onClick={() => setShowHelp((prev) => !prev)}
+        aria-expanded={showHelp}
       >
-        <i className="bi bi-info-square"></i>
-      </div>
+        <i className="bi bi-info-circle" aria-hidden="true"></i>
+        {showHelp ? t("pHideHelp") : t("pShowHelp")}
+      </button>
       {showHelp && (
-        <ol>
+        <ol className="dw-help-panel">
           <li className="mb-2">
             {t("pConnectDwarfIIContent1", {
               DwarfType: connectionCtx.typeNameDwarf,
@@ -273,25 +289,30 @@ export default function ConnectDwarf() {
           <li className="mb-4">{t("pConnectDwarfIIContent6")}</li>
         </ol>
       )}
-      <br />
-      <form onSubmit={checkConnection} className="mb-3">
+      <form onSubmit={checkConnection} className="mb-3 dw-connection-form">
         <div className="row mb-3">
           <div className="col-lg-2 col-md-3 text-lg-end">
-            <label htmlFor="notify" className="form-label">
-              {connectionCtx.typeNameDwarf}
-            </label>
+            <span className="form-label">Device model</span>
           </div>
           <div className="col">
-            <button className="btn-refresh" onClick={handleReset}>
-              <i className="fa fa-refresh" aria-hidden="true"></i>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={handleReset}
+              aria-label={t("pResetDwarfType")}
+            >
+              <i className="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>
+              Redetect model
             </button>{" "}
-            {t("pResetDwarfType")}
+            <span className="small ms-2">
+              {connectionCtx.typeNameDwarf || "Not identified yet"}
+            </span>
           </div>
         </div>
         <div className="row mb-3">
           <div className="col-lg-2 col-md-3 text-lg-end">
             <label htmlFor="notify" className="form-label">
-              Specific ID
+              Private client ID
             </label>
           </div>
           <div className="col">
@@ -302,10 +323,16 @@ export default function ConnectDwarf() {
               checked={isChecked}
               onChange={(e) => handleCheckboxChange(e)}
             />{" "}
-            <button className="btn-refresh" onClick={handleRefresh}>
-              <i className="fa fa-refresh" aria-hidden="true"></i>
-            </button>{" "}
-            {t("pConnectPrivateID")}
+            <button
+              type="button"
+              className="btn btn-outline-secondary ms-2"
+              onClick={handleRefresh}
+              aria-label={t("pConnectPrivateID")}
+            >
+              <i className="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>
+              Regenerate ID
+            </button>
+            <p className="small mt-2 mb-0">{t("pConnectPrivateID")}</p>
           </div>
         </div>
         <div className="row mb-3">
@@ -314,7 +341,7 @@ export default function ConnectDwarf() {
               {t("pIPAddress")}
             </label>
           </div>
-          <div className="col-lg-2 col-md-10  d-flex align-items-center">
+          <div className="col-lg-6 col-md-9 d-flex align-items-center">
             <input
               className="form-control"
               id="ip"
@@ -327,11 +354,13 @@ export default function ConnectDwarf() {
             />
           </div>
         </div>
-        <button type="submit" className="btn btn-more02 me-3">
-          <i className="icon-wifi" /> {t("pConnect")}
-        </button>{" "}
-        {renderConnectionStatus()}
-        {renderCmdHostLockDwarf()}
+        <div className="dw-connection-actions">
+          <button type="submit" className="btn btn-more02">
+            <i className="icon-wifi" /> {t("pConnect")}
+          </button>
+          {renderConnectionStatus()}
+          {renderCmdHostLockDwarf()}
+        </div>
       </form>
     </div>
   );

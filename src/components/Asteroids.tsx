@@ -21,7 +21,7 @@ const MainPage: NextPage<PropType> = ({ setModule, setErrors, setSuccess }) => {
   const currentDate = new Date().toISOString().split("T")[0];
   const [localStorageData, setLocalStorageData] = useLocalStorage(
     "asteroids",
-    ""
+    "",
   );
   let connectionCtx = useContext(ConnectionContext);
   const [NasaApiKey, setNasaApiKey] = useLocalStorage("NasaApiKey", ""); // Store NasaApiKey in local storage
@@ -32,7 +32,7 @@ const MainPage: NextPage<PropType> = ({ setModule, setErrors, setSuccess }) => {
   // Parse the local storage data or initialize it as an empty object
   const asteroidsData: ApiNasaResponse = React.useMemo(
     () => (localStorageData ? JSON.parse(localStorageData) : {}),
-    [localStorageData]
+    [localStorageData],
   );
 
   const { t } = useTranslation();
@@ -68,85 +68,128 @@ const MainPage: NextPage<PropType> = ({ setModule, setErrors, setSuccess }) => {
 
   // Handler to save NasaApiKey to local storage
   const handleSaveNasaApiKey = () => {
-    setNasaApiKey(inputNasaApiKey);
+    const apiKey = inputNasaApiKey.trim();
+    if (!apiKey) {
+      setErrors("Enter a NASA API key before saving.");
+      return;
+    }
+    setErrors(undefined);
+    setNasaApiKey(apiKey);
   };
 
   // Handler to load objects (trigger API call)
   const handleLoadObjects = () => {
     if (NasaApiKey) {
       getAsteroids(currentDate);
+    } else {
+      setErrors("Save a NASA API key before loading asteroid data.");
     }
   };
 
   return (
-    <>
-      <div className="wrapper">
+    <div className="dw-asteroid-browser">
+      <div className="dw-target-notices" aria-live="polite">
         {!connectionCtx.connectionStatusStellarium && (
-          <p className="text-danger">{t("cGoToAsteroidConnectStellarium")}</p>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>{t("cGoToAsteroidConnectStellarium")}</span>
+          </div>
         )}
-        {!connectionCtx.connectionStatusStellarium && <br />}
         {!connectionCtx.connectionStatus && (
-          <p className="text-danger">
-            {t("cGoToListConnectDwarf", {
-              DwarfType: connectionCtx.typeNameDwarf,
-            })}
-          </p>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>
+              {t("cGoToListConnectDwarf", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
+            </span>
+          </div>
         )}
-        <div className="col-sm-6 col-md-3 mb-3 input-button-container">
+      </div>
+      <section className="dw-asteroid-api-panel">
+        <div>
+          <h2>Near-Earth asteroids</h2>
+          <p>
+            Load today&apos;s close approaches from NASA. Your API key is stored
+            only in this browser.
+          </p>
+        </div>
+        <label htmlFor="nasa-api-key">NASA API key</label>
+        <div className="dw-asteroid-api-controls">
           <input
-            type="text"
+            id="nasa-api-key"
+            type="password"
             value={inputNasaApiKey}
             onChange={(e) => setInputNasaApiKey(e.target.value)}
-            placeholder="Enter NASA API Key"
-            className="form-control-nasa"
+            placeholder="Enter your API key"
+            autoComplete="off"
           />
           <button
             type="button"
-            className="btn btn-more02 w-100 me-2"
+            className="dw-target-action is-secondary"
             onClick={handleSaveNasaApiKey}
           >
-            Save API
+            Save key
           </button>
           <button
             type="button"
-            className="btn btn-more02 w-100 me-2 ml-2"
+            className="dw-target-action"
             onClick={handleLoadObjects}
+            disabled={!NasaApiKey || isLoading}
           >
-            Load Objects
+            {isLoading ? "Loading…" : "Load asteroids"}
           </button>
         </div>
+      </section>
 
-        <span className="date">{currentDate}</span>
+      <div className="dw-asteroid-summary">
+        <div>
+          <span>Approach date</span>
+          <strong>{currentDate}</strong>
+        </div>
         <Counter
           total={asteroidsData?.element_count}
           dangerous={
             asteroidsData?.near_earth_objects?.[currentDate]?.filter(
-              (asteroid) => asteroid.is_potentially_hazardous_asteroid
+              (asteroid) => asteroid.is_potentially_hazardous_asteroid,
             )?.length
           }
         />
-
-        {isLoading && (
-          <div className="loader">
-            <h2>Please wait</h2>
-            <h4>Looking for asteroids approaching Earth</h4>
-          </div>
-        )}
-        {asteroidsData &&
-          asteroidsData.near_earth_objects?.[currentDate]
-            ?.sort(({ is_potentially_hazardous_asteroid }) =>
-              is_potentially_hazardous_asteroid ? -1 : 1
-            )
-            .map((data, index) => (
-              <Asteroid
-                key={index}
-                data={data}
-                setErrors={setErrors}
-                setSuccess={setSuccess}
-              />
-            ))}
       </div>
-    </>
+
+      {isLoading && (
+        <div className="dw-target-loading" role="status">
+          <span
+            className="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          />
+          Looking for asteroids approaching Earth…
+        </div>
+      )}
+      {!isLoading && !asteroidsData?.near_earth_objects?.[currentDate] && (
+        <div className="dw-target-empty">
+          <i className="bi bi-stars" aria-hidden="true" />
+          <h2>No asteroid data loaded</h2>
+          <p>
+            Save your NASA API key, then load today&apos;s close approaches.
+          </p>
+        </div>
+      )}
+      <div className="dw-asteroid-results">
+        {asteroidsData?.near_earth_objects?.[currentDate]
+          ?.sort(({ is_potentially_hazardous_asteroid }) =>
+            is_potentially_hazardous_asteroid ? -1 : 1,
+          )
+          .map((data, index) => (
+            <Asteroid
+              key={index}
+              data={data}
+              setErrors={setErrors}
+              setSuccess={setSuccess}
+            />
+          ))}
+      </div>
+    </div>
   );
 };
 

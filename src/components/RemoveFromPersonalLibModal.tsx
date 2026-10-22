@@ -33,7 +33,7 @@ export default function RemoveFromPersonalLibrary(props: PropTypes) {
 
   function removeAstroObject(
     list: AstroObject[],
-    nameToRemove: string
+    nameToRemove: string,
   ): AstroObject[] {
     return list.filter((obj) => obj.displayName !== nameToRemove);
   }
@@ -44,7 +44,7 @@ export default function RemoveFromPersonalLibrary(props: PropTypes) {
     console.log("Before:", objectPersonalList);
     const updatedPersonalList = removeAstroObject(
       objectPersonalList,
-      objectName
+      objectName,
     );
     console.log("After:", updatedPersonalList);
     saveObjectListsByNameDb("personal", JSON.stringify(updatedPersonalList));

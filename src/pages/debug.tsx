@@ -1,24 +1,30 @@
 import Link from "next/link";
-import StatusBar from "@/components/shared/StatusBar";
-import { useSetupConnection } from "@/hooks/useSetupConnection";
-import { useLoadIntialValues } from "@/hooks/useLoadIntialValues";
+import PageHeader from "@/components/shared/PageHeader";
 
 export default function DebugPage() {
-  useSetupConnection();
-  useLoadIntialValues();
-
   return (
-    <div>
-      <StatusBar />
-      <h1>Debugging</h1>
-      <ol>
-        <li>
-          <Link href="/logs">Message Logs</Link>
-        </li>
-        <li>
-          <Link href="/dwarfii-status">Camera Status</Link>
-        </li>
-      </ol>
+    <div className="dw-page">
+      <PageHeader
+        eyebrow="Diagnostics"
+        title="Debugging"
+        description="Choose a diagnostic view for application or telescope troubleshooting."
+      />
+      <div className="dw-quick-actions">
+        <Link href="/logs" className="dw-quick-action">
+          <i className="bi bi-terminal" aria-hidden="true" />
+          <span>
+            <strong>Message logs</strong>
+            <small>Inspect app and device communication</small>
+          </span>
+        </Link>
+        <Link href="/device-status" className="dw-quick-action">
+          <i className="bi bi-activity" aria-hidden="true" />
+          <span>
+            <strong>Camera status</strong>
+            <small>Inspect live ISP and hardware state</small>
+          </span>
+        </Link>
+      </div>
     </div>
   );
 }

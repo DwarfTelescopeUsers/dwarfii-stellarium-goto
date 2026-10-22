@@ -10,7 +10,7 @@ export default function RecordingButton(props: PropType) {
 
   function setStyles(
     properties: (string | undefined)[],
-    styles: { [k: string]: string }
+    styles: { [k: string]: string },
   ) {
     let styleNames: string[] = [];
     properties

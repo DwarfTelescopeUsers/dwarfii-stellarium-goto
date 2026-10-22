@@ -141,7 +141,7 @@
                 ["M 109", 11.96, 53.37452, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 7.24],
                 ["M 110", 0.67279, 41.68542, "Galaxy in Group of Galaxies", "", 0, 0, "", "", 18.62]]
         };
-        var catalogs_home = "http://localhost:3000/mosaic/cat_json/";
+        var catalogs_home = "/mosaic/cat_json/";
         var catalogs = [
             { name: "Messier", targets: messier_catalog.data, url: catalogs_home + "Messier.json", source: "simbad", AladinCatalog: null, color: '#29a329' },
             { name: "NGC", targets: null, url: catalogs_home + "OpenNGC.json", source: "openngc", AladinCatalog: null, color: '#cccccc' },
@@ -162,16 +162,22 @@
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             soft: null
         };
+        var mosaicConfig = window.dwarfiumMosaicConfig || {};
+        var mosaicTelescopeProfiles = mosaicConfig.telescopes || [
+            { name: "DWARF II", fov_x: 180, fov_y: 101.4 },
+            { name: "DWARF 3", fov_x: 175.8, fov_y: 99 },
+            { name: "DWARF mini", fov_x: 128.4, fov_y: 73.2 }
+        ];
         var all_services = {
             telescope_services: [
               
                 {
                     name: "Dwarflab",
                     radec_format: 1,
-                    telescopes: [
-                        { name: "Dwarflab II", fov_x: 192, fov_y: 110, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10 },
-                        { name: "Dwarflab III", fov_x: 210, fov_y: 160, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10 }
-                    ]
+                    default_telescope: mosaicConfig.defaultTelescope || 0,
+                    telescopes: mosaicTelescopeProfiles.map(function (profile) {
+                        return { name: profile.name, fov_x: profile.fov_x, fov_y: profile.fov_y, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10 };
+                    })
                 }
             ]
         };
@@ -401,6 +407,15 @@
 
         function startDwarfiumMosaic(txt) {
             console.log("startDwarfiumMosaic", txt);
+
+            // React can change the active DWARF or observing location between visits.
+            mosaicConfig = window.dwarfiumMosaicConfig || mosaicConfig;
+            if (Array.isArray(mosaicConfig.telescopes) && mosaicConfig.telescopes.length) {
+                all_services.telescope_services[0].telescopes = mosaicConfig.telescopes.map(function (profile) {
+                    return { name: profile.name, fov_x: profile.fov_x, fov_y: profile.fov_y, lat: null, lng: null, timezoneOffset: "detect_timezone", alt: 100, seeing: "detect_location", horizon_limits: [20], meridian_transit: 10 };
+                });
+                all_services.telescope_services[0].default_telescope = mosaicConfig.defaultTelescope || 0;
+            }
 
             apply_url_add();
 
@@ -1592,6 +1607,11 @@
         }
 
         function getCurrentTelescopeLocation() {
+            if (mosaicConfig.location && Number.isFinite(mosaicConfig.location.latitude) && Number.isFinite(mosaicConfig.location.longitude)) {
+                setAllUnknownTelescopeLocations(mosaicConfig.location.latitude, mosaicConfig.location.longitude);
+                ViewImage(0);
+                return;
+            }
             getLocation(setCurrentTelescopePosition);
         }
 

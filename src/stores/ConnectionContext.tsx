@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { telephotoCamera } from "@/lib/dwarf_utils";
@@ -20,10 +20,11 @@ type ProviderProps = {
 };
 
 export const ConnectionContext = createContext<ConnectionContextType>(
-  {} as ConnectionContextType
+  {} as ConnectionContextType,
 );
 
 export function ConnectionContextProvider({ children }: ProviderProps) {
+  const [deviceError, setDeviceError] = useState<string | undefined>();
   const [connectionStatus, setConnectionStatus] = useState<
     boolean | undefined
   >();
@@ -34,6 +35,11 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     number | undefined
   >();
   const [useHttps, setUseHttps] = useState<boolean>(false);
+  useEffect(() => {
+    // Fleet can connect without visiting Setup, so derive the transport mode
+    // from the standalone page instead of relying on Setup to set this flag.
+    setUseHttps(window.location.protocol === "https:");
+  }, []);
   const [proxyIP, setProxyIP] = useState<string | undefined>();
   const [proxyLocalIP, setProxyLocalIP] = useState<string | undefined>();
   const [proxyInLan, setProxyInLan] = useState<boolean | undefined>();
@@ -84,7 +90,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
 
   const [searchTxt, setSearchTxt] = useState<string | undefined>("");
   const [visibleSkyLimit, setVisibleSkyLimit] = useState<string | undefined>(
-    ""
+    "",
   );
   const [visibleSkyLimitTarget, setVisibleSkyLimitTarget] =
     useState<SkyLimitObject[]>();
@@ -96,7 +102,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
   const [isSavedPosition, setIsSavedPosition] = useState<boolean | undefined>();
 
   const [saveAstroData, setSaveAstroData] = useState<AstroObject | undefined>(
-    {} as AstroObject
+    {} as AstroObject,
   );
 
   const [gotoType, setGotoType] = useState<string | undefined>("lists");
@@ -108,7 +114,7 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     string | undefined
   >();
   const [astroSettings, setAstroSettings] = useState<AstroSettings>(
-    {} as AstroSettings
+    {} as AstroSettings,
   );
 
   const [currentAstroCamera, setCurrentAstroCamera] =
@@ -117,12 +123,12 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     useState<boolean>(true);
 
   const [astroSavePosition, setAstroSavePosition] = useState<AstroSavePosition>(
-    {} as AstroSavePosition
+    {} as AstroSavePosition,
   );
   const [astroEQSolvingResult, setAstroEQSolvingResult] =
     useState<AstroEQSolvingResult>({} as AstroEQSolvingResult);
   const [imagingSession, setImagingSession] = useState<ImagingSession>(
-    {} as ImagingSession
+    {} as ImagingSession,
   );
   const [timerGlobal, setTimerGlobal] =
     useState<ReturnType<typeof setInterval>>();
@@ -195,6 +201,8 @@ export function ConnectionContextProvider({ children }: ProviderProps) {
     setStreamTypeWideDwarf,
     statusTemperatureDwarf,
     setStatusTemperatureDwarf,
+    deviceError,
+    setDeviceError,
     valueFocusDwarf,
     setValueFocusDwarf,
     connectionStatusStellarium,

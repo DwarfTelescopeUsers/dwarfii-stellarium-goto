@@ -40,7 +40,7 @@ export default function GotoUserLists(props: PropType) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectPersonalList, setSelectPersonalList] = useState(
-    connectionCtx.currentUserObjectListName === "personal"
+    connectionCtx.currentUserObjectListName === "personal",
   );
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function GotoUserLists(props: PropType) {
         setObjectPersonalList(personalObjecList);
         console.log(
           "Loaded  personalObjecList on load: ",
-          personalObjecList.length
+          personalObjecList.length,
         );
       } else {
         console.log("No personalObjecList found in DB");
@@ -107,113 +107,112 @@ export default function GotoUserLists(props: PropType) {
   }, []);
 
   return (
-    <div>
-      <div className="container">
+    <div className="dw-target-source">
+      <div className="dw-target-notices" aria-live="polite">
         {!connectionCtx.connectionStatusStellarium && (
-          <p className="text-danger">{t("cGoToListConnectStellarium")}.</p>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>{t("cGoToListConnectStellarium")}</span>
+          </div>
         )}
         {!connectionCtx.connectionStatus && (
-          <p className="text-danger">
-            {t("cGoToListConnectDwarf", {
-              DwarfType: connectionCtx.typeNameDwarf,
-            })}
-          </p>
-        )}
-
-        <div className="row">
-          <div className="col-xl-6 col-lg-5 col-md-5 col-12">
-            <select
-              className="form-select mb-2"
-              value={
-                connectionCtx.currentUserObjectListName ||
-                "default" ||
-                "personal"
-              }
-              onChange={selectListHandler}
-            >
-              <option value="default">{t("cGoToListdefault")}</option>
-              <option value="personal">{t("cGoToListpersonal")}</option>
-              {objectListsNames.map((list, index) => (
-                <option key={index} value={list}>
-                  {list}
-                </option>
-              ))}
-            </select>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>
+              {t("cGoToListConnectDwarf", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
+            </span>
           </div>
+        )}
+      </div>
 
-          <div className="col-lg-5 col-md-6 col-sm-6 col-10">
-            <button
-              className="btn btn-more02 me-2 mb-2"
-              onClick={importListModalHandle}
-            >
-              {t("cGoToUserListNewList")}
-            </button>
-            {!selectPersonalList && (
+      <div className="dw-target-toolbar">
+        <label className="dw-target-catalog-field" htmlFor="custom-target-list">
+          <span>Observation list</span>
+          <select
+            id="custom-target-list"
+            className="form-select"
+            value={connectionCtx.currentUserObjectListName || "default"}
+            onChange={selectListHandler}
+          >
+            <option value="default">{t("cGoToListdefault")}</option>
+            <option value="personal">{t("cGoToListpersonal")}</option>
+            {objectListsNames.map((list, index) => (
+              <option key={index} value={list}>
+                {list}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="dw-target-toolbar-actions">
+          <button
+            type="button"
+            className="dw-target-action"
+            onClick={importListModalHandle}
+          >
+            <i className="bi bi-plus-lg" aria-hidden="true" />
+            {t("cGoToUserListNewList")}
+          </button>
+          {!selectPersonalList &&
+            connectionCtx.currentUserObjectListName !== "default" && (
               <button
-                className="btn btn-more03 me-2 mb-2"
+                type="button"
+                className="dw-target-action is-danger"
                 onClick={deleteListModalHandle}
               >
+                <i className="bi bi-trash" aria-hidden="true" />
                 {t("cGoToUserListDeleteList")}
               </button>
             )}
-          </div>
         </div>
-
-        {connectionCtx.currentUserObjectListName &&
-          objectLists[connectionCtx.currentUserObjectListName] && (
-            <DSOList
-              objects={objectLists[connectionCtx.currentUserObjectListName]}
-              objectFavoriteNames={objectFavoriteNames}
-              setObjectFavoriteNames={setObjectFavoriteNames}
-              objectPersonalList={objectPersonalList}
-              setObjectPersonalList={setObjectPersonalList}
-              isInObjectPersonalList={selectPersonalList}
-              setModule={setModule}
-              setErrors={setErrors}
-              setSuccess={setSuccess}
-            ></DSOList>
-          )}
-
-        {showInstructions && (
-          <>
-            <p
-              className="mt-4"
-              dangerouslySetInnerHTML={{
-                __html: t("cGoToUserListCustomObjectsListInstruction1"),
-              }}
-            />
-
-            <p>{t("cGoToUserListCustomObjectsListInstruction2")}</p>
-            <p>{t("cGoToUserListCustomObjectsListInstruction3")}</p>
-            {""}
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-          </>
-        )}
-        <ImportObjectListModal
-          showModal={showImportModal}
-          setShowModal={setShowImportModal}
-          objectListsNames={objectListsNames}
-          setObjectListsNames={setObjectListsNames}
-          objectLists={objectLists}
-          setObjectLists={setObjectLists}
-        />
-        <DeleteObjectListModal
-          showModal={showDeleteModal}
-          setShowModal={setShowDeleteModal}
-          objectListsNames={objectListsNames}
-          setObjectListsNames={setObjectListsNames}
-          objectLists={objectLists}
-          setObjectLists={setObjectLists}
-        />
       </div>
+
+      {connectionCtx.currentUserObjectListName &&
+        objectLists[connectionCtx.currentUserObjectListName] && (
+          <DSOList
+            objects={objectLists[connectionCtx.currentUserObjectListName]}
+            objectFavoriteNames={objectFavoriteNames}
+            setObjectFavoriteNames={setObjectFavoriteNames}
+            objectPersonalList={objectPersonalList}
+            setObjectPersonalList={setObjectPersonalList}
+            isInObjectPersonalList={selectPersonalList}
+            setModule={setModule}
+            setErrors={setErrors}
+            setSuccess={setSuccess}
+          ></DSOList>
+        )}
+
+      {showInstructions && (
+        <section className="dw-target-guide">
+          <h2>Build a reusable observing list</h2>
+          <p
+            dangerouslySetInnerHTML={{
+              __html: t("cGoToUserListCustomObjectsListInstruction1"),
+            }}
+          />
+
+          <p>{t("cGoToUserListCustomObjectsListInstruction2")}</p>
+          <p>{t("cGoToUserListCustomObjectsListInstruction3")}</p>
+        </section>
+      )}
+      <ImportObjectListModal
+        showModal={showImportModal}
+        setShowModal={setShowImportModal}
+        objectListsNames={objectListsNames}
+        setObjectListsNames={setObjectListsNames}
+        objectLists={objectLists}
+        setObjectLists={setObjectLists}
+      />
+      <DeleteObjectListModal
+        showModal={showDeleteModal}
+        setShowModal={setShowDeleteModal}
+        objectListsNames={objectListsNames}
+        setObjectListsNames={setObjectListsNames}
+        objectLists={objectLists}
+        setObjectLists={setObjectLists}
+      />
     </div>
   );
 }

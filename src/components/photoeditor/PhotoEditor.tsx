@@ -22,10 +22,11 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
   const [sharpness, setSharpness] = useState(100);
   const [temperature, setTemperature] = useState(0);
   const [filter, setFilter] = useState("");
-  const [copyrightText, setCopyrightText] = useState(" \u00A9 2025 Your Name");
+  const [copyrightText, setCopyrightText] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [isCropping, setIsCropping] = useState(false);
   const [cropStart, setCropStart] = useState<{ x: number; y: number } | null>(
-    null
+    null,
   );
   const [cropEnd, setCropEnd] = useState<{ x: number; y: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -81,7 +82,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
 
     // Zet de data om naar een Uint8ClampedArray met vier kanalen (RGBA)
     const pixelArray = new Uint8ClampedArray(
-      newCanvas.width * newCanvas.height * 4
+      newCanvas.width * newCanvas.height * 4,
     );
 
     // Vul het array met de juiste waarden
@@ -97,7 +98,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
     const outputImageData = new ImageData(
       pixelArray,
       newCanvas.width,
-      newCanvas.height
+      newCanvas.height,
     );
     newCtx.putImageData(outputImageData, 0, 0);
 
@@ -111,6 +112,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
   };
 
   const saveImage = () => {
+    setSaveError("");
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
@@ -118,7 +120,6 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
 
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = fullImageUrl;
 
     img.onload = () => {
       canvas.width = img.width;
@@ -130,29 +131,34 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
       ctx.font = "30px Arial";
       ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
       ctx.textAlign = "right";
-      ctx.fillText(copyrightText, canvas.width - 20, canvas.height - 20);
-
-      // Hier de bewerkte afbeelding opslaan
-      const newImageUrl = canvas.toDataURL("image/jpeg");
-      setEditedImageUrl(newImageUrl);
+      if (copyrightText.trim()) {
+        ctx.fillText(
+          copyrightText.trim(),
+          canvas.width - 20,
+          canvas.height - 20,
+        );
+      }
 
       canvas.toBlob(
         (blob) => {
           if (blob) {
             const link = document.createElement("a");
-            link.download = "bewerkt_foto.jpg";
+            link.download = "dwarfium-edited-photo.jpg";
             link.href = URL.createObjectURL(blob);
             link.click();
-            URL.revokeObjectURL(link.href);
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
           }
         },
         "image/jpeg",
-        0.95
+        0.95,
       );
     };
     img.onerror = () => {
-      alert("Kan de afbeelding niet laden. Controleer of de URL correct is.");
+      setSaveError(
+        "Could not load the image. Check the device connection and try again.",
+      );
     };
+    img.src = editedImageUrl;
   };
   const resetAdjustments = () => {
     setBrightness(100);
@@ -209,7 +215,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
         0,
         0,
         cropWidth,
-        cropHeight
+        cropHeight,
       );
 
       const newImageUrl = canvas.toDataURL("image/jpeg");
@@ -237,7 +243,12 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
 
   return (
     <div className="photo-editor-overlay">
-      <div className="photo-editor-modal">
+      <div
+        className="photo-editor-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edit photo"
+      >
         {/* Header */}
         <div className="photo-editor-header">
           <h2>{t("cImageEditorPhotoEdit")}</h2>
@@ -262,7 +273,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
               <img
                 ref={imageRef}
                 crossOrigin="anonymous"
-                src={fullImageUrl}
+                src={editedImageUrl}
                 alt={t("cImageEditorFullImage")}
                 className="photo-editor-fullimage"
                 style={{
@@ -391,27 +402,21 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({
               type="text"
               value={copyrightText}
               onChange={(e) => setCopyrightText(e.target.value)}
-              placeholder={t("cImageEditorCopyright")}
+              placeholder="Optional copyright text"
+              aria-label="Optional copyright text"
             />
           </div>
 
           <div className="photo-editor-footer">
             <button onClick={saveImage} className="photo-editor-save-btn">
-              {t("cImageEditorSave")}
+              Download edited JPG
             </button>
           </div>
-          <button
-            onClick={() => {
-              const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                editedImageUrl
-              )}`;
-              window.open(facebookShareUrl, "_blank");
-            }}
-            className="photo-editor-share-btn"
-          >
-            <img src="/images/facebook-icon.svg" alt="Facebook" />
-            {t("cImageEditorShareFacebook")}
-          </button>
+          {saveError && (
+            <p className="photo-editor-error" role="alert">
+              {saveError}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import React from "react";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { useContext } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { modeManual, modeAuto } from "dwarfii_api";
+import { modeManual, modeAuto } from "@/services/dwarf";
 import { Formik } from "formik";
 import {
   allowedWideExposures,
@@ -84,7 +84,7 @@ export default function CameraWideSettings(props: PropTypes) {
     setWideWBAuto(parseInt(targetValue, 10));
   }
   function changeWBColorTempIndexValueHandler(
-    e: ChangeEvent<HTMLSelectElement>
+    e: ChangeEvent<HTMLSelectElement>,
   ) {
     let targetValue = e.target.value;
     setWideWBColorTempIndexValue(parseInt(targetValue, 10));
@@ -155,7 +155,7 @@ export default function CameraWideSettings(props: PropTypes) {
     ));
   };
   const allowedWideExposuresOptions = generateWideExposureOptions(
-    connectionCtx.typeIdDwarf
+    connectionCtx.typeIdDwarf,
   ); //DwarfModelId
 
   const generateWideGainOptions = (DwarfModelId = 1) => {
@@ -167,7 +167,7 @@ export default function CameraWideSettings(props: PropTypes) {
     ));
   };
   const allowedWideGainsOptions = generateWideGainOptions(
-    connectionCtx.typeIdDwarf
+    connectionCtx.typeIdDwarf,
   ); //DwarfModelId
 
   const generateWideWBColorTempOptions = (DwarfModelId = 1) => {
@@ -179,7 +179,7 @@ export default function CameraWideSettings(props: PropTypes) {
     ));
   };
   const allowedWideWBColorTempOptions = generateWideWBColorTempOptions(
-    connectionCtx.typeIdDwarf
+    connectionCtx.typeIdDwarf,
   ); //DwarfModelId
 
   function call_setWideAllParamsFn() {
@@ -203,7 +203,7 @@ export default function CameraWideSettings(props: PropTypes) {
       wideContrastValue,
       wideHueValue,
       wideSaturationValue,
-      wideSharpnessValue
+      wideSharpnessValue,
     );
   }
 

@@ -6,17 +6,17 @@ const arch = os.arch(); // 'x64', 'arm64'
 
 const targets = {
   win32: {
-    x64: "node16-win-x64",
+    x64: "node24-win-x64",
   },
   linux: {
-    x64: "node16-linux-x64",
-    arm64: "node16-linux-arm64",
-    arm: "node16-linux-armv7"
+    x64: "node24-linux-x64",
+    arm64: "node24-linux-arm64",
+    arm: "node24-linux-armv7",
   },
   darwin: {
-    x64: "node16-macos-x64",
-    arm64: "node16-macos-arm64"
-  }
+    x64: "node24-macos-x64",
+    arm64: "node24-macos-arm64",
+  },
 };
 
 const outputPaths = {
@@ -26,12 +26,12 @@ const outputPaths = {
   linux: {
     x64: "./install/linux/DwarfiumProxy",
     arm64: "./install/linux/DwarfiumProxy-arm64",
-    arm: "./install/linux/DwarfiumProxy-armv7"
+    arm: "./install/linux/DwarfiumProxy-armv7",
   },
   darwin: {
     x64: "./install/macos/DwarfiumProxy",
-    arm64: "./install/macos/DwarfiumProxy-arm64"
-  }
+    arm64: "./install/macos/DwarfiumProxy-arm64",
+  },
 };
 
 const outputPathsCert = {
@@ -41,12 +41,12 @@ const outputPathsCert = {
   linux: {
     x64: "./install/linux/createSSLcert",
     arm64: "./install/linux/createSSLcert-arm64",
-    arm: "./install/linux/createSSLcert-armv7"
+    arm: "./install/linux/createSSLcert-armv7",
   },
   darwin: {
     x64: "./install/macos/createSSLcert",
-    arm64: "./install/macos/createSSLcert-arm64"
-  }
+    arm64: "./install/macos/createSSLcert-arm64",
+  },
 };
 
 const target = targets[platform]?.[arch];
@@ -59,5 +59,10 @@ if (!target || !outputPath) {
 }
 
 console.log(`Building Proxy server for ${platform}-${arch}`);
-execSync(`pkg server/server.js --targets ${target} -o ${outputPath}`, { stdio: "inherit" });
-execSync(`pkg server/createSSLcert.js --targets ${target} -o ${outputPathCert}`, { stdio: "inherit" });
+execSync(`pkg server/server.js --targets ${target} -o ${outputPath}`, {
+  stdio: "inherit",
+});
+execSync(
+  `pkg server/createSSLcert.js --targets ${target} -o ${outputPathCert}`,
+  { stdio: "inherit" }
+);

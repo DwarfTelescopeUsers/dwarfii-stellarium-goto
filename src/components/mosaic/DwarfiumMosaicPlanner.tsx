@@ -1,30 +1,66 @@
 ﻿import React, { useEffect } from "react";
 
+import { useContext } from "react";
+import { useState } from "react";
+import { ConnectionContext } from "@/stores/ConnectionContext";
+import { getMosaicConfig } from "@/lib/mosaic_profile";
+import { readMosaicPlan } from "@/lib/mosaic_export";
+import NativeMosaicPanel from "./NativeMosaicPanel";
+
 const DwarfiumMosaicPlanner: React.FC = () => {
+  const connection = useContext(ConnectionContext);
+  const [downloadMessage, setDownloadMessage] = useState("");
   useEffect(() => {
+    (window as any).dwarfiumMosaicConfig = getMosaicConfig(
+      connection.typeIdDwarf,
+      connection.latitude,
+      connection.longitude,
+    );
     const loadScript = (src: string) => {
       return new Promise<void>((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-          resolve();
+        const existing = document.querySelector<HTMLScriptElement>(
+          `script[src="${src}"]`,
+        );
+        if (existing) {
+          if (existing.dataset.dwarfiumLoaded === "true") resolve();
+          else {
+            existing.addEventListener("load", () => resolve(), { once: true });
+            existing.addEventListener(
+              "error",
+              () => reject(new Error(`Script load error: ${src}`)),
+              { once: true },
+            );
+          }
           return;
         }
         const script = document.createElement("script");
         script.src = src;
         script.async = false; // Voorkom dat scripts tegelijk laden
-        script.onload = () => resolve();
+        script.onload = () => {
+          script.dataset.dwarfiumLoaded = "true";
+          resolve();
+        };
         script.onerror = () => reject(new Error(`Script load error: ${src}`));
         document.body.appendChild(script);
       });
     };
 
     // Laad de scripts in de juiste volgorde
+    const alreadyInitialized =
+      document
+        .querySelector('script[src="/mosaic/inline.js"]')
+        ?.getAttribute("data-dwarfium-loaded") === "true";
     loadScript("https://code.jquery.com/jquery-1.12.1.min.js")
       .then(() => loadScript("/mosaic/aladin.js"))
       .then(() => loadScript("https://www.gstatic.com/charts/loader.js"))
       .then(() => loadScript("/mosaic/DwarfiumMosaicEngine.js"))
-      .then(() => loadScript("/mosaic/inline.js")) // inline.js pas als laatste!
+      .then(() => loadScript("/mosaic/inline.js"))
+      .then(() => {
+        if (alreadyInitialized)
+          (window as any).startDwarfiumMosaic?.("return to planner");
+      })
       .catch((err) => console.error("Error loading scripts:", err));
-  }, []);
+  }, [connection.typeIdDwarf, connection.latitude, connection.longitude]);
 
   // Event-handlers (deze gaan ervan uit dat de globale functies beschikbaar zijn)
   const handleViewTarget = (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,7 +70,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
 
   const handleViewImage = (
     e: React.FormEvent<HTMLFormElement>,
-    mode: number
+    mode: number,
   ) => {
     e.preventDefault();
     (window as any).ViewImage && (window as any).ViewImage(mode);
@@ -53,96 +89,50 @@ const DwarfiumMosaicPlanner: React.FC = () => {
     (window as any).filterTimeChanged && (window as any).filterTimeChanged();
   };
 
-  // Nieuwe download-functie: haalt data uit <p id="aladin-div-text">, filtert de header en de rijnummers eruit en downloadt als JSON.
   const handleDownload = () => {
-    const p = document.getElementById("aladin-div-text");
-    if (!p) {
-      console.error("Element met id 'aladin-div-text' niet gevonden.");
+    const container = document.getElementById("aladin-div-text");
+    if (!container) {
+      setDownloadMessage("Create a frame before downloading a plan.");
       return;
     }
-
-    const text = p.innerText.trim();
-    if (!text) {
-      console.error("Geen data gevonden in 'aladin-div-text'.");
+    const input = (id: string) =>
+      (
+        document.getElementById(id) as
+          HTMLInputElement | HTMLSelectElement | null
+      )?.value ?? "";
+    const plan = readMosaicPlan(container, {
+      target: input("target"),
+      telescope: input("current-telescope"),
+      view: input("grid_type"),
+      overlapPercent: Number(input("overlap_percentage")),
+      gridX: Number(input("size_x")),
+      gridY: Number(input("size_y")),
+    });
+    if (!plan) {
+      setDownloadMessage("Create a frame before downloading a plan.");
       return;
     }
-
-    // 1) Splits de tekst in rijen op basis van newlines
-    const lines = text
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    if (lines.length < 2) {
-      console.error("Niet genoeg rijen om kolomnamen en data te verwerken.");
-      return;
-    }
-
-    // 2) De eerste regel zijn de kolomnamen (bijv. "A B C D")
-    const columns = lines[0].split(/\s+/);
-    // Verwijder de eerste regel uit de array
-    lines.shift();
-
-    // 3) Verwerk elke rij in een object
-    const rows: Array<Record<string, any>> = [];
-
-    for (const line of lines) {
-      // Splits de regel op whitespace
-      const tokens = line.split(/\s+/);
-      // De eerste token is het rijnummer
-      const rowNumber = tokens.shift(); // bijv. "1", "2", ...
-
-      // We verwachten voor elke kolom 2 tokens (dus columns.length * 2)
-      if (tokens.length !== columns.length * 2) {
-        console.warn(
-          `Rij "${rowNumber}" heeft niet het juiste aantal waardes (verwacht: ${
-            columns.length * 2
-          }, gekregen: ${tokens.length}).`
-        );
-        continue; // of throw Error(...)
-      }
-
-      // Bouw een object voor deze rij
-      const rowData: Record<string, any> = { rowNumber };
-
-      // Voor elke kolom pakken we 2 tokens (bijv. ["01:39:54.18", "43°28'07,50"])
-      for (let i = 0; i < columns.length; i++) {
-        const colName = columns[i];
-        const index = i * 2;
-        // Sla ze bijvoorbeeld op als array:
-        rowData[colName] = [tokens[index], tokens[index + 1]];
-        // Wil je liever een object, kan dat ook:
-        // rowData[colName] = { part1: tokens[index], part2: tokens[index + 1] };
-      }
-
-      rows.push(rowData);
-    }
-
-    // 4) Bouw het uiteindelijke JSON-object op
-    const output = {
-      columns, // ["A", "B", "C", "D", ...]
-      rows, // [{ rowNumber: "1", A: [...], B: [...], ... }, ...]
-    };
-
-    // 5) Converteer naar JSON-string met mooie inspringing
-    const json = JSON.stringify(output, null, 2);
-
-    // 6) Download als JSON
-    const blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(plan, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "data.json";
+    a.download = "dwarfium-mosaic-plan.json";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setDownloadMessage("Plan downloaded.");
   };
 
   return (
     <div id="allDiv" className="all_div">
+      <NativeMosaicPanel />
       <div className="new-layout">
         {/* Panel voor observatie-instellingen (1) */}
         <div className="panel panel-left">
-          <h2>Observatie-instellingen</h2>
+          <h2>Observation settings</h2>
 
           <form
             className="field"
@@ -156,6 +146,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
                 type="button"
                 className="btn-icon"
                 onClick={() => alert((window as any).target_info_text)}
+                aria-label="Show target format help"
               >
                 <img src="/images/information-outline.png" alt="Info" />
               </button>
@@ -201,7 +192,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
 
           <form
             className="field"
-            title="Select mosaic overlap, een aanbevolen waarde is 20% overlap."
+            title="Select the panel overlap. A value of 20% is recommended."
             onSubmit={(e) => handleViewImage(e, 0)}
           >
             <label htmlFor="overlap_percentage">Mosaic overlap (%):</label>
@@ -250,7 +241,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
 
         {/* Panel voor catalogus-instellingen (2) */}
         <div className="panel panel-right">
-          <h2>Catalogus-instellingen</h2>
+          <h2>Catalog settings</h2>
 
           <div className="field">
             <label htmlFor="catalog-selection">Catalog:</label>
@@ -352,6 +343,7 @@ const DwarfiumMosaicPlanner: React.FC = () => {
               Download
             </button>
           </div>
+          {downloadMessage && <p role="status">{downloadMessage}</p>}
         </div>
       </div>
 

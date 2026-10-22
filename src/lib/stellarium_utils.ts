@@ -3,8 +3,18 @@ import {
   ObjectStellariumInfo,
   ObjectStellarium,
 } from "@/types";
+import type { ConnectionContextType } from "@/types";
+import { getProxyUrl } from "@/lib/get_proxy_url";
 
 export let statusPath = "/api/main/status";
+
+export function stellariumRequestUrl(
+  target: string,
+  connection: ConnectionContextType,
+): string {
+  const proxy = getProxyUrl(connection);
+  return proxy ? `${proxy}?target=${encodeURIComponent(target)}` : target;
+}
 export let focusPath = "/api/main/focus?target=";
 export let focusPosPath = "/api/main/focus?position=";
 export let objectInfoPath = "/api/objects/info?format=json";
@@ -31,11 +41,11 @@ export function parseStellariumData(text: string): ParsedStellariumData {
 
 function parseRADec(text: string) {
   let matches = text.match(
-    /(?:[A-Za-z]+ *: *)?(?:RA\/Dec)? \(J2000.0\): *([-0-9hms.+°]+)\/([-0-9.+°'"]+)/
+    /(?:[A-Za-z]+ *: *)?(?:RA\/Dec)? \(J2000.0\): *([-0-9hms.+°]+)\/([-0-9.+°'"]+)/,
   );
   if (!matches) {
     matches = text.match(
-      /(?:<td>\s*RA\/Dec \(J2000.0\):\s*<\/td>\s*<td[^>]*>\s*([-0-9hms.+°]*)\s*\/\s*<\/td>\s*<td[^>]*>\s*([-0-9.+°'"]*)\s*<\/td>)/i
+      /(?:<td>\s*RA\/Dec \(J2000.0\):\s*<\/td>\s*<td[^>]*>\s*([-0-9hms.+°]*)\s*\/\s*<\/td>\s*<td[^>]*>\s*([-0-9.+°'"]*)\s*<\/td>)/i,
     );
   }
   if (matches) {
@@ -67,7 +77,7 @@ function parseObjectName(text: string) {
     } else if (startIndex !== -1)
       return {
         objectName: removeHtmlTags(
-          matches[1].split(")")[0].replace("<br />", "") + ")"
+          matches[1].split(")")[0].replace("<br />", "") + ")",
         ),
       };
     else return { objectName: removeHtmlTags(matches[1].split("<br")[0]) };
@@ -109,7 +119,7 @@ function parseObjectNGC(text: string) {
 
         // Find an additional name that starts with "NGC" or "HIP"
         additionalName = names.find(
-          (name) => name.startsWith("NGC") || name.startsWith("HIP")
+          (name) => name.startsWith("NGC") || name.startsWith("HIP"),
         );
       }
 
@@ -156,11 +166,11 @@ export function formatObjectNameStellarium(objectData: ObjectStellarium) {
 function formatName(
   name1: string | undefined,
   name2: string | undefined,
-  name3: string | undefined
+  name3: string | undefined,
 ) {
   let allNames = [name1, name2, name3];
   let filteredNames = allNames.filter(
-    (item) => item !== "" && item !== undefined
+    (item) => item !== "" && item !== undefined,
   );
   let uniqueNames = new Set(filteredNames);
   let names = "";

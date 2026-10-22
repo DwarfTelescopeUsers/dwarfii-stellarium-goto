@@ -1,276 +1,472 @@
 .photo-editor-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .photo-editor-modal {
-    background: #222;
-    color: #fff;
-    width: 80vw; /* Of een vaste waarde zoals 600px */
-    height: 100vh;
-    overflow: hidden; /* Voorkomt dat de modal zich vergroot */
-    max-width: 900px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
+  background: #222;
+  color: #fff;
+  width: 80vw; /* Of een vaste waarde zoals 600px */
+  height: 100vh;
+  overflow: hidden; /* Voorkomt dat de modal zich vergroot */
+  max-width: 900px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
 }
 
 .photo-editor-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #444;
-    padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
 }
 
-    .photo-editor-header h2 {
-        margin: 0;
-        font-size: 20px;
-    }
+.photo-editor-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
 
 .photo-editor-close-btn {
-    background: red;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
 .photo-editor-body {
-    display: flex;
-    margin-top: 15px;
-    gap: 20px;
+  display: flex;
+  margin-top: 15px;
+  gap: 20px;
 }
 
 /* Afbeeldingssectie */
 .photo-editor-content {
-    flex: 2;
-    text-align: center;
+  flex: 2;
+  text-align: center;
 }
 
 .photo-editor-thumbnail {
-    width: 100% !important;
-    max-height: 100px !important;
-    object-fit: contain !important;
-    border-radius: 8px !important;
-    background: #333 !important;
-    padding: 5px !important;
-    margin-bottom: 10px !important;
+  width: 100% !important;
+  max-height: 100px !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  background: #333 !important;
+  padding: 5px !important;
+  margin-bottom: 10px !important;
 }
 .photo-editor-fullimage {
-    width: 100% !important;
-    max-height: max-content !important;
-    object-fit: contain !important;
-    border-radius: 8px !important;
-    background: #333 !important;
-    padding: 5px !important;
-    margin-bottom: 10px !important;
+  width: 100% !important;
+  max-height: max-content !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  background: #333 !important;
+  padding: 5px !important;
+  margin-bottom: 10px !important;
 }
 
 /* Zijpaneel */
 .photo-editor-sidebar {
-    flex: 1;
-    background: #333;
-    padding: 15px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 0px;
+  flex: 1;
+  background: #333;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
 }
 
-    .photo-editor-sidebar h3 {
-        text-align: center;
-        margin-bottom: 10px;
-        font-size: 18px;
-        border-bottom: 1px solid #555;
-        padding-bottom: 5px;
-    }
+.photo-editor-sidebar h3 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 18px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 5px;
+}
 
-    .photo-editor-sidebar label {
-        font-size: 14px;
-        margin-bottom: 5px;
-        color: #bbb;
-    }
+.photo-editor-sidebar label {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #bbb;
+}
 
-    .photo-editor-sidebar input[type="range"] {
-        width: 100%;
-        cursor: pointer;
-        appearance: none;
-        height: 5px;
-        background: #555;
-        border-radius: 0px;
-    }
+.photo-editor-sidebar input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  height: 5px;
+  background: #555;
+  border-radius: 0px;
+}
 
-    .photo-editor-sidebar button {
-        background: #444;
-        color: white;
-        border: none;
-        padding: 0px;
-        cursor: pointer;
-        border-radius: 0px;
-        transition: background 0.2s;
-    }
+.photo-editor-sidebar button {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 0px;
+  cursor: pointer;
+  border-radius: 0px;
+  transition: background 0.2s;
+}
 
-        .photo-editor-sidebar button:hover {
-            background: #666;
-        }
+.photo-editor-sidebar button:hover {
+  background: #666;
+}
 
 /* Footer met opslaan-knop */
 .photo-editor-footer {
-    text-align: center;
-    margin-top: 15px;
+  text-align: center;
+  margin-top: 15px;
 }
 
 .photo-editor-save-btn {
-    background: green;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
+  background: green;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
 }
 
-    .photo-editor-save-btn:hover {
-        background: #2d8a2d;
-    }
+.photo-editor-save-btn:hover {
+  background: #2d8a2d;
+}
 /* Copyright tekst invoerveld */
 .photo-editor-copyright {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 14px;
-    font-weight: bold;
-    color: #fff;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
 }
 
-    .photo-editor-copyright label {
-        margin-bottom: 5px;
-    }
+.photo-editor-copyright label {
+  margin-bottom: 5px;
+}
 
-    .photo-editor-copyright input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #444;
-        background-color: #222;
-        color: #fff;
-        border-radius: 5px;
-        font-size: 14px;
-        outline: none;
-        transition: border-color 0.2s ease-in-out;
-    }
+.photo-editor-copyright input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
+  border-radius: 5px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
 
-        .photo-editor-copyright input:focus {
-            border-color: #0078D7; /* Blauw accent bij focus */
-        }
+.photo-editor-copyright input:focus {
+  border-color: #0078d7; /* Blauw accent bij focus */
+}
 
 /* Container voor copyright + opslaan-knop */
 .photo-editor-footer-container {
-    display: flex;
-    align-items: center; /* Horizontaal uitlijnen */
-    justify-content: space-between; /* Ruimte tussen de elementen */
-    gap: 10px; /* Ruimte tussen copyright en knop */
-    margin-top: 15px;
+  display: flex;
+  align-items: center; /* Horizontaal uitlijnen */
+  justify-content: space-between; /* Ruimte tussen de elementen */
+  gap: 10px; /* Ruimte tussen copyright en knop */
+  margin-top: 15px;
 }
 
 /* Zorg dat de copyright input en knop netjes blijven */
 .photo-editor-copyright input {
-    flex-grow: 1;
-    min-width: 200px;
+  flex-grow: 1;
+  min-width: 200px;
 }
 
 .photo-editor-save-btn {
-    padding: 10px 15px;
-    font-size: 14px;
-    background-color: #0078D7;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.2s ease-in-out;
+  padding: 10px 15px;
+  font-size: 14px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
 }
 
-    .photo-editor-save-btn:hover {
-        background-color: #005a9e;
-    }
+.photo-editor-save-btn:hover {
+  background-color: #005a9e;
+}
 
 .crop-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    cursor: crosshair;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
 }
 
 .crop-selection {
-    position: absolute;
-    border: 2px dashed #ff0000;
-    background: rgba(255, 0, 0, 0.2);
-    pointer-events: none;
+  position: absolute;
+  border: 2px dashed #ff0000;
+  background: rgba(255, 0, 0, 0.2);
+  pointer-events: none;
 }
 .photo-editor-share-btn {
-    background-color: #1877F2; /* Facebook blauw */
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
+  background-color: #1877f2; /* Facebook blauw */
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    transform 0.2s ease;
 }
 
-    .photo-editor-share-btn:hover {
-        background-color: #166FE5; /* Donkerder blauw bij hover */
-        transform: scale(1.05); /* Subtiele vergroting */
-    }
+.photo-editor-share-btn:hover {
+  background-color: #166fe5; /* Donkerder blauw bij hover */
+  transform: scale(1.05); /* Subtiele vergroting */
+}
 
-    .photo-editor-share-btn:active {
-        background-color: #0E5AC3; /* Nog donkerder blauw bij klikken */
-        transform: scale(0.98);
-    }
+.photo-editor-share-btn:active {
+  background-color: #0e5ac3; /* Nog donkerder blauw bij klikken */
+  transform: scale(0.98);
+}
 
-    .photo-editor-share-btn img {
-        width: 20px; /* Grootte van het Facebook-logo */
-        height: 20px;
-    }
+.photo-editor-share-btn img {
+  width: 20px; /* Grootte van het Facebook-logo */
+  height: 20px;
+}
 
 .ai-contrast-container {
-    margin-top: 20px;
-    padding: 15px;
-    border: 2px solid #4caf50;
-    border-radius: 8px;
-    background-color: rgba(76, 175, 80, 0.1);
-    text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  background-color: rgba(76, 175, 80, 0.1);
+  text-align: center;
+}
+
+/* Session photo editor: one clear preview with compact, usable controls. */
+.photo-editor-overlay {
+  z-index: 2000;
+  padding: 16px;
+  background: rgba(3, 8, 13, 0.82);
+  backdrop-filter: blur(8px);
+}
+.photo-editor-modal {
+  width: min(1120px, 100%);
+  height: min(820px, calc(100dvh - 32px));
+  max-width: none;
+  padding: 0;
+  overflow: hidden;
+  color: var(--dw-text, #e8f2f5);
+  background: var(--dw-surface-raised, #15202b);
+  border: 1px solid var(--dw-border, #314356);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+.photo-editor-header {
+  flex: 0 0 auto;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--dw-border, #314356);
+}
+.photo-editor-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.photo-editor-close-btn,
+.photo-editor-sidebar button,
+.photo-editor-save-btn,
+.photo-editor-share-btn {
+  min-height: 38px;
+  padding: 8px 13px;
+  color: var(--dw-text, #e8f2f5);
+  background: var(--dw-surface-soft, #1b2a38);
+  border: 1px solid var(--dw-border-strong, #405468);
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.photo-editor-close-btn:hover,
+.photo-editor-sidebar button:hover {
+  background: #263a49;
+}
+.photo-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+}
+.photo-editor-content {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px;
+  background: #080e16;
+  border: 1px solid var(--dw-border, #314356);
+  border-radius: 10px;
+}
+.photo-editor-content > h4,
+.photo-editor-thumbnail {
+  display: none !important;
+}
+.photo-editor-content > div {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.photo-editor-fullimage {
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: min(62vh, 640px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  background: transparent !important;
+}
+.photo-editor-sidebar {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 16px;
+  gap: 8px;
+  background: var(--dw-surface-soft, #1b2a38);
+  border: 1px solid var(--dw-border, #314356);
+  border-radius: 10px;
+}
+.photo-editor-sidebar h3 {
+  margin: 0 0 5px;
+  padding: 0 0 10px;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.photo-editor-sidebar h4 {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+}
+.photo-editor-sidebar label {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+}
+.photo-editor-sidebar input[type="range"] {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--dw-accent, #40c8ab);
+}
+.photo-editor-sidebar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.photo-editor-footer-container {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--dw-border, #314356);
+}
+.photo-editor-copyright {
+  flex: 1 1 auto;
+  max-width: 360px;
+  margin: 0;
+}
+.photo-editor-copyright input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  background: #080e16;
+}
+.photo-editor-footer {
+  margin: 0;
+}
+.photo-editor-save-btn {
+  color: #06110e;
+  background: var(--dw-accent, #40c8ab);
+  border-color: var(--dw-accent, #40c8ab);
+}
+.photo-editor-save-btn:hover {
+  background: #5ae2c7;
+}
+.photo-editor-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: #ffb7b7;
+  font-size: 0.82rem;
+}
+.photo-editor-share-btn {
+  font-weight: 600;
+  background: var(--dw-surface-soft, #1b2a38);
+}
+.photo-editor-share-btn:hover {
+  background: #263a49;
+  transform: none;
+}
+@media (max-width: 720px) {
+  .photo-editor-overlay {
+    padding: 0;
+  }
+  .photo-editor-modal {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .photo-editor-body {
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+  .photo-editor-content {
+    min-height: 240px;
+  }
+  .photo-editor-fullimage {
+    max-height: 42vh !important;
+  }
+  .photo-editor-sidebar {
+    overflow: visible;
+  }
+  .photo-editor-footer-container {
+    flex-wrap: wrap;
+  }
+  .photo-editor-copyright {
+    flex-basis: 100%;
+    max-width: none;
+  }
 }
 
 .contrast-btn {
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 10px;
-    border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 5px;
 }
 
-    .contrast-btn:hover {
-        background-color: #45a049;
-    }
+.contrast-btn:hover {
+  background-color: #45a049;
+}

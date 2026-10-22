@@ -12,19 +12,31 @@ type Fields = {
   AiEnhance: FieldValues;
 };
 
-export function validateAstroSettings(values: Fields) {
+type AstroValidationOptions = {
+  camera?: "telephoto" | "wide";
+  requireLegacyFields?: boolean;
+};
+
+export function validateAstroSettings(
+  values: Fields,
+  options: AstroValidationOptions = {},
+) {
   const errors: { [k: string]: string } = {};
-  [
-    "gain",
-    "exposure",
-    "wideGain",
-    "wideExposure",
-    "IR",
-    "binning",
-    "fileFormat",
-    "count",
-    "AiEnhance",
-  ].forEach((item) => {
+  const camera = options.camera ?? "telephoto";
+  const requiredFields =
+    camera === "wide"
+      ? ["wideGain", "wideExposure", "count"]
+      : [
+          "gain",
+          "exposure",
+          "IR",
+          "count",
+          ...(options.requireLegacyFields
+            ? ["binning", "fileFormat", "AiEnhance"]
+            : []),
+        ];
+
+  requiredFields.forEach((item) => {
     if (
       values[item as keyof Fields] === undefined ||
       values[item as keyof Fields] === "default"
@@ -32,6 +44,11 @@ export function validateAstroSettings(values: Fields) {
       errors[item] = `${item} is required`;
     }
   });
+
+  const count = Number(values.count);
+  if (!Number.isFinite(count) || count < 1) {
+    errors.count = "count must be at least 1";
+  }
 
   return errors;
 }

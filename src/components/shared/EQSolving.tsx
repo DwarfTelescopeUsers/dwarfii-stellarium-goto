@@ -1,188 +1,208 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import { useTranslation } from "react-i18next";
-import i18n from "@/i18n";
-import { AstroEQSolvingResult } from "@/types";
 import { EQSolvingHandlerFn, stopEQSolvingHandler } from "@/lib/goto_utils";
 
+function qualityFor(error: number) {
+  const absolute = Math.abs(error);
+  if (absolute <= 0.1) return { label: "Excellent", className: "is-excellent" };
+  if (absolute <= 0.5) return { label: "Fine tune", className: "is-close" };
+  return { label: "Adjustment needed", className: "is-adjust" };
+}
+
 export default function EQSolvingDwarf() {
-  let connectionCtx = useContext(ConnectionContext);
-  const [errors, setErrors] = useState<string | undefined>();
-  const [success, setSuccess] = useState<string | undefined>();
-  const [module, setModule] = useState<string | undefined>();
-  const [isVisible, setIsVisible] = useState(true);
-  const [message, setMessage] = useState<string | undefined>();
-  const prevErrors = usePrevious(errors);
-  const prevSuccess = usePrevious(success);
-  const { azimuth_err, altitude_err } = connectionCtx.astroEQSolvingResult;
+  const connection = useContext(ConnectionContext);
+  const [error, setError] = useState<string>();
+  const [status, setStatus] = useState<string>();
+  const [running, setRunning] = useState(false);
+  const { azimuth_err: azimuth, altitude_err: altitude } =
+    connection.astroEQSolvingResult;
+  const hasResult = azimuth !== undefined && altitude !== undefined;
 
-  // Local state to manage displayed results
-  const [displayedResults, setDisplayedResults] =
-    useState<AstroEQSolvingResult>({
-      azimuth_err: undefined,
-      altitude_err: undefined,
+  useEffect(() => {
+    if (error) setRunning(false);
+  }, [error]);
+
+  const overallQuality = useMemo(() => {
+    if (!hasResult) return null;
+    return qualityFor(Math.max(Math.abs(azimuth), Math.abs(altitude)));
+  }, [altitude, azimuth, hasResult]);
+
+  const startCalibration = () => {
+    setRunning(true);
+    setError(undefined);
+    setStatus("Starting DWARF EQ calibration…");
+    void EQSolvingHandlerFn(connection, setError, setStatus, (message) => {
+      if (typeof message === "string") setStatus(message);
+      if (
+        typeof message === "object" &&
+        message?.data &&
+        (message.data.aziErr !== undefined || message.data.code !== undefined)
+      ) {
+        setRunning(false);
+      }
     });
+  };
 
-  // Update displayed results whenever the context values change
-  useEffect(() => {
-    setDisplayedResults({
-      azimuth_err,
-      altitude_err,
-    });
-  }, [azimuth_err, altitude_err]);
+  const stopCalibration = () => {
+    void stopEQSolvingHandler(connection, setError, setStatus, () =>
+      setRunning(false),
+    );
+  };
 
-  // custom hook for getting previous value
-  function usePrevious(value: any) {
-    const ref = useRef();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-  }
-
-  useEffect(() => {
-    let new_message =
-      (prevErrors ?? "") +
-      (errors ?? "") +
-      (prevSuccess ?? "") +
-      (success ?? "");
-    if (new_message != (message ?? "")) {
-      setIsVisible(true);
-      setMessage(new_message);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 30000);
-
-      // Clear the timeout if new messages come in within the 10 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [prevErrors, errors, prevSuccess, success]);
-
-  const { t } = useTranslation();
-  // eslint-disable-next-line no-unused-vars
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
-
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language");
-    if (storedLanguage) {
-      setSelectedLanguage(storedLanguage);
-      i18n.changeLanguage(storedLanguage);
-    }
-  }, []);
-
-  function EQSolvingFn() {
-    setModule(t("cPolarAlignProcess"));
-    EQSolvingHandlerFn(connectionCtx, setErrors, setSuccess);
-  }
-
-  function stopEQSolving() {
-    setModule(t("cPolarAlignProcess"));
-    stopEQSolvingHandler(connectionCtx, setErrors, setSuccess);
-  }
+  const ready =
+    Boolean(connection.connectionStatus) &&
+    Boolean(connection.IPDwarf) &&
+    connection.latitude !== undefined &&
+    connection.longitude !== undefined;
 
   return (
-    <div>
-      <div className="d-flex flex-wrap justify-content-center overflow-auto gap-2 mt-3">
-        <button
-          className={`btn ${
-            connectionCtx.connectionStatus ? "btn-more02" : "btn-more02"
-          } me-4 mt-3`}
-          onClick={EQSolvingFn}
-          disabled={!connectionCtx.connectionStatus}
-        >
-          {t("cEQSolvingAction")}
-        </button>
-        <button
-          className={`btn ${
-            connectionCtx.connectionStatus ? "btn-more02" : "btn-more02"
-          } me-4 mt-3`}
-          onClick={stopEQSolving}
-          disabled={!connectionCtx.connectionStatus}
-        >
-          {t("cEQSolvingStopAction")}
-        </button>
-        <div className="EQ-result d-flex flex-wrap">
-          {displayedResults.azimuth_err !== undefined && (
-            <div className="result-item">
-              <span
-                className="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle mt-2 p-2"
-                style={{ width: "25px", height: "25px" }}
-              >
-                {displayedResults?.azimuth_err > 0 ? (
-                  <i className="bi bi-arrow-clockwise text-success"></i>
-                ) : (
-                  <i className="bi bi-arrow-counterclockwise text-danger"></i>
-                )}
-              </span>
-              <span className="value ms-2">
-                {Math.abs(displayedResults.azimuth_err).toFixed(2)}°
-              </span>
-              <span> : {t("cEQSolvingAzimuthResult")}</span>
-            </div>
-          )}{" "}
-          {displayedResults.altitude_err !== undefined && (
-            <div className="result-item">
-              <span
-                className="d-inline-flex align-items-center justify-content-center bg-light border rounded-circle mt-2 p-2"
-                style={{ width: "25px", height: "25px" }}
-              >
-                {displayedResults.altitude_err > 0 ? (
-                  <i className="bi bi-arrow-up text-success"></i>
-                ) : (
-                  <i className="bi bi-arrow-down text-danger"></i>
-                )}
-              </span>
-              <span className="value ms-2">
-                {Math.abs(displayedResults.altitude_err).toFixed(2)}°
-              </span>
-              <span> : {t("cEQSolvingAltitudeResult")}</span>
-            </div>
+    <div className="dw-eq-calibration">
+      <div className="dw-eq-control-card">
+        <div>
+          <p className="dw-eyebrow">DWARF calibration</p>
+          <h2>{hasResult ? "Alignment result" : "Run EQ calibration"}</h2>
+          <p>
+            The telescope solves the sky at multiple mount positions and returns
+            the polar-axis error. Keep the tripod fixed while it runs.
+          </p>
+        </div>
+        <div className="dw-action-row">
+          {running && (
+            <button
+              className="dw-button dw-button-secondary"
+              onClick={stopCalibration}
+            >
+              Stop
+            </button>
           )}
+          <button
+            className="dw-button dw-button-primary"
+            onClick={startCalibration}
+            disabled={!ready || running}
+          >
+            <i
+              className={`bi ${running ? "bi-arrow-repeat" : "bi-compass"}`}
+              aria-hidden="true"
+            />
+            {running
+              ? "Calibrating…"
+              : hasResult
+                ? "Run calibration again"
+                : "Start EQ calibration"}
+          </button>
         </div>
       </div>
-      {isVisible && (prevErrors || errors || prevSuccess || success) && (
+
+      {!ready && (
+        <div className="dw-inline-message is-warning" role="status">
+          <i className="bi bi-info-circle" aria-hidden="true" />
+          {!connection.connectionStatus
+            ? "Connect your DWARF to start calibration."
+            : "Set your observing location on First steps before calibration."}
+        </div>
+      )}
+      {(error || status) && (
         <div
-          className="slide-pane_from_bottom"
-          style={{
-            position: "fixed",
-            bottom: "65px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "fit-content",
-            height: "30px",
-            paddingTop: "5px",
-            paddingBottom: "20px",
-            paddingLeft: "50px",
-            paddingRight: "50px",
-            color: "rgb(0, 0, 0)",
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-          }}
+          className={`dw-inline-message ${error ? "is-error" : running ? "is-progress" : ""}`}
+          role={error ? "alert" : "status"}
         >
-          {module && (
-            <span>
-              <b> {module} </b>{" "}
+          {running && <span className="dw-spinner" aria-hidden="true" />}
+          {error || status}
+        </div>
+      )}
+
+      {hasResult ? (
+        <div className="dw-eq-results">
+          <div className="dw-eq-summary">
+            <span className={`dw-alignment-score ${overallQuality?.className}`}>
+              <i className="bi bi-bullseye" aria-hidden="true" />
             </span>
-          )}
-          {prevErrors && (
-            <span className="text-danger">
-              <b>{prevErrors} </b>
-            </span>
-          )}
-          {errors && errors != prevErrors && (
-            <span className="text-danger">
-              <b>{errors} </b>
-            </span>
-          )}
-          {prevSuccess && (
-            <span className="text-success">
-              <b>{prevSuccess} </b>
-            </span>
-          )}
-          {success && success != prevSuccess && (
-            <span className="text-success">
-              <b>{success} </b>
-            </span>
-          )}
+            <div>
+              <span className={`dw-badge ${overallQuality?.className}`}>
+                {overallQuality?.label}
+              </span>
+              <h3>
+                Maximum error{" "}
+                {Math.max(Math.abs(azimuth), Math.abs(altitude)).toFixed(2)}°
+              </h3>
+              <p>
+                Make the adjustments below without moving the tripod, then run
+                calibration again to verify the result.
+              </p>
+            </div>
+          </div>
+          <div className="dw-adjustment-grid">
+            <article>
+              <div className="dw-adjustment-icon">
+                <i
+                  className={`bi ${azimuth >= 0 ? "bi-arrow-clockwise" : "bi-arrow-counterclockwise"}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <span>Azimuth</span>
+                <strong>
+                  Turn {azimuth >= 0 ? "clockwise" : "counter-clockwise"} by{" "}
+                  {Math.abs(azimuth).toFixed(2)}°
+                </strong>
+                <small>Use the mount’s left/right adjustment.</small>
+              </div>
+              <span className={`dw-badge ${qualityFor(azimuth).className}`}>
+                {qualityFor(azimuth).label}
+              </span>
+            </article>
+            <article>
+              <div className="dw-adjustment-icon">
+                <i
+                  className={`bi ${altitude >= 0 ? "bi-arrow-up" : "bi-arrow-down"}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <span>Altitude</span>
+                <strong>
+                  {altitude >= 0 ? "Raise" : "Lower"} the axis by{" "}
+                  {Math.abs(altitude).toFixed(2)}°
+                </strong>
+                <small>Use the mount’s elevation adjustment.</small>
+              </div>
+              <span className={`dw-badge ${qualityFor(altitude).className}`}>
+                {qualityFor(altitude).label}
+              </span>
+            </article>
+          </div>
+          <p className="dw-eq-caution">
+            <i className="bi bi-lightbulb" aria-hidden="true" />
+            If an adjustment moves the error farther away, reverse that axis and
+            repeat. Mount orientation can invert a direction.
+          </p>
+        </div>
+      ) : (
+        <div className="dw-eq-placeholder">
+          <div>
+            <span>1</span>
+            <strong>Place the mount</strong>
+            <small>
+              Level the tripod and point the polar axis approximately north or
+              south.
+            </small>
+          </div>
+          <i className="bi bi-arrow-right" aria-hidden="true" />
+          <div>
+            <span>2</span>
+            <strong>Run calibration</strong>
+            <small>
+              Let the DWARF move and plate-solve without touching the mount.
+            </small>
+          </div>
+          <i className="bi bi-arrow-right" aria-hidden="true" />
+          <div>
+            <span>3</span>
+            <strong>Adjust and verify</strong>
+            <small>
+              Apply the reported corrections and run the solve again.
+            </small>
+          </div>
         </div>
       )}
     </div>

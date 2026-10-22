@@ -1,68 +1,102 @@
-import Grid2 from "@mui/material/Unstable_Grid2";
-import { Inner } from "@/components/witmotion/Inner";
-import { ApplicationProvider } from "@/components/witmotion/ApplicationProvider";
-import { Application } from "@/lib/witmotion/Application";
-// import PolarAlign from "@/components/shared/PolarAlign";
+import { useContext } from "react";
+import PageHeader from "@/components/shared/PageHeader";
+import EQSolvingDwarf from "@/components/shared/EQSolving";
 import DwarfCameras from "@/components/DwarfCameras";
-// import ConnectDwarfII from "@/components/setup/ConnectDwarfII";
-import { useEffect, useState } from "react";
-import i18n from "@/i18n";
-import { useTranslation } from "react-i18next";
+import { ConnectionContext } from "@/stores/ConnectionContext";
 
-export default function WitSensorData() {
-  const application = new Application();
-  const { t } = useTranslation();
-  // eslint-disable-next-line no-unused-vars
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
-
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language");
-    if (storedLanguage) {
-      setSelectedLanguage(storedLanguage);
-      i18n.changeLanguage(storedLanguage);
-    }
-  }, []);
+export default function PolarAlignment() {
+  const connection = useContext(ConnectionContext);
 
   return (
-    <section className="daily-horp d-inline-block w-100">
-      <div className="container">
-        <ApplicationProvider application={application}>
-          <div className="witsensor">
-            <div className="witimage">
-              <img src="/images/witmotion.png" alt="WitMotion" />
-            </div>
-            <Grid2 container spacing={2}>
-              <Inner />
-            </Grid2>
+    <div className="dw-page">
+      <PageHeader
+        eyebrow="Align"
+        title="Polar alignment"
+        description="Use the DWARF’s own EQ calibration to measure polar error and get clear mount adjustments."
+      />
+
+      <section className="dw-polar-readiness">
+        <article className={connection.connectionStatus ? "is-ready" : ""}>
+          <i
+            className={`bi ${connection.connectionStatus ? "bi-check-circle-fill" : "bi-1-circle"}`}
+            aria-hidden="true"
+          />
+          <div>
+            <span>Device</span>
+            <strong>
+              {connection.connectionStatus
+                ? `${connection.typeNameDwarf || "DWARF"} connected`
+                : "Connect your DWARF"}
+            </strong>
           </div>
-        </ApplicationProvider>
-        {""}
-      </div>
-      <Grid2 container spacing={3}>
-        <Grid2 md={12} xs={12} className="camera-container">
-          <div className="camera-witmotion">
-            <main className="camera-con">
-              <DwarfCameras
-                setExchangeCamerasStatus={function () {}}
-                showWideangle={false}
-                useRawPreviewURL={false}
-                showControls={false}
-              />
-              <div className="overlay-circle"></div>
-            </main>
+        </article>
+        <article
+          className={
+            connection.latitude !== undefined &&
+            connection.longitude !== undefined
+              ? "is-ready"
+              : ""
+          }
+        >
+          <i
+            className={`bi ${connection.latitude !== undefined && connection.longitude !== undefined ? "bi-check-circle-fill" : "bi-2-circle"}`}
+            aria-hidden="true"
+          />
+          <div>
+            <span>Location</span>
+            <strong>
+              {connection.latitude !== undefined &&
+              connection.longitude !== undefined
+                ? `${connection.latitude.toFixed(3)}, ${connection.longitude.toFixed(3)}`
+                : "Set observing location"}
+            </strong>
           </div>
-        </Grid2>
-        <Grid2 md={12} xs={12} sm={12} className="altitude-description-wit">
-          <div className="camera-witmotion-content  ms-4">
-            <p>{t("cWitmotionPolaris1")}</p>
-            <p>{t("cWitmotionPolaris2")}</p>
+        </article>
+        <article>
+          <i className="bi bi-3-circle" aria-hidden="true" />
+          <div>
+            <span>Mount</span>
+            <strong>Level and roughly pole-align</strong>
           </div>
-        </Grid2>
-      </Grid2>
-      {""}
-      <br />
-      <br />
-      <br />
-    </section>
+        </article>
+      </section>
+
+      <section className="dw-panel dw-polar-workflow">
+        <EQSolvingDwarf />
+      </section>
+
+      <section className="dw-panel dw-polar-preview">
+        <div className="dw-panel-heading">
+          <div>
+            <p className="dw-eyebrow">Optional visual check</p>
+            <h2>Telephoto preview</h2>
+            <p>
+              Use the live view to confirm clear sky and unobstructed movement.
+              The EQ solve—not the camera crosshair—measures alignment.
+            </p>
+          </div>
+          <span className="dw-badge">No external sensor required</span>
+        </div>
+        {connection.connectionStatus ? (
+          <div className="dw-polar-camera-frame">
+            <DwarfCameras
+              setExchangeCamerasStatus={() => {}}
+              showWideangle={false}
+              useRawPreviewURL={false}
+              showControls={false}
+            />
+          </div>
+        ) : (
+          <div className="dw-empty-state dw-empty-state-compact">
+            <i
+              className="bi bi-camera-video-off dw-empty-state-icon"
+              aria-hidden="true"
+            />
+            <h2>Preview unavailable</h2>
+            <p>Connect your DWARF to open the live telephoto preview.</p>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

@@ -10,7 +10,7 @@ export async function proxyRequest(
     headers?: Record<string, string>;
     body?: Record<string, any> | string | null;
     redirect?: "follow" | "manual" | "error" | undefined;
-  }
+  },
 ): Promise<any> {
   {
     // Use Next.js API proxy
@@ -48,7 +48,7 @@ export async function proxyRequest(
 
       if (!response.ok) {
         throw new Error(
-          `Request failed with status ${response.status}: ${data}`
+          `Request failed with status ${response.status}: ${data}`,
         );
       }
 

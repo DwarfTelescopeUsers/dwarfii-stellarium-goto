@@ -42,7 +42,7 @@ function formatObjectStellarium(object: ObjectStellarium): AstroObject {
 }
 
 export function processObjectListStellarium(
-  objects: ObjectStellarium[]
+  objects: ObjectStellarium[],
 ): AstroObject[] {
   let formattedObjects = objects.map(formatObjectStellarium);
   let noCatalogObjects = formattedObjects
@@ -92,7 +92,7 @@ export function processObjectListOpenNGC(objects: ObjectOpenNGC[]) {
 // Function to find the first object matching the search names directly from the catalog data
 export function findFirstObjectByNamesListOpenNGC(
   objects: ObjectOpenNGC[],
-  searchNames
+  searchNames,
 ) {
   // Convert the search names to lowercase for case-insensitive comparison
   const lowerCaseSearchNames = searchNames.map((name) => name.toLowerCase());
@@ -113,10 +113,10 @@ export function findFirstObjectByNamesListOpenNGC(
 
     // Check if displayName or any of the alternateNames include any of the searchNames
     const displayNameMatch = lowerCaseSearchNames.some((searchName) =>
-      displayName.startsWith(searchName)
+      displayName.startsWith(searchName),
     );
     const alternateNamesMatch = alternateNames.some((altName) =>
-      lowerCaseSearchNames.some((searchName) => altName.startsWith(searchName))
+      lowerCaseSearchNames.some((searchName) => altName.startsWith(searchName)),
     );
 
     // Return the object if either displayName or any of the alternateNames match any search name
@@ -132,7 +132,7 @@ export function findFirstObjectByNamesListOpenNGC(
 export function getObjectByNamesListOpenNGC(
   objects: ObjectOpenNGC[],
   searchNames,
-  objectFavoriteNames
+  objectFavoriteNames,
 ) {
   let object = findFirstObjectByNamesListOpenNGC(objects, searchNames);
 

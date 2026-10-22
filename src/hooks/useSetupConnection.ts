@@ -4,293 +4,103 @@ import { ConnectionContext } from "@/stores/ConnectionContext";
 import { getProxyUrl } from "@/lib/get_proxy_url";
 import {
   saveConnectionStatusDB,
-  saveInitialConnectionTimeDB,
   saveConnectionStatusStellariumDB,
-  fetchInitialConnectionTimeDB,
-  saveIPConnectDB,
-  fetchIPConnectDB,
-  saveIPCheckTimerDB,
-  fetchIPCheckTimerDB,
-  saveLastCheckTimerDB,
-  fetchLastCheckTimerDB,
 } from "@/db/db_utils";
-import { firmwareVersion, WebSocketHandler } from "dwarfii_api";
-import { ConnectionContextType } from "@/types";
+import { connectionHandler } from "@/lib/connect_utils";
 
-export function useSetupConnection() {
-  let connectionCtx = useContext(ConnectionContext);
-  let errorCount = useRef(0);
-  let errorCountStellarium = useRef(0);
-  console.debug("Start Dwarf useSetupConnection", connectionCtx.IPDwarf);
-
-  let errorCountMax = 5;
+/** Restore user intent once. Only the owned WebSocket session can establish
+ * actual DWARF readiness; HTTP reachability is not protocol connectivity. */
+export function useSetupConnection(restoreDevice = true) {
+  const connectionCtx = useContext(ConnectionContext);
+  const latestContext = useRef(connectionCtx);
+  latestContext.current = connectionCtx;
+  const restoringConnection = useRef(false);
 
   useEffect(() => {
-    let timerDwarf: any = undefined;
-    let timerStellarium: any = undefined;
-    let IPConnectDB = fetchIPConnectDB();
-    console.debug("Start Dwarf useSetupConnection IPConnectDB:", IPConnectDB);
+    const ip = connectionCtx.IPDwarf;
+    if (
+      !restoreDevice ||
+      !ip ||
+      connectionCtx.connectionStatus !== true ||
+      restoringConnection.current ||
+      connectionCtx.socketIPDwarf?.isConnected()
+    )
+      return;
+    restoringConnection.current = true;
+    const context = latestContext.current;
+    const finish = (restoring: boolean) => {
+      restoringConnection.current = restoring;
+    };
+    const fail = (message: string) => {
+      if (!message) return;
+      restoringConnection.current = false;
+      context.setConnectionStatus(false);
+      saveConnectionStatusDB(false);
+    };
+    void connectionHandler(
+      context,
+      ip,
+      true,
+      finish,
+      context.setConnectionStatusSlave,
+      () => undefined,
+      fail,
+    ).catch((error) =>
+      fail(error instanceof Error ? error.message : String(error)),
+    );
+  }, [
+    restoreDevice,
+    connectionCtx.IPDwarf,
+    connectionCtx.connectionStatus,
+    connectionCtx.socketIPDwarf,
+  ]);
 
-    if (connectionCtx.connectionStatus && IPConnectDB) {
-      // check if other timers have been started or not (
-      let initialConnectionTime = fetchInitialConnectionTimeDB();
-      let IPCheckTimer = fetchIPCheckTimerDB();
-      let LastCheckTimer = fetchLastCheckTimerDB();
-
-      console.debug(
-        "Start Dwarf useSetupConnection initialConnectionTime:",
-        initialConnectionTime
-      );
-      console.debug(
-        "Start Dwarf useSetupConnection IPCheckTimer:",
-        IPCheckTimer
-      );
-      console.debug(
-        "Start Dwarf useSetupConnection LastCheckTimer:",
-        LastCheckTimer
-      );
-
-      if (
-        IPCheckTimer === undefined ||
-        !IPCheckTimer ||
-        IPConnectDB != IPCheckTimer ||
-        LastCheckTimer === undefined ||
-        (initialConnectionTime &&
-          LastCheckTimer &&
-          (LastCheckTimer > initialConnectionTime + 100 * 1000 ||
-            LastCheckTimer < initialConnectionTime))
-      ) {
-        // No Other Time has been started, New IP, The lastcheck is too old
-        console.debug("Start Dwarf useSetupConnection  : start timer");
-        saveIPCheckTimerDB(IPConnectDB);
-        saveLastCheckTimerDB();
-
-        timerDwarf = checkDwarfConnection(connectionCtx, timerDwarf, false);
-
-        // continously check connection status
-        if (timerDwarf === undefined) {
-          console.debug("Start Dwarf connection timer");
-          timerDwarf = setInterval(() => {
-            checkDwarfConnection(connectionCtx, timerDwarf, true);
-          }, 90 * 1000);
+  // Stellarium is an independent HTTP integration. Always dispose timers/fetches.
+  useEffect(() => {
+    if (
+      !connectionCtx.connectionStatusStellarium ||
+      !connectionCtx.IPStellarium
+    )
+      return;
+    let disposed = false;
+    let failures = 0;
+    let activeRequest: AbortController | undefined;
+    const check = async () => {
+      if (activeRequest) return;
+      const context = latestContext.current;
+      let url = `http://${context.IPStellarium}:${context.portStellarium}`;
+      if (context.proxyIP)
+        url = `${getProxyUrl(context)}?target=${encodeURIComponent(url)}`;
+      const controller = new AbortController();
+      activeRequest = controller;
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Stellarium HTTP ${response.status}`);
+        failures = 0;
+      } catch {
+        if (disposed) return;
+        failures += 1;
+        if (failures >= 5) {
+          context.setConnectionStatusStellarium(false);
+          saveConnectionStatusStellariumDB(false);
         }
-      }
-    }
-
-    if (connectionCtx.connectionStatusStellarium) {
-      timerStellarium = checkStellariumConnection(
-        connectionCtx,
-        timerStellarium,
-        false
-      );
-
-      // continously check connection status
-      if (timerStellarium === undefined) {
-        console.debug("Start Stellarium connection timer");
-        timerStellarium = setInterval(() => {
-          checkStellariumConnection(connectionCtx, timerStellarium, true);
-        }, 90 * 1000);
-      }
-    }
-    return () => {
-      if (connectionCtx.connectionStatus === false) {
-        console.log("unmount: delete checkDwarfConnection timer");
-        clearInterval(timerDwarf);
-      }
-      if (connectionCtx.connectionStatusStellarium === false) {
-        console.log("unmount: delete checkStellariumConnection timer");
-        clearInterval(timerStellarium);
+      } finally {
+        clearTimeout(timeout);
+        activeRequest = undefined;
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function checkDwarfConnection(
-    connectionCtx: ConnectionContextType,
-    timer: any,
-    loop: boolean
-  ) {
-    // Check if connection has not been force stopped
-    let IPConnectDB = fetchIPConnectDB();
-
-    if (IPConnectDB === undefined || !IPConnectDB) {
-      console.log("Check Dwarf connection no IPConnectDB!");
-      saveIPCheckTimerDB("");
-      if (timer) clearInterval(timer);
-      return undefined;
-    }
-    if (connectionCtx.IPDwarf === undefined) {
-      console.log("Check Dwarf connection no IPDwarf!");
-      saveIPCheckTimerDB("");
-      if (timer) clearInterval(timer);
-      return undefined;
-    }
-    if (connectionCtx.IPDwarf != IPConnectDB) {
-      console.log("Check Dwarf connection change IP!");
-      saveIPCheckTimerDB("");
-      if (timer) clearInterval(timer);
-      return undefined;
-    }
-
-    console.debug("Check Dwarf connection timer", connectionCtx.IPDwarf);
-    // if we can't connect to camera in 2 seconds, reset connection data
-    const url = firmwareVersion(connectionCtx.IPDwarf);
-    const proxyUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-      url
-    )}`;
-    fetch(proxyUrl, {
-      signal: AbortSignal.timeout(5000),
-      mode: "no-cors",
-      method: "POST",
-    })
-      .then(() => {
-        console.log("Dwarf connection ok.", loop ? " (loop)" : "");
-        errorCount.current = 0;
-        if (!connectionCtx.connectionStatus) {
-          connectionCtx.setConnectionStatus(true);
-          saveConnectionStatusDB(true);
-          saveInitialConnectionTimeDB();
-          saveIPCheckTimerDB(IPConnectDB);
-          saveLastCheckTimerDB();
-        }
-      })
-      .catch((err) => {
-        if (err.name === "AbortError" || err.message == "Failed to fetch") {
-          console.log("Dwarf verification connection");
-
-          console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-          const webSocketHandler = connectionCtx.socketIPDwarf
-            ? connectionCtx.socketIPDwarf
-            : new WebSocketHandler(connectionCtx.IPDwarf);
-
-          if (webSocketHandler.isConnected()) {
-            errorCount.current = 0;
-            saveIPCheckTimerDB(IPConnectDB);
-            saveLastCheckTimerDB();
-            connectionCtx.setConnectionStatus(true);
-            console.log("Dwarf connection ok");
-          } else {
-            console.log("Dwarf connection error");
-            // let more time for autoconnect function!
-            if (errorCount.current < errorCountMax) {
-              // retry later
-              console.log("Dwarf connection error count:", errorCount.current);
-              errorCount.current += 1;
-            } else {
-              if (timer) clearInterval(timer);
-              connectionCtx.setConnectionStatus(false);
-              saveConnectionStatusDB(false);
-              webSocketHandler.close();
-              saveIPConnectDB("");
-              saveIPCheckTimerDB("");
-            }
-          }
-        } else {
-          console.log("checkDwarfConnection err ???", err.name, err.message);
-          console.log("Dwarf verification connection");
-
-          console.log("socketIPDwarf: ", connectionCtx.socketIPDwarf); // Create WebSocketHandler if need
-          const webSocketHandler = connectionCtx.socketIPDwarf
-            ? connectionCtx.socketIPDwarf
-            : new WebSocketHandler(connectionCtx.IPDwarf);
-
-          if (webSocketHandler.isConnected()) {
-            errorCount.current = 0;
-            saveIPCheckTimerDB(IPConnectDB);
-            saveLastCheckTimerDB();
-            connectionCtx.setConnectionStatus(true);
-            console.log("Dwarf connection ok");
-          } else {
-            console.log("Dwarf connection error");
-            // let more time for autoconnect function!
-            if (errorCount.current < errorCountMax) {
-              // retry later
-              console.log("Dwarf connection error count:", errorCount);
-              errorCount.current += 1;
-            } else {
-              if (timer) clearInterval(timer);
-              connectionCtx.setConnectionStatus(false);
-              saveConnectionStatusDB(false);
-              webSocketHandler.close();
-              saveIPConnectDB("");
-              saveIPCheckTimerDB("");
-            }
-          }
-        }
-      });
-    return timer;
-  }
-
-  function checkStellariumConnection(
-    connectionCtx: ConnectionContextType,
-    timer: any,
-    loop: boolean
-  ) {
-    if (connectionCtx.IPStellarium === undefined) {
-      console.log("Check Stellarium connection no IPStellarium!");
-      return timer;
-    }
-
-    // if we can't connect to camera in 2 seconds, reset connection data
-    let url = `http://${connectionCtx.IPStellarium}:${connectionCtx.portStellarium}`;
-    if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
-      const targetUrl = new URL(url);
-      url = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-        targetUrl.href
-      )}`;
-    }
-    fetch(url, {
-      signal: AbortSignal.timeout(2000),
-    })
-      .then(() => {
-        console.log("Stellarium connection ok.", loop ? " (loop)" : "");
-        if (!connectionCtx.connectionStatusStellarium) {
-          connectionCtx.setConnectionStatusStellarium(true);
-          saveConnectionStatusStellariumDB(true);
-          errorCountStellarium.current = 0;
-        }
-      })
-      .catch((err) => {
-        if (
-          err.name === "AbortError" ||
-          err.message === "Load failed" ||
-          err.message === "Failed to fetch"
-        ) {
-          console.log("Stellarium connection error");
-          // let more time for autoconnect function!
-          if (errorCountStellarium.current < errorCountMax) {
-            // retry later
-            console.log(
-              "Stellarium connection error count:",
-              errorCount.current
-            );
-            errorCount.current += 1;
-          } else {
-            if (timer) clearInterval(timer);
-            connectionCtx.setConnectionStatusStellarium(false);
-            saveConnectionStatusStellariumDB(false);
-          }
-        } else {
-          console.log(
-            "checkStellariumConnection err >>>",
-            err.name,
-            err.message
-          );
-          // let more time for autoconnect function!
-          if (errorCountStellarium.current < errorCountMax) {
-            // retry later
-            console.log(
-              "Stellarium connection error count:",
-              errorCount.current
-            );
-            errorCount.current += 1;
-          } else {
-            if (timer) clearInterval(timer);
-
-            connectionCtx.setConnectionStatusStellarium(false);
-            saveConnectionStatusStellariumDB(false);
-          }
-        }
-      });
-    return timer;
-  }
+    const timer = setInterval(() => {
+      void check();
+    }, 90_000);
+    return () => {
+      disposed = true;
+      activeRequest?.abort();
+      clearInterval(timer);
+    };
+  }, [
+    connectionCtx.connectionStatusStellarium,
+    connectionCtx.IPStellarium,
+    connectionCtx.portStellarium,
+  ]);
 }

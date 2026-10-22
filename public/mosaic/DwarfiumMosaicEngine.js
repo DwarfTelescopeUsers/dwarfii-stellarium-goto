@@ -1653,7 +1653,7 @@ function StartDwarfiumMosaicViewerEngine(
         }
         if (A) {
             document.getElementById(engine_panels.aladin_panel).innerHTML = "";
-            aladin = A.aladin('#'+engine_panels.aladin_panel, {survey: "P/DSS2/color", fov:aladin_fov, target:aladin_target,
+            aladin = A.aladin('#'+engine_panels.aladin_panel, {survey: "https://alasky.cds.unistra.fr/DSS/DSSColor", fov:aladin_fov, target:aladin_target,
                             showReticle:true, showZoomControl:true, showFullscreenControl:fullscreen, 
                             showLayersControl:layers, showGotoControl:true, 
                             showControl: true, cooFrame: "J2000", showFrame: false,

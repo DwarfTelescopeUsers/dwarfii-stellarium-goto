@@ -2,21 +2,31 @@
 // use same value as NEXT_PUBLIC_PORT_PROXY_CORS in env.production file
 // use same value as NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS in env.production file
 ////////////////////////////////////////////////////////////////////////
-const NEXT_PUBLIC_PORT_PROXY_CORS = 8860;
-const NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS = 9443;
+const NEXT_PUBLIC_PORT_PROXY_CORS = Number(
+  process.env.DWARFIUM_PROXY_PORT ?? 8860,
+);
+const NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS = Number(
+  process.env.DWARFIUM_PROXY_HTTPS_PORT ?? 9443,
+);
 const USE_CLIENT_CERTIFICATE = false; // if need set USE_CLIENT_CERTIFICATE to true
 
 import express from "express";
 const WebSocket = require("ws");
 const http = require("http");
 const https = require("https");
-import fetch from "node-fetch";
 import cors from "cors";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
+import { Agent, fetch, type RequestInit } from "undici";
+import {
+  buildBleCommandArguments,
+  getBleDeviceNames,
+  parseBleHelperOutput,
+} from "./ble-helper";
 const os = require("os");
-import * as forge from "node-forge";
 
 // Function to check if body is a valid JSON string
 function isJSONString(body) {
@@ -59,30 +69,37 @@ function getLocalIPAddress(): string[] {
   return localIPs;
 }
 
-const isMultipart = (contentType) =>
-  typeof contentType === "string" && contentType.includes("multipart");
-
 function check_certificates() {
   const basePath = "."; // Current directory
   const caPath = path.join(basePath, "CADwarfiumCert.pem"); // Your Root CA
 
-  // Possible certificate and key names
-  const certPath = path.join(basePath, "DwarfiumCert.pem");
-  const keyPath = path.join(basePath, "DwarfiumKey.pem");
+  // Match the standalone web server's supported certificate names. Older
+  // installations use the Server-prefixed pair, and must start HTTPS on both
+  // ports or browsers will block camera/proxy requests as mixed content.
+  const pair = [
+    ["DwarfiumCert.pem", "DwarfiumKey.pem"],
+    ["DwarfiumServerCert.pem", "DwarfiumServerKey.pem"],
+  ].find(
+    ([cert, key]) =>
+      fs.existsSync(path.join(basePath, cert)) &&
+      fs.existsSync(path.join(basePath, key)),
+  );
 
-  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  if (pair) {
+    const certPath = path.join(basePath, pair[0]);
+    const keyPath = path.join(basePath, pair[1]);
     console.log(`✅ Using certificate: ${certPath}`);
     return {
       key: fs.readFileSync(keyPath, "utf-8"),
       cert: fs.readFileSync(certPath, "utf-8"),
-      requestCert: true, // Require client certificates
-      rejectUnauthorized: false, // Enforce validation
+      requestCert: USE_CLIENT_CERTIFICATE,
+      rejectUnauthorized: USE_CLIENT_CERTIFICATE,
       ca: fs.existsSync(caPath) ? fs.readFileSync(caPath, "utf-8") : undefined,
     };
   }
 
   console.warn(
-    "🔒 SSL Certificates not found, use createSSLcert tool to generate and install them..."
+    "🔒 SSL Certificates not found, use createSSLcert tool to generate and install them...",
   );
   return false;
 }
@@ -121,19 +138,14 @@ const httpsServer = httpsOptions
   ? https.createServer(httpsOptions, app)
   : false;
 
-// Function to determine the correct agent dynamically
-function getAgentForUrl(url: string) {
-  const targetUrl = new URL(url);
-  if (targetUrl.protocol === "https:" && httpsOptions) {
-    return new https.Agent({
-      ca: httpsOptions.ca, // Use the CA certificate
-      rejectUnauthorized: false,
-    });
-  } else if (targetUrl.protocol === "http:") {
-    return new http.Agent(); // Use a regular HTTP agent for HTTP requests
-  }
-  return undefined;
-}
+const httpsDispatcher = httpsOptions
+  ? new Agent({
+      connect: {
+        ca: httpsOptions.ca,
+        rejectUnauthorized: false,
+      },
+    })
+  : undefined;
 
 // WebSocket Server
 const wss = new WebSocket.Server({ noServer: true });
@@ -152,81 +164,59 @@ wss.on("connection", (clientSocket, req) => {
 
     console.log(`WebSocket proxying to target: ${targetUrl}`);
 
-    const targetSocket = new WebSocket(targetUrl);
+    const targetSocket = new WebSocket(targetUrl, { handshakeTimeout: 10000 });
+    const pendingFrames: { data: Buffer; binary: boolean }[] = [];
+    let pendingBytes = 0;
 
     targetSocket.on("open", () => {
-      console.log(`Connected to target: ${targetUrl}`);
+      if (clientSocket.readyState !== WebSocket.OPEN) {
+        targetSocket.close();
+        return;
+      }
 
       // If a token is provided, send it to the target server
       if (authToken) {
-        console.log(`Sending auth token: ${authToken}`);
         targetSocket.send(authToken);
       }
+      for (const frame of pendingFrames)
+        targetSocket.send(frame.data, { binary: frame.binary });
+      pendingFrames.length = 0;
+      pendingBytes = 0;
     });
 
-    clientSocket.on("message", (data) => {
+    clientSocket.on("message", (data: Buffer, isBinary: boolean) => {
       if (targetSocket.readyState === WebSocket.OPEN) {
-        // Check if the received message is a ping
-        if (data instanceof Buffer) {
-          const message = data.toString();
-          try {
-            // Try parsing as JSON
-            const jsonData = JSON.parse(message);
-            console.log("Received JSON data:", jsonData);
-
-            // Send JSON as a string
-            targetSocket.send(JSON.stringify(jsonData));
-          } catch (error) {
-            if (message === "ping") {
-              // If it's a ping, resend it as text
-              console.log("Received ping as binary, sending as text...");
-              targetSocket.send("ping"); // Send ping back as text
-            } else {
-              // Otherwise, forward it as is
-              console.log(
-                "Forwarding message from client to target:",
-                data.toString("hex")
-              );
-              targetSocket.send(data); // Forward data to client
-            }
-          }
+        targetSocket.send(data, { binary: isBinary });
+      } else if (targetSocket.readyState === WebSocket.CONNECTING) {
+        // The browser is already open while the telescope handshake is pending.
+        // Retain the initial status request in order, with a bounded queue.
+        if (
+          pendingFrames.length >= 64 ||
+          pendingBytes + data.length > 1024 * 1024
+        ) {
+          pendingFrames.length = 0;
+          pendingBytes = 0;
+          clientSocket.close(1013, "Upstream queue limit reached");
+          targetSocket.terminate();
+          return;
         }
+        pendingFrames.push({ data, binary: isBinary });
+        pendingBytes += data.length;
       }
     });
 
-    targetSocket.on("message", (data) => {
-      if (clientSocket.readyState === WebSocket.OPEN) {
-        if (data instanceof Buffer) {
-          const message = data.toString();
-
-          try {
-            // Try parsing as JSON
-            const jsonData = JSON.parse(message);
-            console.log("Received JSON data:", jsonData);
-
-            // Send JSON as a string
-            clientSocket.send(JSON.stringify(jsonData));
-          } catch (error) {
-            if (message === "pong") {
-              // If it's a pong, resend it as text
-              console.log("Received pong as binary, sending as text...");
-              clientSocket.send("pong"); // Send pong back as text
-            } else {
-              // Otherwise, forward it as is
-              console.log(
-                "Forwarding message from target to client:",
-                data.toString("hex")
-              );
-              clientSocket.send(data); // Forward data to client
-            }
-          }
-        }
-      }
+    targetSocket.on("message", (data: Buffer, isBinary: boolean) => {
+      if (clientSocket.readyState === WebSocket.OPEN)
+        clientSocket.send(data, { binary: isBinary });
     });
 
     clientSocket.on("close", () => {
+      pendingFrames.length = 0;
+      pendingBytes = 0;
       try {
-        targetSocket.close(1000, "Normal closure");
+        if (targetSocket.readyState === WebSocket.CONNECTING)
+          targetSocket.terminate();
+        else targetSocket.close(1000, "Normal closure");
       } catch (error: any) {
         console.error("Proxy WebSocket Close error:", error);
       }
@@ -276,7 +266,7 @@ httpServer.on("upgrade", (req, socket, head) => {
       const err = error as Error; // Cast error to Error
       console.error(
         "Client WebSocket details:",
-        err.message || "An unknown error occurred"
+        err.message || "An unknown error occurred",
       );
     }
   });
@@ -298,7 +288,7 @@ if (httpsServer) {
         const err = error as Error; // Cast error to Error
         console.error(
           "Client WebSocket details:",
-          err.message || "An unknown error occurred"
+          err.message || "An unknown error occurred",
         );
       }
     });
@@ -332,9 +322,6 @@ app.post("/run-ble", async (req, res) => {
     let clientIp = req.ip.replace(/^::ffff:/, ""); // Normalize IPv6-mapped IPv4 addresses
     if (clientIp === "::1") clientIp = "127.0.0.1";
     console.log(`Received request from IP: ${clientIp}`);
-    const on_server =
-      clientIp === "127.0.0.1" || getLocalIPAddress().includes(clientIp);
-
     const externPath = path.resolve("./extern"); // Adjust path if needed
     const exeName = "connect_bluetooth";
     const exePath =
@@ -355,42 +342,34 @@ app.post("/run-ble", async (req, res) => {
       return res.status(404).json({ error: "Executable not found" });
     }
 
-    const command_line = on_server
-      ? ["--psd", ble_psd, "--ssid", ble_STA_ssid, "--pwd", ble_STA_pwd]
-      : [
-          "--psd",
-          ble_psd,
-          "--ssid",
-          ble_STA_ssid,
-          "--pwd",
-          ble_STA_pwd,
-          "--select",
-          auto_select,
-          "--cmd",
-        ];
-
-    // Run the executable with parameters
-    const childProcess = spawn(`"${exePath}"`, command_line, {
-      cwd: externPath,
-      shell: true,
+    // This HTTP route is always non-interactive. Local requests must use the
+    // same command mode as remote requests; otherwise the hidden packaged
+    // helper waits for its desktop UI and the browser appears to do nothing.
+    const command_line = buildBleCommandArguments({
+      blePassword: ble_psd,
+      wifiSsid: ble_STA_ssid,
+      wifiPassword: ble_STA_pwd,
+      selectedDevice: auto_select,
     });
 
-    interface DwarfScanResult {
-      step: string;
-      dwarf_devices?: string[]; // Optional, since it might not be present in every step
-      dwarf_device?: string | null;
-      error?: string | null;
-      is_connected?: boolean;
-      connecting?: boolean;
-      device_dwarf_id?: number;
-      device_dwarf_name?: string;
-      device_dwarf_uid?: string;
-      ip_address?: string;
-    }
+    // Run the executable with parameters
+    const childProcess = spawn(exePath, command_line, {
+      cwd: externPath,
+      shell: false,
+      windowsHide: true,
+    });
 
     let stdoutData = "";
     let stderrData = "";
-    let stdMessageData = {};
+    let responseSent = false;
+
+    childProcess.on("error", (error) => {
+      if (responseSent) return;
+      responseSent = true;
+      res
+        .status(500)
+        .json({ error: `Bluetooth helper failed to start: ${error.message}` });
+    });
 
     childProcess.stdout.on("data", (data) => {
       stdoutData += data.toString().trim();
@@ -400,40 +379,17 @@ app.post("/run-ble", async (req, res) => {
     childProcess.stderr.on("data", (data) => {
       const text = data.toString().trim();
       console.info("Info:", text);
-      stderrData += text;
-
-      // Try parsing JSON immediately if the data contains a valid JSON object
-      try {
-        let jsonString = text;
-        if (text.startsWith("{")) {
-          jsonString = text.slice(0, text.indexOf("}") + 1);
-        }
-        const sanitizedJson = jsonString
-          .replace(/None/g, "null")
-          .replace(/True/g, "true")
-          .replace(/False/g, "false")
-          .replace(/([{,]\s*)'([^']+)'(\s*[:])/g, '$1"$2"$3') // Convert keys to double quotes
-          .replace(/(:\s*)'([^']+)'/g, '$1"$2"') // Convert string values to double quotes
-          .replace(/BLEDevice\(([^)]+)\)/g, '"$1"'); // Convert Python-style objects
-        console.info("sanitizedJson:", sanitizedJson);
-        const parsedJson = JSON.parse(sanitizedJson);
-        stdMessageData = parsedJson; // Store the last JSON object
-        console.info("MessageData:", stdMessageData);
-      } catch (err) {
-        // Ignore non-JSON data
-        console.log("Ignore non JSPN data");
-      }
+      stderrData += `${text}\n`;
     });
 
     childProcess.on("close", async (code) => {
+      if (responseSent) return;
+      responseSent = true;
       if (code !== 0) {
         return res.status(500).json({ error: `Process failed: ${stderrData}` });
       }
 
-      let jsonResult: DwarfScanResult | null = null;
-
-      jsonResult = stdMessageData as DwarfScanResult;
-      console.info("Final jsonResult:", stdMessageData);
+      const jsonResult = parseBleHelperOutput(stderrData);
       console.log("Final jsonResult:", JSON.stringify(jsonResult, null, 2));
 
       if (jsonResult) {
@@ -450,10 +406,7 @@ app.post("/run-ble", async (req, res) => {
           Array.isArray(jsonResult.dwarf_devices) &&
           jsonResult.dwarf_devices.length > 1
         ) {
-          const deviceNames = jsonResult.dwarf_devices.map((device: string) => {
-            // Split by comma and take the second part (the device name)
-            return device.split(", ")[1]; // This will give "DWARF3_3C2E2A" and "DWARF3_3AD246"
-          });
+          const deviceNames = getBleDeviceNames(jsonResult.dwarf_devices);
           return res.status(202).json({
             message: "Multiple devices found, user selection needed",
             devices: deviceNames,
@@ -586,6 +539,8 @@ app.use((req, res, next) => {
 // Proxy route
 app.all("*", async (req, res) => {
   const controller = new AbortController();
+  const disconnect = () => controller.abort();
+  res.once("close", disconnect);
   const timeout = 90000; // 90 seconds timeout
 
   // Set up the timeout manually
@@ -609,15 +564,21 @@ app.all("*", async (req, res) => {
     console.log("target: ", lastTarget);
     const urlLastTarget = new URL(target);
     console.log("target port: ", urlLastTarget.port);
-
-    // Assign the correct agent based on `lastTarget`
-    const agent = getAgentForUrl(lastTarget);
+    const dispatcher =
+      urlLastTarget.protocol === "https:" ? httpsDispatcher : undefined;
 
     // Prepare headers, removing problematic ones
     const filteredHeaders = Object.fromEntries(
       Object.entries(req.headers).filter(
-        ([key]) => !["host", "transfer-encoding"].includes(key.toLowerCase())
-      )
+        ([key]) =>
+          ![
+            "host",
+            "connection",
+            "content-length",
+            "content-type",
+            "transfer-encoding",
+          ].includes(key.toLowerCase()),
+      ),
     );
 
     // Ensure headers only contain strings (this prevents TypeScript errors)
@@ -625,7 +586,7 @@ app.all("*", async (req, res) => {
       Object.entries(filteredHeaders).map(([key, value]) => [
         key,
         Array.isArray(value) ? value.join(",") : String(value), // Ensure value is a string
-      ])
+      ]),
     );
 
     // Validate if the body is valid for the method
@@ -639,21 +600,17 @@ app.all("*", async (req, res) => {
     // Only include body if valid
     if (isBodyValid) {
       // Ensure proper content type
-      sanitizedHeaders["Content-Type"] = "application/json";
+      sanitizedHeaders["content-type"] = "application/json";
     }
 
-    interface FetchOptions {
-      method: string;
-      headers: { [key: string]: string };
-      body?: string;
-      signal?: AbortSignal; // Ensure signal is part of the type
-    }
-
-    const fetchOptions: FetchOptions = {
-      signal: req.signal ?? controller.signal,
+    const fetchOptions: RequestInit = {
+      // The outbound request owns its timeout. An incoming request's signal can
+      // be cancelled as soon as its body finishes in packaged Node runtimes.
+      // That must not abort the independent request to the telescope.
+      signal: controller.signal,
       method: req.method ?? "GET", // Fallback to "GET" if req.method is undefined
       headers: sanitizedHeaders,
-      ...(agent ? { agent } : {}), // Add `agent` only when using HTTPS
+      ...(dispatcher ? { dispatcher } : {}),
     };
     console.log(fetchOptions.signal);
     console.log(fetchOptions);
@@ -684,7 +641,13 @@ app.all("*", async (req, res) => {
     // Handle multipart streaming (if applicable)
     if (typeof contentType === "string" && contentType.includes("multipart")) {
       if (response.body) {
-        return response.body.pipe(res); // Stream response directly
+        res.status(response.status);
+        res.setHeader("Cache-Control", "no-store");
+        await pipeline(
+          Readable.from(response.body as unknown as AsyncIterable<Uint8Array>),
+          res,
+        );
+        return;
       } else {
         // Handle the case where response.body is null or undefined
         return res
@@ -698,15 +661,12 @@ app.all("*", async (req, res) => {
       const buffer = Buffer.from(await response.arrayBuffer()); // ? Convert response to Buffer
       return res.status(response.status).send(buffer); // ? Send binary data
     } else {
-      // Check if it contains JSON
-      const isJSON = contentType?.includes("application/json");
-
-      const data = isJSON ? await response.json() : await response.text();
-      //console.log(data);
-
-      res.status(response.status).send(data);
+      // Firmware JSON contains uint64 parameter IDs. Parsing and serializing
+      // here rounds them before the client can decode them losslessly.
+      res.status(response.status).send(await response.text());
     }
   } catch (error: any) {
+    if (res.destroyed) return;
     if (error.name === "AbortError") {
       return res.status(504).json({
         error: "Error: Proxy request timed out",
@@ -720,20 +680,21 @@ app.all("*", async (req, res) => {
       details: err.message || "An unknown error occurred",
     });
   } finally {
+    res.off("close", disconnect);
     clearTimeout(timeoutSignal);
   }
 });
 
 httpServer.listen(NEXT_PUBLIC_PORT_PROXY_CORS, "0.0.0.0", () => {
   console.log(
-    `Proxy server is running on http://localhost:${NEXT_PUBLIC_PORT_PROXY_CORS}`
+    `Proxy server is running on http://localhost:${NEXT_PUBLIC_PORT_PROXY_CORS}`,
   );
 });
 
 if (httpsServer) {
   httpsServer.listen(NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS, "0.0.0.0", () => {
     console.log(
-      `HTTPS Proxy server is running on https://localhost:${NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS}`
+      `HTTPS Proxy server is running on https://localhost:${NEXT_PUBLIC_PORT_PROXY_CORS_HTTPS}`,
     );
   });
 }

@@ -4,6 +4,8 @@ import os
 import sys
 import socket
 import ssl
+import ast
+import re
 
 package_name = "flask"
 
@@ -11,9 +13,37 @@ if importlib.util.find_spec(package_name) is None:
     print(f"{package_name} is not installed. Installing now...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, abort
 # Create a Flask app, serving static files from the current directory
 app = Flask(__name__, static_folder=os.getcwd())
+
+
+def parse_ble_helper_output(output):
+    result = None
+    for line in output.splitlines():
+        object_start = line.find("{")
+        object_end = line.rfind("}")
+        if object_start < 0 or object_end <= object_start:
+            continue
+
+        value = line[object_start:object_end + 1]
+        value = re.sub(r"BLEDevice\(([^)]+)\)", lambda match: repr(match.group(1)), value)
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, dict):
+                result = parsed
+        except (SyntaxError, ValueError):
+            continue
+    return result
+
+
+def ble_device_names(devices):
+    names = []
+    for device in devices or []:
+        match = re.search(r"(DWARF(?:3|_mini|II)?_[A-Za-z0-9]+)", str(device), re.IGNORECASE)
+        if match:
+            names.append(match.group(1))
+    return names
 
 # Function to get local IP addresses
 def get_local_ip_addresses():
@@ -72,55 +102,60 @@ def run_ble():
         else:
             exe_path = os.path.join(extern_path, exe_name)  # No .exe on Linux/macOS
 
-        client_ip = request.remote_addr
-        print(f"Received request from IP: {client_ip}")
-
-        local_ips = get_local_ip_addresses()
-
-        # Check if the request comes from the server itself
-        on_server = client_ip in local_ips
-
         command_line = [
             exe_path,
             "--psd", ble_psd,
             "--ssid", ble_STA_ssid,
-            "--pwd", ble_STA_pwd
+            "--pwd", ble_STA_pwd,
+            "--select", str(auto_select),
+            "--cmd"
         ]
-
-        if not on_server:
-            command_line.append("--select")
-            command_line.append("0")
-            command_line.append("--cmd")
 
         # Ensure correct execution format for Linux/macOS
         if sys.platform != "win32":
             exe_path = "./" + exe_path.replace("\\", "/")  # Convert Windows-style paths if needed
 
         # Run the executable with parameters
-        process = subprocess.run(command_line, cwd=extern_path,capture_output=True, text=True)
+        process = subprocess.run(
+            command_line,
+            cwd=extern_path,
+            capture_output=True,
+            text=True,
+            timeout=115,
+        )
 
         # Debugging: Check process output
         print("Process Output:", process.stdout)
         print("Process Errors:", process.stderr)
 
         if process.returncode != 0:
-            return {"error": f"Process failed: {process.stderr}"}
+            return jsonify({"error": f"Process failed: {process.stderr}"}), 500
 
-        # Read DWARF_IP from config.py
-        config_path = os.path.join(extern_path, "config.py")
+        result = parse_ble_helper_output(process.stderr)
+        if not result:
+            return jsonify({"error": "Bluetooth helper returned no structured result"}), 500
 
-        if not os.path.isfile(config_path):
-            return {"error": "config.py not found"}
+        if result.get("step") == "1" and not result.get("dwarf_devices"):
+            return "", 204
 
-        spec = importlib.util.spec_from_file_location("config", config_path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
+        if result.get("step") == "3" and len(result.get("dwarf_devices") or []) > 1:
+            return jsonify({
+                "message": "Multiple devices found, user selection needed",
+                "devices": ble_device_names(result.get("dwarf_devices")),
+            }), 202
 
-        # Extract DWARF_IP
-        dwarfIp = getattr(config, "DWARF_IP", "")
-        dwarfId = getattr(config, "DWARF_ID", "")
+        if result.get("step") == "4":
+            payload = {
+                "dwarfIp": result.get("ip_address"),
+                "dwarfId": result.get("device_dwarf_id"),
+                "details": result,
+            }
+            return jsonify(payload), 200 if result.get("is_connected") else 401
 
-        return {"dwarfIp": dwarfIp, "dwarfId": dwarfId}
+        return jsonify({
+            "error": "Bluetooth helper returned an unexpected result",
+            "details": result,
+        }), 500
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -198,26 +233,30 @@ def serve_static(path):
     if os.path.exists(full_path):
         return send_from_directory(app.static_folder, path)
 
+    # Missing build assets must be reported as missing, not silently returned
+    # as HTML (which the browser then rejects as a JavaScript MIME error).
+    if path.startswith("_next/") or "." in os.path.basename(path):
+        abort(404)
+
     # Otherwise, redirect to index.html for frontend routing (SPA)
     return send_from_directory(app.static_folder, "index.html")
 
 # Start the Flask server on port 8000
 if __name__ == '__main__':
-    # Path to your certificate and key files
-    cert_file = 'DwarfiumCert.pem'
-    key_file = 'DwarfiumKey.pem'
     ca_file = 'CADwarfiumCert.pem'
 
-    # Define possible certificate paths
-    cert_files = ['DwarfiumCert.pem', 'DwarfiumServerCert.pem']
-    key_files = ['DwarfiumKey.pem', 'DwarfiumServerKey.pem']
-    ca_file = 'CADwarfiumCert.pem'
+    # Certificate and key must come from the same pair. Older ZIP releases
+    # used the Server-prefixed names; keep those installations upgradeable.
+    certificate_pair = next(
+        ((cert, key) for cert, key in (
+            ('DwarfiumCert.pem', 'DwarfiumKey.pem'),
+            ('DwarfiumServerCert.pem', 'DwarfiumServerKey.pem'),
+        ) if os.path.exists(cert) and os.path.exists(key)),
+        None,
+    )
 
-    # Find the first available certificate and key
-    cert_file = next((cert for cert in cert_files if os.path.exists(cert)), None)
-    key_file = next((key for key in key_files if os.path.exists(key)), None)
-
-    if cert_file and key_file:
+    if certificate_pair:
+        cert_file, key_file = certificate_pair
         print(f"Using certificate: {cert_file} and key: {key_file}")
 
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)

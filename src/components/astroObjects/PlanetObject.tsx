@@ -51,11 +51,10 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
 
   function renderRiseSetTime(object: AstroObject) {
     if (connectionCtx.latitude && connectionCtx.longitude) {
-      // eslint-disable-next-line testing-library/render-result-naming-convention
       let timesObject = renderLocalRiseSetTime(
         object,
         connectionCtx.latitude,
-        connectionCtx.longitude
+        connectionCtx.longitude,
       );
 
       if (timesObject?.error) {
@@ -106,44 +105,62 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
       object.displayName,
       (options) => {
         setGotoMessages((prev) => prev.concat(options));
-      }
+      },
     );
   }
 
   return (
-    <div className="border-bottom p-2">
-      <h3 className="fs-5">{object.displayName}</h3>
-      <div className="row">
-        <div className="col-md-9">
-          {/* {JSON.sdivingify(object)} */}
-          Average magnitude: {object.magnitude}
-          <br />
-          {renderRiseSetTime(object)}
+    <article className="dw-target-card">
+      <header className="dw-target-card-heading">
+        <div className="dw-target-object-icon" aria-hidden="true">
+          <i className="bi bi-globe2" />
         </div>
-        <div className="col-md-3">
+        <div>
+          <h3>{object.displayName}</h3>
+          <p>Solar system object</p>
+        </div>
+      </header>
+      <div className="dw-target-card-grid is-planet">
+        <dl className="dw-target-details">
+          <div>
+            <dt>Magnitude</dt>
+            <dd>{object.magnitude ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>Visibility</dt>
+            <dd>
+              {renderRiseSetTime(object) ||
+                "Set an observing location to calculate rise and set times."}
+            </dd>
+          </div>
+        </dl>
+        <div className="dw-target-actions" aria-label="Target actions">
           <button
-            className={`btn ${
-              connectionCtx.connectionStatusStellarium
-                ? "btn btn-more02"
-                : "btn-secondary"
-            } me-2 mb-2`}
+            type="button"
+            className="dw-target-action is-secondary"
             onClick={() => centerHandler(object, connectionCtx, setErrors)}
             disabled={!connectionCtx.connectionStatusStellarium}
+            title={
+              connectionCtx.connectionStatusStellarium
+                ? undefined
+                : "Connect Stellarium to center this target"
+            }
           >
             Center
           </button>
           <button
-            className={`btn ${
-              connectionCtx.connectionStatus
-                ? "btn btn-more02"
-                : "btn-secondary"
-            } mb-2`}
+            type="button"
+            className="dw-target-action"
             onClick={gotoFn}
             disabled={!connectionCtx.connectionStatus}
+            title={
+              connectionCtx.connectionStatus
+                ? undefined
+                : "Connect your DWARF to start GOTO"
+            }
           >
             Goto
           </button>
-          <br />
           <GotoModal
             object={object}
             showModal={showModal}
@@ -153,6 +170,6 @@ export default function PlanetObject(props: AstronomyObjectPropType) {
           />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

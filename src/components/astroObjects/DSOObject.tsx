@@ -98,7 +98,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       if (!objectFavoriteNames) updatedListsNames.push(object.displayName);
       else
         updatedListsNames = objectFavoriteNames.filter(
-          (name) => name != object.displayName
+          (name) => name != object.displayName,
         );
       setObjectFavoriteNames(updatedListsNames);
       saveObjectFavoriteNamesDb(updatedListsNames.join("|"));
@@ -115,10 +115,10 @@ export default function DSOObject(props: AstronomyObjectPropType) {
 
   function addAstroObject(
     list: AstroObject[],
-    newObject: AstroObject
+    newObject: AstroObject,
   ): AstroObject[] {
     const exists = list.some(
-      (obj) => obj.displayName === newObject.displayName
+      (obj) => obj.displayName === newObject.displayName,
     );
     return exists ? list : [...list, newObject];
   }
@@ -143,17 +143,16 @@ export default function DSOObject(props: AstronomyObjectPropType) {
   const riseSetTime = useMemo(() => renderRiseSetTime(), [forceUpdate]);
   const altAz = useMemo(
     () => renderAltAz(),
-    [forceUpdate, connectionCtx.visibleSkyLimit]
+    [forceUpdate, connectionCtx.visibleSkyLimit],
   );
   const raDec = useMemo(() => renderRADec(), [forceUpdate]);
 
   function renderRiseSetTime() {
     if (connectionCtx.latitude && connectionCtx.longitude) {
-      // eslint-disable-next-line testing-library/render-result-naming-convention
       let timesObject = renderLocalRiseSetTime(
         object,
         connectionCtx.latitude,
-        connectionCtx.longitude
+        connectionCtx.longitude,
       );
 
       if (timesObject?.error) {
@@ -195,7 +194,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
         raDecimal,
         decDecimal,
         toIsoStringInLocalTime(today),
-        connectionCtx.timezone
+        connectionCtx.timezone,
       );
 
       let visibility = false;
@@ -215,7 +214,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             "directions" in target
           ) {
             const isInTargetDirections = target.directions.includes(
-              convertAzToCardinal(results.az)
+              convertAzToCardinal(results.az),
             );
             if (isInTargetDirections) notPresentInDirection = false;
             if (results.alt >= target.number && isInTargetDirections) {
@@ -267,7 +266,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
       object.displayName,
       (options) => {
         setGotoMessages((prev) => prev.concat(options));
-      }
+      },
     );
   }
 
@@ -278,66 +277,94 @@ export default function DSOObject(props: AstronomyObjectPropType) {
   return (
     <>
       {(!isInObjectPersonalList || isInPersonalList) && (
-        <div className="border-bottom p-2">
-          <h3 className="fs-5 mb-0">
-            {!object.favorite && (
-              <button className="btn-refresh" onClick={handleFavoriteClick}>
-                <i className="bi bi-heart" aria-hidden="true"></i>
-              </button>
-            )}
-            {object.favorite && (
-              <button className="btn-refresh" onClick={handleFavoriteClick}>
-                <i className="bi bi-heart-fill" aria-hidden="true"></i>
-              </button>
-            )}{" "}
-            {object.displayName}
-          </h3>
-          <div className="mb-2">{object.alternateNames}</div>
-          <div className="row">
-            <div className="col-md-3 col-lg-4 col-12">
-              {t(object.type)}{" "}
-              {object.constellation &&
-                t("cObjectsIn") + t(object.constellation)}
-              <br />
-              {t("cObjectsSize")}: {object.size}
-              <br />
-              {t("cObjectsMagnitude")}: {object.magnitude}
+        <article className="dw-target-card">
+          <header className="dw-target-card-heading">
+            <button
+              type="button"
+              className="dw-target-icon-button"
+              onClick={handleFavoriteClick}
+              aria-label={
+                object.favorite
+                  ? `Remove ${object.displayName} from favorites`
+                  : `Add ${object.displayName} to favorites`
+              }
+              aria-pressed={object.favorite}
+            >
+              <i
+                className={`bi ${object.favorite ? "bi-heart-fill" : "bi-heart"}`}
+                aria-hidden="true"
+              />
+            </button>
+            <div>
+              <h3>{object.displayName}</h3>
+              {object.alternateNames && <p>{object.alternateNames}</p>}
             </div>
-            <div className="col-md-6 col-lg-4 col-xl-5 col-12">
-              {riseSetTime}
-              <br></br>
-              {altAz}{" "}
-              <button className="btn-refresh" onClick={handleRefreshClick}>
-                <i className="fa fa-refresh" aria-hidden="true"></i>
-              </button>
-              <br></br>
-              {raDec}
+          </header>
+          <div className="dw-target-card-grid">
+            <dl className="dw-target-details">
+              <div>
+                <dt>Type</dt>
+                <dd>
+                  {t(object.type)}{" "}
+                  {object.constellation &&
+                    t("cObjectsIn") + t(object.constellation)}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("cObjectsSize")}</dt>
+                <dd>{object.size || "—"}</dd>
+              </div>
+              <div>
+                <dt>{t("cObjectsMagnitude")}</dt>
+                <dd>{object.magnitude ?? "—"}</dd>
+              </div>
+            </dl>
+            <div className="dw-target-position">
+              {riseSetTime && <p>{riseSetTime}</p>}
+              <p>
+                {altAz || "Set an observing location to calculate altitude."}
+                <button
+                  type="button"
+                  className="dw-target-refresh-button"
+                  onClick={handleRefreshClick}
+                  aria-label={`Refresh position for ${object.displayName}`}
+                  title="Refresh calculated position"
+                >
+                  <i className="fa fa-refresh" aria-hidden="true" />
+                </button>
+              </p>
+              {raDec && <p>{raDec}</p>}
             </div>
-            <div className="col-md-12 col-lg-3 col-xl-3 col-12">
+            <div className="dw-target-actions" aria-label="Target actions">
               <button
-                className={`btn ${
-                  connectionCtx.connectionStatusStellarium
-                    ? "btn-more02"
-                    : "btn-secondary"
-                } me-2 mb-2`}
+                type="button"
+                className="dw-target-action is-secondary"
                 onClick={() => centerHandler(object, connectionCtx, setErrors)}
                 disabled={!connectionCtx.connectionStatusStellarium}
+                title={
+                  connectionCtx.connectionStatusStellarium
+                    ? undefined
+                    : "Connect Stellarium to center this target"
+                }
               >
                 {t("cObjectsCenter")}
               </button>
               <button
-                className={`btn ${
-                  connectionCtx.connectionStatus
-                    ? "btn-more02"
-                    : "btn-secondary"
-                } me-4 mb-2`}
+                type="button"
+                className="dw-target-action"
                 onClick={gotoFn}
                 disabled={!connectionCtx.connectionStatus}
+                title={
+                  connectionCtx.connectionStatus
+                    ? undefined
+                    : "Connect your DWARF to start GOTO"
+                }
               >
                 {t("cObjectsGoto")}
               </button>
               <button
-                className={`btn btn-more02 me-2 mb-2`}
+                type="button"
+                className="dw-target-action is-secondary"
                 onClick={saveData}
                 disabled={
                   !connectionCtx.saveAstroData ||
@@ -348,17 +375,25 @@ export default function DSOObject(props: AstronomyObjectPropType) {
               </button>
               {!isInPersonalList && (
                 <button
-                  className={`btn btn-more02 me-2 mb-2`}
+                  type="button"
+                  className="dw-target-icon-button is-accent"
                   title={t("cObjectsAddPersonal")}
+                  aria-label={t("cObjectsAddPersonal")}
                   onClick={addObjectToPersonalList}
                 >
-                  <i className="bi bi-bookmark-plus fs-3"></i>
+                  <i className="bi bi-bookmark-plus" aria-hidden="true" />
                 </button>
               )}
               {isInPersonalList && (
                 <button
-                  className={`btn btn-more02 me-2 mb-2`}
+                  type="button"
+                  className="dw-target-icon-button is-accent"
                   title={
+                    isInObjectPersonalList
+                      ? t("cObjectsRemovePersonal")
+                      : t("cObjectsInfoPersonal")
+                  }
+                  aria-label={
                     isInObjectPersonalList
                       ? t("cObjectsRemovePersonal")
                       : t("cObjectsInfoPersonal")
@@ -369,10 +404,9 @@ export default function DSOObject(props: AstronomyObjectPropType) {
                       : () => {}
                   }
                 >
-                  <i className="bi bi-star-fill fs-3"></i>
+                  <i className="bi bi-star-fill" aria-hidden="true" />
                 </button>
               )}
-              <br />
               <GotoModal
                 object={object}
                 showModal={showModal}
@@ -390,7 +424,7 @@ export default function DSOObject(props: AstronomyObjectPropType) {
             setObjectPersonalList={setObjectPersonalList}
             setIsInPersonalList={setIsInPersonalList}
           />
-        </div>
+        </article>
       )}
     </>
   );

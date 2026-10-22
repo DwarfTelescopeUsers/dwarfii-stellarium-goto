@@ -24,8 +24,8 @@ export const Inner: React.FC = () => {
     useState<ArraySensorDataInterface>(inputDataInit);
 
   const buttonLogic: any = [
-    ["error", "Disconnect"],
-    ["success", "Connect"],
+    ["error", "Disconnect sensor"],
+    ["success", "Connect sensor"],
   ];
 
   useEffect(() => {

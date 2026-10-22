@@ -188,9 +188,11 @@ ul {
 
 
 
-@media (min-width: 1400px) .navbar .navbar-nav .nav-link {
+@media (min-width: 1400px) {
+  .navbar .navbar-nav .nav-link {
     padding-left: 15px;
     padding-right: 15px;
+  }
 }
 
 

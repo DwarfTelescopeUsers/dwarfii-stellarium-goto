@@ -96,7 +96,7 @@ const caCertPath = path.join(INSTALL_DIR, "CADwarfiumCert.pem");
 const caKeyPath = path.join(INSTALL_DIR, "CADwarfiumKey.pem");
 
 console.log(
-  "Create Self SIGNED SSL certificates to use with Dwarfium Server and Proxy"
+  "Create Self SIGNED SSL certificates to use with Dwarfium Server and Proxy",
 );
 
 async function ensureSSLCACertificates(): Promise<{
@@ -106,10 +106,10 @@ async function ensureSSLCACertificates(): Promise<{
   if (!fs.existsSync(caKeyPath) || !fs.existsSync(caCertPath)) {
     console.log("⚠️  CA Certificate is missing.");
     console.log(
-      "🚨 WARNING: If you proceed, a **NEW Root CA** will be generated!"
+      "🚨 WARNING: If you proceed, a **NEW Root CA** will be generated!",
     );
     console.log(
-      "⚠️  This may cause issues if other services rely on an existing CA."
+      "⚠️  This may cause issues if other services rely on an existing CA.",
     );
 
     // Pause and ask for confirmation
@@ -131,7 +131,7 @@ async function ensureSSLCACertificates(): Promise<{
     const validityDays = 3650;
     cert.validity.notBefore = new Date();
     cert.validity.notAfter = new Date(
-      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1)
+      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1),
     );
 
     // Set subject and issuer (self-signed)
@@ -198,7 +198,7 @@ const keyPath = path.join(INSTALL_DIR, `${DWARFIUM_CN_NAME}Key.pem`);
 async function ensureSSLCertificates(
   rootCAKeys,
   rootCACert,
-  commonName
+  commonName,
 ): Promise<{ key: string; cert: string }> {
   if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
     console.log("🔒 Generating SSL certificate with node-forge...");
@@ -218,7 +218,7 @@ async function ensureSSLCertificates(
     const validityDays = 730;
     cert.validity.notBefore = new Date();
     cert.validity.notAfter = new Date(
-      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1)
+      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1),
     );
 
     // Set subject and issuer (self-signed)
@@ -319,7 +319,7 @@ async function createClientCertificate(rootCAKeys, rootCACert) {
     const validityDays = 730;
     clientCert.validity.notBefore = new Date();
     clientCert.validity.notAfter = new Date(
-      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1)
+      new Date().getTime() + 1000 * 60 * 60 * 24 * (validityDays ?? 1),
     );
 
     const attrs = [
@@ -330,7 +330,7 @@ async function createClientCertificate(rootCAKeys, rootCACert) {
     clientCert.setIssuer(pki.certificateFromPem(rootCACert).subject.attributes);
     clientCert.sign(
       pki.privateKeyFromPem(rootCAKeys),
-      forge.md.sha256.create()
+      forge.md.sha256.create(),
     );
 
     const pemClientCert = pki.certificateToPem(clientCert);
@@ -347,7 +347,7 @@ async function createClientCertificate(rootCAKeys, rootCACert) {
     const pkcs12Asn1 = forge.pkcs12.toPkcs12Asn1(
       clientKey.privateKey,
       clientCert,
-      "password"
+      "password",
     );
     const pkcs12Der = forge.asn1.toDer(pkcs12Asn1).getBytes();
 
@@ -382,14 +382,14 @@ async function main() {
     const httpsOptions = await ensureSSLCertificates(
       rootCAOptions.key,
       rootCAOptions.cert,
-      commonName
+      commonName,
     );
     console.log("SSL Certificates loaded successfully:", httpsOptions);
 
     if (USE_CLIENT_CERTIFICATE) {
       const clientCertData = await createClientCertificate(
         rootCAOptions.key,
-        rootCAOptions.cert
+        rootCAOptions.cert,
       );
       console.log("Client Certificate loaded:", clientCertData);
     }
@@ -479,14 +479,14 @@ async function main() {
       fs.writeFileSync(
         path.join(INSTALL_DIR, "install_SSL_certificates.bat"),
         launcherScriptWindows,
-        { mode: 0o755 }
+        { mode: 0o755 },
       );
     } else {
       scriptPath = path.join(INSTALL_DIR, "install_SSL_certificates.sh");
       fs.writeFileSync(
         path.join(INSTALL_DIR, "install_SSL_certificates.sh"),
         launcherScriptLinuxMac,
-        { mode: 0o755 }
+        { mode: 0o755 },
       );
     }
 

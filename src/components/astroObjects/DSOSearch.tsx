@@ -3,9 +3,15 @@ import i18n from "@/i18n";
 import React, { useState, useContext, useEffect } from "react";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 
-export default function DSOSearch({ updateSearchText }) {
+type PropType = {
+  updateSearchText: (value: string) => void;
+};
+
+export default function DSOSearch({ updateSearchText }: PropType) {
   let connectionCtx = useContext(ConnectionContext);
-  const [searchTxtValue, setSearchTxtValue] = useState(connectionCtx.searchTxt);
+  const [searchTxtValue, setSearchTxtValue] = useState(
+    connectionCtx.searchTxt ?? "",
+  );
 
   const { t } = useTranslation();
   // eslint-disable-next-line no-unused-vars
@@ -19,30 +25,30 @@ export default function DSOSearch({ updateSearchText }) {
     }
   }, []);
 
-  function searchHandler() {
+  function searchHandler(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     updateSearchText(searchTxtValue);
   }
 
   return (
-    <div className="search_object">
-      <div className="row mb-3">
-        <div className="col-lg-1 col-md-2 col-4 mb-2 mb-md-0">
-          <button className="btn btn-more02 w-100" onClick={searchHandler}>
-            {t("cObjectsSearch")}
-          </button>
-        </div>
-        <div className="col-lg-3 col-md-4 col-6">
-          <input
-            pattern="^[\w\s]{0,255}$/i"
-            className="form-control"
-            placeholder=""
-            id="search"
-            name="search"
-            value={searchTxtValue}
-            onChange={(e) => setSearchTxtValue(e.target.value)}
-          />
-        </div>
+    <form className="dw-target-filter" onSubmit={searchHandler}>
+      <label htmlFor="target-search">Search catalog</label>
+      <div className="dw-target-input-action">
+        <input
+          pattern="^[A-Za-z0-9_\s-]{0,255}$"
+          className="form-control"
+          type="search"
+          placeholder="Name or catalog number (for example, M31)"
+          id="target-search"
+          name="search"
+          value={searchTxtValue}
+          onChange={(e) => setSearchTxtValue(e.target.value)}
+        />
+        <button className="btn btn-more02" type="submit">
+          <i className="bi bi-search" aria-hidden="true" />
+          {t("cObjectsSearch")}
+        </button>
       </div>
-    </div>
+    </form>
   );
 }

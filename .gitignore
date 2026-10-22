@@ -11,6 +11,11 @@
 # next.js
 /.next/
 /out/
+/.playwright-cli/
+/output/playwright/after/audit-*.png
+/output/playwright/after/*-fixed.png
+/output/playwright/*.png
+/output/mockups/
 
 # production
 /build
@@ -204,7 +209,6 @@ raw_data/mike_camilleri_list.csv
 src-tauri/target/
 /.vs
 .vscode/
-package-lock.json
 certificates
 /Dwarfium
 /save
@@ -218,9 +222,13 @@ install/extern/frozen_application_license.txt
 install/extern/python311.dll
 install/windows/DwarfiumProxy.exe
 server/server.js
+server/createSSLcert.js
+install/windows/createSSLcert.exe
 src-tauri/bin/DwarfiumProxy-x86_64-pc-windows-msvc.exe
 src-tauri/bin/mediamtx-x86_64-pc-windows-msvc.exe
 src-tauri/mediamtx.yml
+/src-tauri/extern/*
+!/src-tauri/extern/.gitkeep
 install/extern/config.py
 install/extern/config.py
 install/extern/config.py
@@ -228,3 +236,7 @@ Dwarfium.tar.gz
 install/extern/config.py
 /DwarfiumProxy
 /DwarfiumServer
+
+# Separate local SDK checkout; use its own repository for API changes.
+/dwarfii_api/
+output/

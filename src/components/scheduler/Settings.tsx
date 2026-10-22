@@ -99,15 +99,15 @@ function openLink(url: string) {
 // Functie om via Nominatim latitude en longitude op te halen
 async function getLatLongAndTimezone(
   address: string,
-  agent = 1
+  agent = 1,
 ): Promise<{ latitude: number; longitude: number; timezone: string } | null> {
   try {
     // We gebruiken hier Nominatim. Voor agent 1 gebruiken we Nominatim,
     // voor een eventuele fallback kun je later een andere API integreren.
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        address
-      )}`
+        address,
+      )}`,
     );
     const data = await response.json();
     if (!data || data.length === 0) {

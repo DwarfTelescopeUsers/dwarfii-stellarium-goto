@@ -1,6 +1,9 @@
 const os = require("os");
 const fs = require("fs").promises;
+const fsSync = require("fs");
 const path = require("path");
+const { pipeline } = require("stream/promises");
+const unzipper = require("unzipper");
 
 const platform = os.platform(); // 'win32', 'linux', 'darwin'
 const arch = os.arch(); // 'x64', 'arm64', 'arm'
@@ -123,8 +126,36 @@ async function copyConfigFileTauri() {
     console.error(`Failed to copy ${source} to ${destination}: ${err.message}`);
   }}
 
-// Start copying
-copyFiles();
+async function copyBleResourcesTauri() {
+  const root = path.resolve("./src-tauri/extern");
+  await fs.mkdir(root, { recursive: true });
+  if (platform !== "win32") return;
 
-// Copy config file
-copyConfigFileTauri();
+  const archive = await unzipper.Open.file("./install/windows/extern/extern.zip");
+  for (const entry of archive.files) {
+    const target = path.resolve(root, entry.path);
+    if (target !== root && !target.startsWith(root + path.sep)) {
+      throw new Error(`Unsafe BLE archive entry: ${entry.path}`);
+    }
+    if (entry.type === "Directory") {
+      await fs.mkdir(target, { recursive: true });
+      continue;
+    }
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await pipeline(entry.stream(), fsSync.createWriteStream(target));
+  }
+  await fs.access(path.join(root, "connect_bluetooth.exe"));
+  await fs.copyFile("./install/extern/config.ini", path.join(root, "config.ini"));
+  console.log("Bundled direct Bluetooth helper for the desktop proxy");
+}
+
+async function main() {
+  await copyFiles();
+  await copyConfigFileTauri();
+  await copyBleResourcesTauri();
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

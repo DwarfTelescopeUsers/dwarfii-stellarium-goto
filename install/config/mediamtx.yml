@@ -51,34 +51,34 @@ authMethod: internal
 authInternalUsers:
   # Default unprivileged user.
   # Username. 'any' means any user, including anonymous ones.
-- user: any
-  # Password. Not used in case of 'any' user.
-  pass:
-  # IPs or networks allowed to use this user. An empty list means any IP.
-  ips: []
-  # List of permissions.
-  permissions:
-    # Available actions are: publish, read, playback, api, metrics, pprof.
-  - action: publish
-    # Paths can be set to further restrict access to a specific path.
-    # An empty path means any path.
-    # Regular expressions can be used by using a tilde as prefix.
-    path:
-  - action: read
-    path:
-  - action: playback
-    path:
+  - user: any
+    # Password. Not used in case of 'any' user.
+    pass:
+    # IPs or networks allowed to use this user. An empty list means any IP.
+    ips: []
+    # List of permissions.
+    permissions:
+      # Available actions are: publish, read, playback, api, metrics, pprof.
+      - action: publish
+        # Paths can be set to further restrict access to a specific path.
+        # An empty path means any path.
+        # Regular expressions can be used by using a tilde as prefix.
+        path:
+      - action: read
+        path:
+      - action: playback
+        path:
 
-  # Default administrator.
-  # This allows to use API, metrics and PPROF without authentication,
-  # if the IP is localhost.
-- user: any
-  pass:
-  ips: ['127.0.0.1', '::1']
-  permissions:
-  - action: api
-  - action: metrics
-  - action: pprof
+    # Default administrator.
+    # This allows to use API, metrics and PPROF without authentication,
+    # if the IP is localhost.
+  - user: any
+    pass:
+    ips: ["127.0.0.1", "::1"]
+    permissions:
+      - action: api
+      - action: metrics
+      - action: pprof
 
 # HTTP-based authentication.
 # URL called to perform authentication. Every time a user wants
@@ -100,9 +100,9 @@ authHTTPAddress:
 # Actions to exclude from HTTP-based authentication.
 # Format is the same as the one of user permissions.
 authHTTPExclude:
-- action: api
-- action: metrics
-- action: pprof
+  - action: api
+  - action: metrics
+  - action: pprof
 
 # JWT-based authentication.
 # Users have to login through an external identity server and obtain a JWT.
@@ -141,7 +141,7 @@ apiServerKey: server.key
 # Path to the server certificate.
 apiServerCert: server.crt
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
-apiAllowOrigin: '*'
+apiAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the HTTP server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -164,7 +164,7 @@ metricsServerKey: server.key
 # Path to the server certificate.
 metricsServerCert: server.crt
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
-metricsAllowOrigin: '*'
+metricsAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the HTTP server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -187,7 +187,7 @@ pprofServerKey: server.key
 # Path to the server certificate.
 pprofServerCert: server.crt
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
-pprofAllowOrigin: '*'
+pprofAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the HTTP server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -210,7 +210,7 @@ playbackServerKey: server.key
 # Path to the server certificate.
 playbackServerCert: server.crt
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
-playbackAllowOrigin: '*'
+playbackAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the HTTP server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -295,7 +295,7 @@ hlsServerKey: DwarfiumKey.pem
 hlsServerCert: DwarfiumCert.pem
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
 # This allows to play the HLS stream from an external website.
-hlsAllowOrigin: '*'
+hlsAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the HLS server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -330,7 +330,7 @@ hlsSegmentMaxSize: 50M
 # Directory in which to save segments, instead of keeping them in the RAM.
 # This decreases performance, since reading from disk is less performant than
 # reading from RAM, but allows to save RAM.
-hlsDirectory: ''
+hlsDirectory: ""
 # The muxer will be closed when there are no
 # reader requests and this amount of time has passed.
 hlsMuxerCloseAfter: 60s
@@ -340,6 +340,9 @@ hlsMuxerCloseAfter: 60s
 
 # Enable publishing and reading streams with the WebRTC protocol.
 webrtc: no
+
+# Disable Media over QUIC; Dwarfium only uses RTSP input and HLS output.
+moq: no
 # Address of the WebRTC HTTP listener.
 webrtcAddress: :8889
 # Enable TLS/HTTPS on the WebRTC server.
@@ -353,7 +356,7 @@ webrtcServerKey: server.key
 webrtcServerCert: server.crt
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
 # This allows to play the WebRTC stream from an external website.
-webrtcAllowOrigin: '*'
+webrtcAllowOrigins: ["*"]
 # List of IPs or CIDRs of proxies placed before the WebRTC server.
 # If the server receives a request from one of these entries, IP in logs
 # will be taken from the X-Forwarded-For header.
@@ -364,7 +367,7 @@ webrtcLocalUDPAddress: :8189
 # Address of a local TCP listener that will receive connections.
 # This is disabled by default since TCP is less efficient than UDP and
 # introduces a progressive delay when network is congested.
-webrtcLocalTCPAddress: ''
+webrtcLocalTCPAddress: ""
 # WebRTC clients need to know the IP of the server.
 # Gather IPs from interfaces and send them to clients.
 webrtcIPsFromInterfaces: yes
@@ -404,7 +407,6 @@ srtAddress: :8890
 # Settings in "pathDefaults" are applied anywhere,
 # unless they are overridden in "paths".
 pathDefaults:
-
   ###############################################
   # Default path settings -> General
 
@@ -584,7 +586,7 @@ pathDefaults:
   rpiCameraTextOverlayEnable: false
   # Text that is printed on each frame.
   # format is the one of the strftime() function.
-  rpiCameraTextOverlay: '%Y-%m-%d %H:%M:%S - MediaMTX'
+  rpiCameraTextOverlay: "%Y-%m-%d %H:%M:%S - MediaMTX"
   # Codec. Available values: auto, hardwareH264, softwareH264
   rpiCameraCodec: auto
   # Period between IDR frames
@@ -594,7 +596,7 @@ pathDefaults:
   # H264 profile
   rpiCameraProfile: main
   # H264 level
-  rpiCameraLevel: '4.1'
+  rpiCameraLevel: "4.1"
 
   ###############################################
   # Default path settings -> Hooks
@@ -647,7 +649,7 @@ pathDefaults:
   #   a regular expression.
   runOnReady:
   # Restart the command if it exits.
-  runOnReadyRestart: no
+  runOnAvailableRestart: no
   # Command to run when the stream is not available anymore.
   # Environment variables are the same of runOnReady.
   runOnNotReady:
@@ -702,15 +704,15 @@ paths:
   # my_camera:
   #   source: rtsp://my_camera
   dwarf_wide:
-      source: rtsp://192.168.0.252:554/ch1/stream0
-      sourceOnDemand: yes
-      sourceOnDemandCloseAfter: 10s
-      record: no
+    source: rtsp://192.168.0.252:554/ch1/stream0
+    sourceOnDemand: yes
+    sourceOnDemandCloseAfter: 10s
+    record: no
   dwarf_tele:
-      source: rtsp://192.168.0.252:554/ch0/stream0
-      sourceOnDemand: yes
-      sourceOnDemandCloseAfter: 10s
-      record: no
+    source: rtsp://192.168.0.252:554/ch0/stream0
+    sourceOnDemand: yes
+    sourceOnDemandCloseAfter: 10s
+    record: no
 
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.

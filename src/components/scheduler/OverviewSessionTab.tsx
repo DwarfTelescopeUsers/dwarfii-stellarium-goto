@@ -39,7 +39,7 @@ const OverviewSessionTab: React.FC = () => {
   const handleSelectionChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(
       event.target.selectedOptions,
-      (option) => option.value
+      (option) => option.value,
     );
     setSelectedFiles(selectedOptions);
 
@@ -82,7 +82,7 @@ const OverviewSessionTab: React.FC = () => {
   const selectSession = () => {
     if (selectedFiles.length > 0) {
       setSessionFiles((prevFiles) =>
-        prevFiles.filter((file) => !selectedFiles.includes(file))
+        prevFiles.filter((file) => !selectedFiles.includes(file)),
       );
       setSelectedFiles([]);
       setFileContent("");

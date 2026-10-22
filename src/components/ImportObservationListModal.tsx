@@ -99,7 +99,7 @@ export default function ImportObjectListModal(props: PropTypes) {
             "Right Ascension": RA_Entry,
             Declination: DEC_Entry,
           } as ObjectTelescopius;
-        })
+        }),
       );
       console.log("saveObjectListsDb", JSON.stringify(cloneObjectLists));
       saveObjectListsDb(JSON.stringify(cloneObjectLists));

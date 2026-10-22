@@ -1,115 +1,69 @@
-﻿import React from "react";
-import FormattedDate from "./FormattedDate";
+import React from "react";
+import { WeatherData } from "../Weather";
 import WeatherIcon from "./WeatherIcon";
-import WeatherTemperature from "./WeatherTemperature";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import i18n from "@/i18n";
 
-function WeatherInfo(props) {
-  const { t } = useTranslation();
-  // eslint-disable-next-line no-unused-vars
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
-
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language");
-    if (storedLanguage) {
-      setSelectedLanguage(storedLanguage);
-      i18n.changeLanguage(storedLanguage);
-    }
-  }, []);
+export default function WeatherInfo({ infoData }: { infoData: WeatherData }) {
+  const current = infoData.forecast[0];
+  const offset = infoData.timezone || 0;
+  const localTime = new Date((current.dt + offset) * 1000).toLocaleString(
+    "en-GB",
+    {
+      timeZone: "UTC",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  );
+  const cloudCover = current.clouds?.all;
+  const rainChance = current.pop;
 
   return (
-    <div className="WeatherInfo">
-      <h1>{props.infoData.city}</h1>
-      <ul>
-        <li>
-          {t("cWeatherInfoLastUpdate")}
-          <div className="update">
-            <FormattedDate date={props.infoData.date} />
-          </div>
-        </li>
-        <li className="text-capitalize">{props.infoData.description}</li>
-      </ul>
-      <div className="row mt-3">
-        <div className="col-md-6">
-          <div className="canvas-info">
-            <div className="canvas-info-content">
-              <WeatherIcon icon={props.infoData.icon} size={62} />
-            </div>
-          </div>
-          <WeatherTemperature celsius={props.infoData.temperature} />
+    <section className="dw-weather-current" aria-label="Next forecast period">
+      <div className="dw-weather-current-main">
+        <div className="dw-weather-location">
+          <span className="dw-weather-eyebrow">Next forecast period</span>
+          <h2>
+            {infoData.city}
+            {infoData.country ? `, ${infoData.country}` : ""}
+          </h2>
+          <p>
+            {localTime} local · {current.weather[0].description}
+          </p>
         </div>
-        <div className="col-md-6">
-          <ul>
-            <li>
-              <svg
-                className="svg-temp"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 30 30"
-              >
-                {/* Temperature SVG */}
-              </svg>{" "}
-              {t("cWeatherInfoMinTemp")} {Math.round(props.infoData.temp_min)}{" "}
-              &deg;C
-            </li>
-            <li>
-              <svg
-                className="svg-temp"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 30 30"
-              >
-                {/* Temperature SVG */}
-              </svg>{" "}
-              {t("cWeatherInfoMaxTemp")} {Math.round(props.infoData.temp_max)}{" "}
-              &deg;C
-            </li>
-            <li>
-              <svg
-                className="svg-temp"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 30 30"
-              >
-                {/* Humidity SVG */}
-              </svg>{" "}
-              {t("cWeatherInfoFeelsLike")}{" "}
-              {Math.round(props.infoData.feels_like)} &deg;C
-            </li>
-            <li>
-              <svg
-                className="svg-temp"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 30 30"
-              >
-                {/* Humidity SVG */}
-              </svg>{" "}
-              {t("cWeatherInfoHumidity")} {props.infoData.humidity} %
-            </li>
-            <li>
-              <svg
-                className="svg-temp"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 30 30"
-              >
-                {/* Wind SVG */}
-              </svg>{" "}
-              {t("cWeatherInfoWind")} {Math.round(props.infoData.wind)} km/h
-            </li>
-          </ul>
+        <div className="dw-weather-reading">
+          <WeatherIcon icon={current.weather[0].icon} size={50} />
+          <strong>{Math.round(current.main.temp)}°</strong>
+          <span>C</span>
         </div>
       </div>
-    </div>
+      <div className="dw-weather-metrics">
+        <div>
+          <span>Feels like</span>
+          <strong>{Math.round(current.main.feels_like)}°C</strong>
+        </div>
+        <div>
+          <span>Cloud cover</span>
+          <strong>
+            {typeof cloudCover === "number" ? `${cloudCover}%` : "—"}
+          </strong>
+        </div>
+        <div>
+          <span>Rain chance</span>
+          <strong>
+            {typeof rainChance === "number"
+              ? `${Math.round(rainChance * 100)}%`
+              : "—"}
+          </strong>
+        </div>
+        <div>
+          <span>Wind</span>
+          <strong>{Math.round(current.wind.speed * 3.6)} km/h</strong>
+        </div>
+        <div>
+          <span>Humidity</span>
+          <strong>{Math.round(current.main.humidity)}%</strong>
+        </div>
+      </div>
+    </section>
   );
 }
-
-export default WeatherInfo;

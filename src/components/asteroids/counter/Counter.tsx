@@ -6,18 +6,15 @@ type CounterProps = {
 };
 
 export const Counter: React.FC<CounterProps> = ({ total, dangerous }) => (
-  <div className="counter">
-    {(!!total || !!dangerous) && <div className="divider" />}
-    {!!total && (
-      <div>
-        Found <span className="totalNumber">{total}</span> asteroids
-      </div>
-    )}
-    {!!dangerous && (
-      <div>
-        Potentially <span className="dangerNumber">{dangerous}</span> dangerous
-      </div>
-    )}
+  <div className="dw-asteroid-counts" aria-label="Asteroid summary">
+    <div>
+      <span>Objects found</span>
+      <strong>{total ?? "—"}</strong>
+    </div>
+    <div className="is-danger">
+      <span>Potentially hazardous</span>
+      <strong>{dangerous ?? "—"}</strong>
+    </div>
   </div>
 );
 

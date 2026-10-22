@@ -75,13 +75,13 @@
 .btn {
     height: 50px;
     border-radius: 5px;
-    // focus &:focus, &:active, &:active:focus
-
-{
-    box-shadow: none;
-    outline: none;
 }
 
+.btn:focus,
+.btn:active,
+.btn:active:focus {
+    box-shadow: none;
+    outline: none;
 }
 
 .btn-modal {
@@ -99,13 +99,11 @@
 p {
     font-size: 22px;
     line-height: 1.5;
-    color: lighten(#5f6377, 20%);
-    // last &:last-child
-
-{
-    margin-bottom: 0;
+    color: #9396a5;
 }
 
+p:last-child {
+    margin-bottom: 0;
 }
 
 ::-webkit-scrollbar {

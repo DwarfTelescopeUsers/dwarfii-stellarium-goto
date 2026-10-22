@@ -51,7 +51,7 @@ const SessionForm: React.FC = () => {
 
   // Target en coördinaten
   const [targetType, setTargetType] = useState<"solar" | "manual" | "none">(
-    "manual"
+    "manual",
   );
   const [targetSolar, setTargetSolar] = useState<string>("");
   const [target, setTarget] = useState<string>("");
@@ -63,10 +63,10 @@ const SessionForm: React.FC = () => {
   const [waitAfterCamera, setWaitAfterCamera] = useState<string>("10");
 
   const [date, setDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   ); // YYYY-MM-DD
   const [time, setTime] = useState<string>(
-    new Date().toTimeString().split(" ")[0]
+    new Date().toTimeString().split(" ")[0],
   ); // HH:MM:SS
 
   // Actie checkboxen
@@ -100,7 +100,7 @@ const SessionForm: React.FC = () => {
       setCameraType("Tele Camera");
     } else if (deviceType === "Dwarf 3 Wide Lens") {
       setExposureOptions(
-        [...allowed_wide_exposuresD3.map((e) => e.name)].reverse()
+        [...allowed_wide_exposuresD3.map((e) => e.name)].reverse(),
       );
       setGainOptions(allowed_wide_gainsD3.map((g) => g.name));
       setIrcutOptions([]);
@@ -188,7 +188,7 @@ const SessionForm: React.FC = () => {
       const startDateTime = new Date(`${date}T${time}`);
       const totalExposureTime = waitTime + (exposureSeconds + 1) * countVal;
       const endDateTime = new Date(
-        startDateTime.getTime() + totalExposureTime * 1000
+        startDateTime.getTime() + totalExposureTime * 1000,
       );
       return {
         endDate: endDateTime.toISOString().split("T")[0],
@@ -291,7 +291,7 @@ const SessionForm: React.FC = () => {
     if (checkInteger(count) === 0) {
       if (
         !window.confirm(
-          "Count value is 0, so no imaging will take place. Proceed?"
+          "Count value is 0, so no imaging will take place. Proceed?",
         )
       )
         return;

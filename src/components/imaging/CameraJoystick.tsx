@@ -1,111 +1,77 @@
-/* eslint no-unused-vars: 0 */
-import { useState, useContext } from "react";
+import { useContext, useEffect } from "react";
 import JoystickController from "joystick-controller";
-
 import { ConnectionContext } from "@/stores/ConnectionContext";
-import {
-  Dwarfii_Api,
-  messageStepMotorServiceJoystick,
-  messageStepMotorServiceJoystickStop,
-  WebSocketHandler,
-} from "dwarfii_api";
 
+/** Each controller belongs to exactly one physical socket for its lifetime. */
 export default function CameraJoystick() {
-  const [motorState, setMotorState] = useState(false);
-  const [lastTimeMotorCmd, setLastTimeMotorCmd] = useState(0);
-  let connectionCtx = useContext(ConnectionContext);
-
-  function joystick(angle_dec, vector) {
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    if (webSocketHandler.isConnected()) {
-      let txtInfoCommand = "";
-      let WS_Packet = messageStepMotorServiceJoystick(angle_dec, vector, 10);
-      txtInfoCommand = "Joystick";
-      webSocketHandler.prepare(WS_Packet, txtInfoCommand);
-    }
-  }
-
-  function stop_motor() {
-    const webSocketHandler = connectionCtx.socketIPDwarf
-      ? connectionCtx.socketIPDwarf
-      : new WebSocketHandler(connectionCtx.IPDwarf);
-
-    if (webSocketHandler.isConnected()) {
-      let txtInfoCommand = "";
-      let WS_Packet = messageStepMotorServiceJoystickStop();
-      txtInfoCommand = "Joystick";
-      webSocketHandler.prepare(WS_Packet, txtInfoCommand);
-    }
-  }
-
-  let gLastTimeMotorCmd = Date.now();
-  let gMotorState = false;
-
-  const staticJoystick = new JoystickController(
-    {
-      maxRange: 70,
-      level: 10,
-      radius: 50,
-      joystickRadius: 30,
-      opacity: 0.5,
-      leftToRight: false,
-      bottomToUp: true,
-      containerClass: "joystick-container",
-      controllerClass: "joystick-controller",
-      joystickClass: "joystick",
-      distortion: true,
-      x: "93%",
-      y: "10%",
-      mouseClickButton: "ALL",
-      hideContextMenu: false,
-    },
-    ({ x, y, leveledX, leveledY, distance, angle }) => {
-      console.debug(x, y, leveledX, leveledY, distance, angle);
-      let newTimeMotorCmd = Date.now();
-      let elapsedTime = newTimeMotorCmd - gLastTimeMotorCmd;
-      let newMotorState = distance > 0;
-      // Stop ?
-      if (
-        newMotorState === false &&
-        gMotorState != newMotorState &&
-        elapsedTime > 100
-      ) {
-        setMotorState(newMotorState);
-        setLastTimeMotorCmd(newTimeMotorCmd);
-        gMotorState = newMotorState;
-        gLastTimeMotorCmd = newTimeMotorCmd;
-        // Send Stop command
-        console.debug("stop_motor");
-        stop_motor();
-      } else if (newMotorState && elapsedTime > 500) {
-        setMotorState(newMotorState);
-        setLastTimeMotorCmd(newTimeMotorCmd);
-        gMotorState = newMotorState;
-        gLastTimeMotorCmd = newTimeMotorCmd;
-        let angle_dec = (angle * 180) / 3.14116;
-        if (angle_dec < 0) {
-          angle_dec = 360 + angle_dec;
+  const context = useContext(ConnectionContext);
+  const socket = context.socketIPDwarf;
+  useEffect(() => {
+    if (!socket) return;
+    let active = true;
+    let moving = false;
+    let pending = false;
+    let lastMovement = -Infinity;
+    const report = (error: unknown) => {
+      if (active)
+        context.setDeviceError?.(
+          error instanceof Error ? error.message : String(error),
+        );
+    };
+    const stop = () => {
+      if (!moving) return;
+      moving = false;
+      if (socket.isConnected())
+        void socket.request("stopJoystick", {}).catch(report);
+    };
+    const controller = new JoystickController(
+      {
+        maxRange: 70,
+        level: 10,
+        radius: 50,
+        joystickRadius: 30,
+        opacity: 0.5,
+        leftToRight: false,
+        bottomToUp: true,
+        containerClass: "joystick-container",
+        controllerClass: "joystick-controller",
+        joystickClass: "joystick",
+        distortion: true,
+        x: "93%",
+        y: "10%",
+        mouseClickButton: "ALL",
+        hideContextMenu: false,
+      },
+      ({ leveledX, leveledY, distance, angle }) => {
+        if (!active) return;
+        if (distance <= 0) {
+          stop();
+          return;
         }
-        angle_dec = 360 - angle_dec;
-        let vector = Math.sqrt(leveledX * leveledX + leveledY * leveledY) / 10;
-        console.debug(elapsedTime, angle_dec, vector);
-        joystick(angle_dec, vector);
-      } else {
-        console.debug("command motor not send", elapsedTime);
-      }
-    }
-  );
-
-  function close() {
-    staticJoystick.destroy();
-  }
-
-  function log(value) {
-    console.log(value); //eslint-disable-line
-  }
-
-  return <div></div>;
+        if (!socket.isConnected() || pending || Date.now() - lastMovement < 500)
+          return;
+        const vectorAngle =
+          (((360 - (angle * 180) / Math.PI) % 360) + 360) % 360;
+        const vectorLength = Math.min(
+          1,
+          Math.sqrt(leveledX ** 2 + leveledY ** 2) / 10,
+        );
+        moving = true;
+        pending = true;
+        lastMovement = Date.now();
+        void socket
+          .request("joystick", { vectorAngle, vectorLength })
+          .catch(report)
+          .finally(() => {
+            pending = false;
+          });
+      },
+    );
+    return () => {
+      active = false;
+      controller.destroy();
+      stop();
+    };
+  }, [socket]);
+  return <div />;
 }

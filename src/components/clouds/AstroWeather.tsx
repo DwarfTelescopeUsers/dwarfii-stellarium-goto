@@ -34,7 +34,7 @@ const AstroWeather: React.FC = () => {
     if (connectionCtx.proxyIP && getProxyUrl(connectionCtx)) {
       const targetUrl = new URL(apiUrl);
       apiUrl = `${getProxyUrl(connectionCtx)}?target=${encodeURIComponent(
-        targetUrl.href
+        targetUrl.href,
       )}`;
     }
 

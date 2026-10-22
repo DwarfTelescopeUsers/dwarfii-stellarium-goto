@@ -1,7 +1,7 @@
 ﻿/* eslint-disable no-unused-vars */
 import React, { useState, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { fabric } from "fabric";
+import { Canvas, FabricImage, filters, type TPointerEventInfo } from "fabric";
 import { loadFITS } from "@/lib/fitsUtils";
 import { calculateHistogram } from "@/lib/histogramUtils";
 import * as UTIF from "utif";
@@ -14,23 +14,30 @@ const ImageEditor: React.FC = () => {
   const [brightness, setBrightness] = useState<number>(0);
   const [histogram, setHistogram] = useState<number[][]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
-  const [imageObject, setImageObject] = useState<fabric.Image | null>(null);
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const [imageObject, setImageObject] = useState<FabricImage | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [lastPosX, setLastPosX] = useState<number | null>(null);
   const [lastPosY, setLastPosY] = useState<number | null>(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const canvasInstance = new fabric.Canvas(canvasRef.current, {
-        selection: false,
-      });
-      setCanvas(canvasInstance);
-      canvasInstance.on("mouse:down", handleMouseDown);
-      canvasInstance.on("mouse:move", handleMouseMove);
-      canvasInstance.on("mouse:up", handleMouseUp);
-      canvasInstance.on("mouse:wheel", handleMouseWheel);
-    }
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) return;
+
+    const canvasInstance = new Canvas(canvasElement, {
+      selection: false,
+    });
+    setCanvas(canvasInstance);
+    canvasInstance.on("mouse:down", handleMouseDown);
+    canvasInstance.on("mouse:move", handleMouseMove);
+    canvasInstance.on("mouse:up", handleMouseUp);
+    canvasInstance.on("mouse:wheel", handleMouseWheel);
+
+    return () => {
+      setCanvas((current) => (current === canvasInstance ? null : current));
+      setImageObject(null);
+      void canvasInstance.dispose();
+    };
   }, []);
 
   const onDrop = (acceptedFiles: File[]) => {
@@ -71,7 +78,7 @@ const ImageEditor: React.FC = () => {
           img.onload = () => {
             if (canvas) {
               canvas.clear();
-              const fabricImg = new fabric.Image(img);
+              const fabricImg = new FabricImage(img);
               setImageObject(fabricImg);
               fitImageToScreen(fabricImg);
               canvas.add(fabricImg);
@@ -100,7 +107,7 @@ const ImageEditor: React.FC = () => {
       if (!timage.bitsPerSample || !Array.isArray(timage.bitsPerSample)) {
         console.error(
           "bitsPerSample is undefined or not an array in the TIFF metadata.",
-          timage
+          timage,
         );
         // You can add a fallback handling here, e.g., assume 8 bits per sample
         // or decide to skip processing this image.
@@ -125,11 +132,11 @@ const ImageEditor: React.FC = () => {
   // eslint-disable-next-line no-unused-vars
   const processTiffImageWithFallback = (
     timage: any,
-    assumedBitDepth: number
+    assumedBitDepth: number,
   ) => {
     // Implement a way to handle TIFF image processing with a fallback assumed bit depth
     console.log(
-      "Processing TIFF image with assumed bit depth: ${assumedBitDepth}"
+      "Processing TIFF image with assumed bit depth: ${assumedBitDepth}",
     );
 
     // For simplicity, let's assume it's an 8-bit image and process accordingly
@@ -187,7 +194,7 @@ const ImageEditor: React.FC = () => {
       ctx.putImageData(imageData, 0, 0);
 
       if (canvas) {
-        const fabricImg = new fabric.Image(tempCanvas);
+        const fabricImg = new FabricImage(tempCanvas);
         setImageObject(fabricImg);
         fitImageToScreen(fabricImg);
         canvas.clear();
@@ -221,7 +228,7 @@ const ImageEditor: React.FC = () => {
       ctx.putImageData(imageData, 0, 0);
 
       if (canvas) {
-        const fabricImg = new fabric.Image(canvasElement);
+        const fabricImg = new FabricImage(canvasElement);
         setImageObject(fabricImg);
         fitImageToScreen(fabricImg); // Fit image to screen on load
         canvas.clear();
@@ -233,7 +240,7 @@ const ImageEditor: React.FC = () => {
   };
 
   const stretchLinear = (
-    data: number[][] | Float32Array | Int16Array
+    data: number[][] | Float32Array | Int16Array,
   ): Uint8Array => {
     const flatData = Array.isArray(data) ? data.flat() : Array.from(data);
     const min = Math.min(...flatData);
@@ -243,11 +250,11 @@ const ImageEditor: React.FC = () => {
     return new Uint8Array(
       flatData.map((value) => {
         return ((value - min) / range) * 255;
-      })
+      }),
     );
   };
 
-  const fitImageToScreen = (fabricImg: fabric.Image) => {
+  const fitImageToScreen = (fabricImg: FabricImage) => {
     if (canvas && fabricImg) {
       const canvasWidth = canvas.width!;
       const canvasHeight = canvas.height!;
@@ -257,7 +264,7 @@ const ImageEditor: React.FC = () => {
       // Calculate scale factor to fit the image within the canvas dimensions
       const scaleFactor = Math.min(
         canvasWidth / imgWidth,
-        canvasHeight / imgHeight
+        canvasHeight / imgHeight,
       );
 
       fabricImg.scale(scaleFactor);
@@ -267,24 +274,26 @@ const ImageEditor: React.FC = () => {
     }
   };
 
-  const handleMouseDown = (event: fabric.IEvent) => {
+  const handleMouseDown = (event: TPointerEventInfo) => {
     if (event.target) {
+      const pointer = event.e as MouseEvent;
       setIsDragging(true);
-      setLastPosX(event.e.clientX);
-      setLastPosY(event.e.clientY);
+      setLastPosX(pointer.clientX);
+      setLastPosY(pointer.clientY);
       canvas?.setCursor("move");
     }
   };
 
-  const handleMouseMove = (event: fabric.IEvent) => {
+  const handleMouseMove = (event: TPointerEventInfo) => {
     if (isDragging && imageObject) {
-      const deltaX = event.e.clientX - (lastPosX || 0);
-      const deltaY = event.e.clientY - (lastPosY || 0);
+      const pointer = event.e as MouseEvent;
+      const deltaX = pointer.clientX - (lastPosX || 0);
+      const deltaY = pointer.clientY - (lastPosY || 0);
 
       imageObject.left! += deltaX;
       imageObject.top! += deltaY;
-      setLastPosX(event.e.clientX);
-      setLastPosY(event.e.clientY);
+      setLastPosX(pointer.clientX);
+      setLastPosY(pointer.clientY);
       canvas?.renderAll();
     }
   };
@@ -294,7 +303,7 @@ const ImageEditor: React.FC = () => {
     canvas?.setCursor("default");
   };
 
-  const handleMouseWheel = (event: fabric.IEvent) => {
+  const handleMouseWheel = (event: TPointerEventInfo<WheelEvent>) => {
     if (imageObject && canvas) {
       const delta = event.e.deltaY;
       let zoom = imageObject.scaleX || 1;
@@ -318,11 +327,11 @@ const ImageEditor: React.FC = () => {
     if (canvas) {
       canvas.getObjects().forEach((obj) => {
         if (obj.type === "image") {
-          const fabricImg = obj as fabric.Image;
+          const fabricImg = obj as FabricImage;
           fabricImg.filters = [
-            new fabric.Image.filters.HueRotation({ rotation: hue }),
-            new fabric.Image.filters.Saturation({ saturation }),
-            new fabric.Image.filters.Brightness({ brightness }),
+            new filters.HueRotation({ rotation: hue }),
+            new filters.Saturation({ saturation }),
+            new filters.Brightness({ brightness }),
           ];
           fabricImg.applyFilters();
         }

@@ -70,7 +70,7 @@ describe("calculateElapsedTime", () => {
     timesObject.forEach((timeObject) => {
       let res = calculateElapsedTime(
         new Date(timeObject.start).getTime(),
-        new Date(timeObject.now).getTime()
+        new Date(timeObject.now).getTime(),
       );
       expect(res).toEqual(timeObject.expected);
     });
@@ -103,7 +103,7 @@ describe("calculateElapsedTime", () => {
     timesObject.forEach((timeObject) => {
       let res = calculateElapsedTime(
         new Date(timeObject.start).getTime(),
-        new Date(timeObject.now).getTime()
+        new Date(timeObject.now).getTime(),
       );
       expect(res).toEqual(timeObject.expected);
     });
@@ -141,7 +141,7 @@ describe("calculateElapsedTime", () => {
     timesObject.forEach((timeObject) => {
       let res = calculateElapsedTime(
         new Date(timeObject.start).getTime(),
-        new Date(timeObject.now).getTime()
+        new Date(timeObject.now).getTime(),
       );
       expect(res).toEqual(timeObject.expected);
     });

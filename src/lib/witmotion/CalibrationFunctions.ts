@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 //import { sleep } from "@amcharts/amcharts5/.internal/core/util/Time";
 import { sleep } from "./helper";
 
@@ -22,7 +23,7 @@ const RateSettings = {
 };
 
 export const defaultAccelerometerCalibration = async (
-  writeValue?: (value: ArrayBufferView) => Promise<void>
+  writeValue?: (value: BufferSource) => Promise<void>,
 ) => {
   writeValue && (await writeValue(CommandSettings.accelerometer_calibration));
   await sleep(3100);
@@ -31,7 +32,7 @@ export const defaultAccelerometerCalibration = async (
 
 export const defaultMagnetometerCalibration = async (
   command: String,
-  writeValue?: (value: ArrayBufferView) => Promise<void>
+  writeValue?: (value: BufferSource) => Promise<void>,
 ) => {
   switch (command) {
     case "start":
@@ -46,7 +47,7 @@ export const defaultMagnetometerCalibration = async (
 
 export const defaultDofSelect = async (
   command: String,
-  writeValue?: (value: ArrayBufferView) => Promise<void>
+  writeValue?: (value: BufferSource) => Promise<void>,
 ) => {
   switch (command) {
     case "6 DOF":
@@ -61,7 +62,7 @@ export const defaultDofSelect = async (
 
 export const defaultRateSelect = async (
   command: Number,
-  writeValue?: (value: ArrayBufferView) => Promise<void>
+  writeValue?: (value: BufferSource) => Promise<void>,
 ) => {
   switch (command) {
     case 0.2:

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 
 // Type for the response from the proxy
 type ProxyResponse = {
@@ -22,9 +23,11 @@ function isJSONString(body) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ProxyResponse | string>
+  res: NextApiResponse<ProxyResponse | string>,
 ) {
   const controller = new AbortController();
+  const disconnect = () => controller.abort();
+  res.once("close", disconnect);
   const timeout = 30000;
 
   // Set up the timeout manually
@@ -51,16 +54,16 @@ export default async function handler(
     // Prepare headers, removing problematic ones
     const filteredHeaders = Object.fromEntries(
       Object.entries(req.headers).filter(
-        ([key]) => !["host", "transfer-encoding"].includes(key.toLowerCase())
-      )
+        ([key]) => !["host", "transfer-encoding"].includes(key.toLowerCase()),
+      ),
     );
 
     // Ensure headers only contain strings (this prevents TypeScript errors)
     const sanitizedHeaders: { [key: string]: string } = Object.fromEntries(
       Object.entries(filteredHeaders).map(([key, value]) => [
         key,
-        Array.isArray(value) ? value.join(",") : value ?? "", // Join arrays, or use empty string for undefined
-      ])
+        Array.isArray(value) ? value.join(",") : (value ?? ""), // Join arrays, or use empty string for undefined
+      ]),
     );
 
     // Validate if the body is valid for the method
@@ -119,7 +122,10 @@ export default async function handler(
     // Handle multipart streaming (if applicable)
     if (typeof contentType === "string" && contentType.includes("multipart")) {
       if (response.body) {
-        return Readable.fromWeb(response.body as any).pipe(res);
+        res.status(response.status);
+        res.setHeader("Cache-Control", "no-store");
+        await pipeline(Readable.fromWeb(response.body as any), res);
+        return;
       } else {
         return res
           .status(500)
@@ -139,14 +145,13 @@ export default async function handler(
       const stream = Readable.fromWeb(response.body as any);
 
       // Pipe the image stream to the response
-      stream.pipe(res);
+      await pipeline(stream, res);
     } else {
-      const data = contentType?.includes("application/json")
-        ? await response.json()
-        : await response.text();
-      res.status(response.status).send(data);
+      // Preserve firmware uint64 parameter IDs for the SDK's lossless decoder.
+      res.status(response.status).send(await response.text());
     }
   } catch (error) {
+    if (res.destroyed) return;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     console.error("Proxy error:", error);
@@ -154,6 +159,7 @@ export default async function handler(
       .status(500)
       .json({ error: "Proxy request failed", details: errorMessage });
   } finally {
+    res.off("close", disconnect);
     clearTimeout(timeoutSignal);
   }
 }

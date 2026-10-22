@@ -1,12 +1,20 @@
 // /lib/fitsUtils.ts
-import * as fits from "fitsjs";
+const fits = require("fitsjs") as {
+  astro: {
+    FITS: {
+      File: new (buffer: ArrayBuffer) => {
+        getHDU: (index: number) => { data: number[][] };
+      };
+    };
+  };
+};
 
 export const loadFITS = async (
-  buffer: ArrayBuffer
+  buffer: ArrayBuffer,
 ): Promise<number[][] | null> => {
   try {
     // Create a new FITS file instance
-    const fitsFile = new fits.File(buffer);
+    const fitsFile = new fits.astro.FITS.File(buffer);
     const hdu = fitsFile.getHDU(0); // Get the primary HDU
     const imageData = hdu.data as number[][];
 

@@ -42,7 +42,7 @@ export default function DeleteObjectListModal(props: PropTypes) {
     e.preventDefault();
 
     let updatedListsNames = objectListsNames.filter(
-      (name) => name != connectionCtx.currentUserObjectListName
+      (name) => name != connectionCtx.currentUserObjectListName,
     );
     setObjectListsNames(updatedListsNames);
     saveObjectListsNamesDb(updatedListsNames.join("|"));

@@ -5,7 +5,7 @@ import {
   Dwarfii_Api,
   messageSystemSetMasterLock,
   WebSocketHandler,
-} from "dwarfii_api";
+} from "@/services/dwarf";
 import { saveIPConnectDB } from "@/db/db_utils";
 import { ConnectionContext } from "@/stores/ConnectionContext";
 import { logger } from "@/lib/logger";
@@ -49,7 +49,7 @@ export default function CmdHostLockDwarf() {
       WS_Packet,
       txtInfoCommand,
       [Dwarfii_Api.DwarfCMD.CMD_SYSTEM_SET_MASTERLOCK],
-      customMessageHandler
+      customMessageHandler,
     );
 
     if (!webSocketHandler.run()) {
@@ -94,12 +94,14 @@ export default function CmdHostLockDwarf() {
       return (
         <div>
           <button
+            type="button"
             onClick={handleClickLockHost}
             className="btn btn-more02 me-3 right-align"
           >
             {isHostLock ? t("cUnlockHost") : t("cLockHost")}
           </button>
           <button
+            type="button"
             onClick={handleClickDisconnect}
             className="btn btn-more02 me-3 right-align"
           >
@@ -115,6 +117,7 @@ export default function CmdHostLockDwarf() {
       return (
         <div>
           <button
+            type="button"
             onClick={handleClickDisconnect}
             className="btn btn-more02 me-3 right-align"
           >

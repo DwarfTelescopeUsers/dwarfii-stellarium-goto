@@ -1,38 +1,64 @@
 import { statusCodes, apiCodes } from "../../data/dwarfii_codes";
+import styles from "@/styles/logs.module.css";
 
-type PropType = {
-  message: any;
-};
+type LogRecord = Record<string, unknown>;
 
-export default function LogMessageItem(props: PropType) {
-  const { message } = props;
+function asRecord(value: unknown): LogRecord {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as LogRecord)
+    : {};
+}
 
-  function renderMetadata() {
-    let action = apiCodes[message.cmd as keyof typeof apiCodes];
-    let description = "";
-    if (message.data && message.data.code)
-      description = statusCodes[message.data.code as keyof typeof statusCodes];
-    if (description && action) {
-      return (
-        <div>
-          {action}: {description}
-        </div>
-      );
-    } else if (description) {
-      return <div>{description}</div>;
-    } else if (action) {
-      return <div>{action}</div>;
-    } else if (message) {
-      return <div>??? unknown </div>;
-    }
-  }
+function label(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function codeLabel(code: unknown, labels: Record<string, string>) {
+  return typeof code === "string" || typeof code === "number"
+    ? labels[String(code)]
+    : undefined;
+}
+
+export default function LogMessageItem({
+  message,
+  sequence,
+}: {
+  message: unknown;
+  sequence: number;
+}) {
+  const record = asRecord(message);
+  const data = asRecord(record.data);
+  const command = record.cmd ?? data.cmd;
+  const result = data.code ?? record.code;
+  const title =
+    label(data.cmdPlainTxt) ??
+    codeLabel(command, apiCodes) ??
+    label(data.cmdText) ??
+    label(record.message) ??
+    "Device message";
+  const description =
+    label(data.statePlainTxt) ??
+    codeLabel(result, statusCodes) ??
+    label(record.description);
+  const payload = JSON.stringify(message, null, 2) ?? String(message);
 
   return (
-    <div className="card mt-3">
-      <div className="card-header">{renderMetadata()}</div>
-      <div className="card-body">
-        <pre>{JSON.stringify(message, null, 2)}</pre>
+    <details className={styles.entry}>
+      <summary className={styles.entrySummary}>
+        <span className={styles.sequence}>#{sequence}</span>
+        <span className={styles.entryText}>
+          <strong>{title}</strong>
+          {description && <small>{description}</small>}
+        </span>
+        {command !== undefined && (
+          <span className={styles.command}>CMD {String(command)}</span>
+        )}
+        <i className="bi bi-chevron-down" aria-hidden="true" />
+      </summary>
+      <div className={styles.payload}>
+        <span>Full device payload</span>
+        <pre>{payload}</pre>
       </div>
-    </div>
+    </details>
   );
 }

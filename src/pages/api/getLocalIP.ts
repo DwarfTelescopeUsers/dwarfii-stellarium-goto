@@ -3,7 +3,7 @@ import { getLocalIPAddress } from "@/lib/getLocalIp";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   console.log("API localIP is running");
   if (req.method !== "GET") {

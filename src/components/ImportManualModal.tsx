@@ -41,7 +41,7 @@ export default function ImportManualModal(props: PropTypes) {
   const [manualRA, setManualRA] = useState<string>(ra || "");
   const [manualDeclination, setManualDeclination] = useState<string>(dec || "");
   const [manualObjectName, setManualObjectName] = useState<string>(
-    displayName || ""
+    displayName || "",
   );
 
   function handleCloseModal() {

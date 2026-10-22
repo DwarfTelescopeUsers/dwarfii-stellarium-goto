@@ -17,20 +17,22 @@ type PropType = {
 export default function PlanetsList(props: PropType) {
   const { setModule, setErrors, setSuccess } = props;
   return (
-    <div>
-      <h4 className="mt-3">
+    <div className="dw-dso-browser">
+      <h2 className="dw-target-results-heading">
         {objects.length} {pluralize(objects.length, "Object", "Objects")}
-      </h4>
+      </h2>
 
-      {objects.map((object, i) => (
-        <PlanetObject
-          setModule={setModule}
-          setErrors={setErrors}
-          setSuccess={setSuccess}
-          key={i}
-          object={object}
-        />
-      ))}
+      <div className="dw-target-results">
+        {objects.map((object) => (
+          <PlanetObject
+            setModule={setModule}
+            setErrors={setErrors}
+            setSuccess={setSuccess}
+            key={object.designation || object.displayName}
+            object={object}
+          />
+        ))}
+      </div>
     </div>
   );
 }

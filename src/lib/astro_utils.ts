@@ -51,7 +51,7 @@ export function getRiseSetTime(
   object: AstroObject,
   lat: number,
   lon: number,
-  jd: number
+  jd: number,
 ): RiseSetTransit | undefined {
   if (object.ra === null) {
     return;
@@ -74,7 +74,7 @@ export function getRiseSetTime(
     decParts?.negative,
     decParts?.degree,
     decParts?.minute,
-    decParts?.second
+    decParts?.second,
   ).rad();
 
   const p = new globe.Coord(coord.lat.rad(), coord.lon.rad());
@@ -84,7 +84,7 @@ export function getRiseSetTime(
   setVisibility(
     object,
     createDateFromTime(rs.rise),
-    createDateFromTime(rs.set)
+    createDateFromTime(rs.set),
   );
 
   return {
@@ -183,7 +183,7 @@ export function getRiseSetTimePlanet(
   object: AstroObject,
   lat: number,
   lon: number,
-  date: Date
+  date: Date,
 ): RiseSetTransit {
   let planetData: any = {};
   switch (object.designation) {
@@ -287,7 +287,7 @@ export function getRiseSetTimeLocal(
   jd: number,
   timezone: string,
   useDaylightSavings = false,
-  use24Hour = false
+  use24Hour = false,
 ): RiseSetTransitLocalTime {
   let results: RiseSetTransitLocalTime = {
     rise: null,
@@ -311,7 +311,7 @@ export function getRiseSetTimeLocal(
       tmp.rise,
       timezone,
       useDaylightSavings,
-      use24Hour
+      use24Hour,
     );
   }
   if (tmp.transit !== null) {
@@ -319,7 +319,7 @@ export function getRiseSetTimeLocal(
       tmp.transit,
       timezone,
       useDaylightSavings,
-      use24Hour
+      use24Hour,
     );
   }
   if (tmp.set !== null) {
@@ -327,7 +327,7 @@ export function getRiseSetTimeLocal(
       tmp.set,
       timezone,
       useDaylightSavings,
-      use24Hour
+      use24Hour,
     );
   }
 
@@ -338,7 +338,7 @@ export function convertTimePartsToString(
   timeParts: TimeParts,
   timezone: string,
   useDaylightSavings: boolean,
-  use24Hour: boolean
+  use24Hour: boolean,
 ): string {
   if (useDaylightSavings) {
     timeParts.hours += 1;
@@ -372,14 +372,14 @@ export function convertTimePartsToString(
 export function renderLocalRiseSetTime(
   object: AstroObject,
   latitude: number,
-  longitude: number
+  longitude: number,
 ) {
   // TODO: add component to let user set the time and save time in context
   let date = new Date();
   let jd = julian.CalendarGregorianToJD(
     date.getFullYear(),
     date.getMonth() + 1,
-    date.getDate()
+    date.getDate(),
   );
   let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   let timesObject = { rise: "--", set: "--", error: null };
@@ -392,7 +392,7 @@ export function renderLocalRiseSetTime(
       longitude,
       jd,
       timezone,
-      useDaylightSavings
+      useDaylightSavings,
     );
     if (result.rise) {
       timesObject.rise = result.rise;
@@ -526,7 +526,7 @@ function calc_jd(date: string, timeZone: string = "") {
     hours,
     minutes,
     seconds,
-    milliseconds
+    milliseconds,
   );
 
   let jd_ut = julian.DateToJD(now_UTC);
@@ -543,7 +543,7 @@ function raDecToAltAz(
   dec: number,
   lat: number,
   lon: number,
-  jd_ut: number
+  jd_ut: number,
 ): AltAsData {
   let lst = localSiderealTime(jd_ut, lon);
 
@@ -557,10 +557,10 @@ function raDecToAltAz(
 
   let az = Math.atan2(
     Math.sin(H),
-    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)
+    Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat),
   );
   let a = Math.asin(
-    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H)
+    Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H),
   );
   az -= Math.PI;
 
@@ -581,7 +581,7 @@ export function computeRaDecToAltAz(
   raDecimal: number,
   decDecimal: number,
   date: string,
-  timeZone: string = ""
+  timeZone: string = "",
 ): AltAsData {
   let jd_ut = calc_jd(date, timeZone);
 
@@ -625,13 +625,13 @@ function altAzToHADec(
   az: number,
   lat: number,
   lon: number,
-  jd_ut: number
+  jd_ut: number,
 ) {
   let lst = localSiderealTime(jd_ut, lon);
 
   let H = Math.atan2(
     -Math.sin(az),
-    Math.tan(alt) * Math.cos(lat) - Math.cos(az) * Math.sin(lat)
+    Math.tan(alt) * Math.cos(lat) - Math.cos(az) * Math.sin(lat),
   );
 
   console.debug("H1 rad: " + H);
@@ -655,7 +655,8 @@ function altAzToHADec(
   }
 
   const dec = Math.asin(
-    Math.sin(lat) * Math.sin(alt) + Math.cos(lat) * Math.cos(alt) * Math.cos(az)
+    Math.sin(lat) * Math.sin(alt) +
+      Math.cos(lat) * Math.cos(alt) * Math.cos(az),
   );
 
   let data: RaDecHData = {
@@ -675,7 +676,7 @@ export function computealtAzToHADec(
   alt: number,
   az: number,
   date: string,
-  timeZone: string = ""
+  timeZone: string = "",
 ): RaDecHData {
   let jd_ut = calc_jd(date, timeZone);
 
@@ -718,7 +719,7 @@ function diffDays(date1: Date, date2: Date): number {
     date1.getHours(),
     date1.getMinutes(),
     date1.getSeconds(),
-    date1.getMilliseconds()
+    date1.getMilliseconds(),
   );
   var utc2 = Date.UTC(
     date2.getFullYear(),
@@ -727,7 +728,7 @@ function diffDays(date1: Date, date2: Date): number {
     date2.getHours(),
     date2.getMinutes(),
     date2.getSeconds(),
-    date2.getMilliseconds()
+    date2.getMilliseconds(),
   );
 
   return (utc1 - utc2) / 86400000;
@@ -738,7 +739,7 @@ export function computeRaDecToAltAzOld(
   lon: number,
   raDecimal: number,
   decDecimal: number,
-  date: Date
+  date: Date,
 ) {
   // https://www.cloudynights.com/topic/446389-alt-az-calculator-spreadsheet/
   // http://www.stargazing.net/kepler/altaz.html
@@ -768,14 +769,14 @@ export function computeRaDecToAltAzOld(
     latitude: number,
     decDegree: number,
     decMinute: number,
-    HA: number
+    HA: number,
   ) {
     return (
       Math.asin(
         Math.sin(toRad * (decDegree + decMinute / 60)) * Math.sin(toRad * lat) +
           Math.cos(toRad * (decDegree + decMinute / 60)) *
             Math.cos(toRad * latitude) *
-            Math.cos(toRad * HA)
+            Math.cos(toRad * HA),
       ) / toRad
     );
   }
@@ -785,13 +786,13 @@ export function computeRaDecToAltAzOld(
     decDegree: number,
     decMinute: number,
     HA: number,
-    alt: number
+    alt: number,
   ) {
     let azTemp =
       Math.acos(
         (Math.sin(toRad * (decDegree + decMinute / 60)) -
           Math.sin(toRad * alt) * Math.sin(toRad * latitudeDecimal)) /
-          (Math.cos(toRad * alt) * Math.cos(toRad * latitudeDecimal))
+          (Math.cos(toRad * alt) * Math.cos(toRad * latitudeDecimal)),
       ) / toRad;
 
     return Math.sin(toRad * HA) < 0 ? azTemp : 360 - azTemp;

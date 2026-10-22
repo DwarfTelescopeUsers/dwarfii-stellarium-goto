@@ -26,7 +26,7 @@ export function olderThanHours(prevTime: number, hours: number): boolean {
 export function range(start: number, stop: number, step: number) {
   return Array.from(
     { length: (stop - start) / step + 1 },
-    (_, i) => start + i * step
+    (_, i) => start + i * step,
   );
 }
 
@@ -193,7 +193,7 @@ export function formatModifyDec(decDecimal) {
 // https://www.vedantu.com/question-answer/calculate-the-right-ascension-and-decli-class-11-physics-cbse-5ff94d1cbfdd3912f3ab841e
 export function convertHMSToDecimalDegrees(
   text: string,
-  decimalPlaces = 5
+  decimalPlaces = 5,
 ): number {
   let hmsMatches = extractHMSValues(text);
   if (hmsMatches) {
@@ -215,7 +215,7 @@ export function convertHMSToDecimalDegrees(
 // Dwarf uses RA in decimal hour : don't multiply by 15 !
 export function convertHMSToDecimalHours(
   text: string,
-  decimalPlaces = 5
+  decimalPlaces = 5,
 ): number {
   let hmsMatches = extractHMSValues(text);
   if (hmsMatches) {
@@ -275,7 +275,7 @@ export function convertHMSToDwarfRA(text: string): string | undefined {
   let decimalMatches = text.match(/([-0-9.]+)/);
   if (decimalMatches) {
     let { hour, minute, second } = convertDecimalHoursToHMS(
-      Number(decimalMatches[1])
+      Number(decimalMatches[1]),
     );
     return `${hour}h ${minute}m ${second}s`;
   }
@@ -317,7 +317,7 @@ export function convertDecimalHoursToHMS(decimal: number) {
 
 export function convertDMSToDecimalDegrees(
   text: string,
-  decimalPlaces = 5
+  decimalPlaces = 5,
 ): number {
   let dmsMatches = extractDMSValues(text);
   if (dmsMatches) {
@@ -326,7 +326,7 @@ export function convertDMSToDecimalDegrees(
       negative,
       Number(degree),
       Number(minute),
-      Number(second)
+      Number(second),
     );
   }
 
@@ -354,7 +354,7 @@ export function convertDMSToDwarfDec(text: string): string | undefined {
   let decimalMatches = text.match(/([-0-9.]+)/);
   if (decimalMatches) {
     let { negative, degree, minute, second } = convertDecimalDegreesToDMS(
-      Number(decimalMatches[1])
+      Number(decimalMatches[1]),
     );
     let secondParts = second.toString().split(".");
     let secondStr = padNumber(Number(secondParts[0]));
@@ -426,10 +426,10 @@ export function padNumber(num: number, places = 2) {
 // https://stackoverflow.com/a/32178833
 export function formatFloatToDecimalPlaces(
   value: number,
-  decimalPlaces: number
+  decimalPlaces: number,
 ): number {
   return Number(
-    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
+    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces,
   );
 }
 

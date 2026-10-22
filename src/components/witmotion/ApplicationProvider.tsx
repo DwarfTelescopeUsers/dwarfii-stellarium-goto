@@ -2,7 +2,7 @@ import React from "react";
 import { Application } from "@/lib/witmotion/Application";
 
 const ReactContext = React.createContext(
-  undefined as ApplicationContext | undefined
+  undefined as ApplicationContext | undefined,
 );
 
 export interface ApplicationContext {

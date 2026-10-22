@@ -1,7 +1,7 @@
 import styles from "@/components/icons/RecordButton.module.css";
 
 type PropType = {
-  onClick: () => void;
+  onClick?: () => void;
   color_stroke: string;
   title: string;
 };

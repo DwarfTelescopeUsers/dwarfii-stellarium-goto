@@ -55,7 +55,7 @@ export default function AutoGoto(props: PropType) {
         setObjectPersonalList(personalObjecList);
         console.log(
           "Loaded  personalObjecList on load: ",
-          personalObjecList.length
+          personalObjecList.length,
         );
       } else {
         console.log("No personalObjecList found in DB");
@@ -75,20 +75,30 @@ export default function AutoGoto(props: PropType) {
     connectionCtx.currentObjectListName === undefined;
 
   return (
-    <div>
-      <div className="container">
+    <div className="dw-target-source">
+      <div className="dw-target-notices" aria-live="polite">
         {!connectionCtx.connectionStatusStellarium && (
-          <p className="text-danger">{t("cGoToListConnectStellarium")}</p>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>{t("cGoToListConnectStellarium")}</span>
+          </div>
         )}
         {!connectionCtx.connectionStatus && (
-          <p className="text-danger">
-            {t("cGoToListConnectDwarf", {
-              DwarfType: connectionCtx.typeNameDwarf,
-            })}
-          </p>
+          <div className="dw-target-notice is-warning">
+            <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+            <span>
+              {t("cGoToListConnectDwarf", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
+            </span>
+          </div>
         )}
+      </div>
 
+      <label className="dw-target-catalog-field" htmlFor="target-catalog">
+        <span>Target catalog</span>
         <select
+          id="target-catalog"
           className="form-select-dso"
           value={connectionCtx.currentObjectListName || "default"}
           onChange={selectListHandler}
@@ -97,59 +107,52 @@ export default function AutoGoto(props: PropType) {
           <option value="dso">DSO</option>
           <option value="planets">{t("cGotoListplanets")}</option>
         </select>
-        {showInstructions && (
-          <>
-            <p className="mt-4">{t("cGotoListSelectObject")}</p>
+      </label>
+      {showInstructions && (
+        <section className="dw-target-guide">
+          <h2>{t("cGotoListSelectObject")}</h2>
 
-            <ol>
-              <li>
-                {t("cGotoListDSOList")}
-                <ul>
-                  <li>{t("cGotoListDSOList1")}</li>
-                  <li>{t("cGotoListDSOList2")}</li>
-                  <li>{t("cGotoListDSOList3")}</li>
-                  <li>{t("cGotoListDSOList4")}</li>
-                </ul>
-              </li>
-              <li>
-                {t("cGotoListDSOList5", {
-                  DwarfType: connectionCtx.typeNameDwarf,
-                })}
-              </li>
-            </ol>
-            <p>
-              {t("cGotoListinfo", { DwarfType: connectionCtx.typeNameDwarf })}
-            </p>
-            {""}
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-          </>
-        )}
-        {connectionCtx.currentObjectListName === "dso" && (
-          <DSOList
-            objects={dsoObject}
-            objectFavoriteNames={objectFavoriteNames}
-            setObjectFavoriteNames={setObjectFavoriteNames}
-            objectPersonalList={objectPersonalList}
-            setObjectPersonalList={setObjectPersonalList}
-            isInObjectPersonalList={false}
-            setModule={setModule}
-            setErrors={setErrors}
-            setSuccess={setSuccess}
-          ></DSOList>
-        )}
-        {connectionCtx.currentObjectListName === "planets" && (
-          <PlanetsList
-            setModule={setModule}
-            setErrors={setErrors}
-            setSuccess={setSuccess}
-          ></PlanetsList>
-        )}
-      </div>
+          <ol>
+            <li>
+              {t("cGotoListDSOList")}
+              <ul>
+                <li>{t("cGotoListDSOList1")}</li>
+                <li>{t("cGotoListDSOList2")}</li>
+                <li>{t("cGotoListDSOList3")}</li>
+                <li>{t("cGotoListDSOList4")}</li>
+              </ul>
+            </li>
+            <li>
+              {t("cGotoListDSOList5", {
+                DwarfType: connectionCtx.typeNameDwarf,
+              })}
+            </li>
+          </ol>
+          <p>
+            {t("cGotoListinfo", { DwarfType: connectionCtx.typeNameDwarf })}
+          </p>
+        </section>
+      )}
+      {connectionCtx.currentObjectListName === "dso" && (
+        <DSOList
+          objects={dsoObject}
+          objectFavoriteNames={objectFavoriteNames}
+          setObjectFavoriteNames={setObjectFavoriteNames}
+          objectPersonalList={objectPersonalList}
+          setObjectPersonalList={setObjectPersonalList}
+          isInObjectPersonalList={false}
+          setModule={setModule}
+          setErrors={setErrors}
+          setSuccess={setSuccess}
+        ></DSOList>
+      )}
+      {connectionCtx.currentObjectListName === "planets" && (
+        <PlanetsList
+          setModule={setModule}
+          setErrors={setErrors}
+          setSuccess={setSuccess}
+        ></PlanetsList>
+      )}
     </div>
   );
 }
